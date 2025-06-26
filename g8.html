@@ -1,0 +1,1365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Uno Game</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #3b82f6; /* Blue background for Uno theme */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 1rem;
+            box-sizing: border-box;
+            overflow-y: auto;
+        }
+
+        .game-container {
+            background-color: #f7fafc; /* Light background for the game area */
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+            padding: 2rem;
+            text-align: center;
+            width: 100%;
+            max-width: 900px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            font-weight: bold;
+            color: #1a202c;
+            text-shadow: 1px 1px 2px rgba(0,0,0,0.2);
+            margin-bottom: 1rem;
+        }
+
+        .game-area {
+            display: flex;
+            flex-direction: column;
+            width: 100%;
+            gap: 1rem;
+        }
+
+        .player-area, .ai-area {
+            background-color: #e2e8f0; /* Light grey for hand sections */
+            border-radius: 1rem;
+            padding: 1rem;
+            box-shadow: inset 0 0 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .player-area h2, .ai-area h2 {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 0.75rem;
+        }
+
+        .ai-hand-display {
+            display: flex;
+            justify-content: center;
+            gap: 0.2rem;
+            min-height: 80px; /* Space for AI cards */
+            flex-wrap: wrap;
+        }
+
+        .ai-card-back {
+            background-color: #dc2626; /* Red for Uno card back */
+            border: 1px solid #a0aec0;
+            border-radius: 0.4rem;
+            width: 50px;
+            height: 70px;
+            box-shadow: 1px 1px 3px rgba(0, 0, 0, 0.3);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5rem;
+            color: white;
+            font-weight: bold;
+        }
+
+        .table-center {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1.5rem;
+            margin: 1.5rem 0;
+        }
+
+        .draw-pile, .discard-pile {
+            border-radius: 0.5rem;
+            width: 80px;
+            height: 110px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 2rem;
+            font-weight: bold;
+            color: white;
+            cursor: pointer;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+        }
+
+        .draw-pile {
+            background-color: #dc2626; /* Uno Red */
+            position: relative;
+            z-index: 10;
+        }
+        .draw-pile:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.4);
+        }
+
+        .discard-pile {
+            background-color: #cbd5e0; /* Default grey for empty discard */
+            border: 1px dashed #a0aec0;
+            color: #a0aec0;
+            position: relative;
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+
+        .discard-card {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: white;
+            border-radius: 0.5rem;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            padding: 5px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            overflow: hidden;
+            transition: transform 0.2s ease-out; /* For dealing animation */
+        }
+        .discard-card .suit-top, .discard-card .suit-bottom {
+            font-size: 0.8em;
+            line-height: 1;
+        }
+        .discard-card .value {
+            font-size: 1.5em;
+        }
+        .discard-card.red { background-color: #ef4444; color: white; }
+        .discard-card.yellow { background-color: #f59e0b; color: white; }
+        .discard-card.green { background-color: #22c55e; color: white; }
+        .discard-card.blue { background-color: #3b82f6; color: white; }
+        .discard-card.wild { background-color: #a0aec0; color: #1a202c; } /* Gray for Wild */
+        .discard-card .wild-indicator {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            display: inline-block;
+            margin: 0 2px;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        .discard-card .wild-indicator.red { background-color: #ef4444; }
+        .discard-card .wild-indicator.yellow { background-color: #f59e0b; }
+        .discard-card .wild-indicator.green { background-color: #22c55e; }
+        .discard-card .wild-indicator.blue { background-color: #3b82f6; }
+
+
+        .player-hand {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.5rem;
+            min-height: 120px; /* Space for player cards */
+        }
+
+        .card {
+            background-color: #ffffff;
+            border: 1px solid #a0aec0;
+            border-radius: 0.5rem;
+            width: 70px;
+            height: 100px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px;
+            font-size: 1.1rem;
+            font-weight: bold;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.2);
+            text-align: center;
+            cursor: pointer;
+            transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
+            position: relative;
+        }
+        .card.red { background-color: #ef4444; color: white; }
+        .card.yellow { background-color: #f59e0b; color: white; }
+        .card.green { background-color: #22c55e; color: white; }
+        .card.blue { background-color: #3b82f6; color: white; }
+        .card.wild { background-color: #a0aec0; color: #1a202c; } /* Gray for Wild */
+        .card.wild .wild-indicator {
+            width: 15px;
+            height: 15px;
+            border-radius: 50%;
+            display: inline-block;
+            margin: 0 1px;
+            border: 1px solid rgba(0,0,0,0.1);
+        }
+        .card.wild .wild-indicator.red { background-color: #ef4444; }
+        .card.wild .wild-indicator.yellow { background-color: #f59e0b; }
+        .card.wild .wild-indicator.green { background-color: #22c55e; }
+        .card.wild .wild-indicator.blue { background-color: #3b82f6; }
+
+
+        .card:hover:not(.disabled) {
+            transform: translateY(-5px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+
+        .card.playable {
+            border: 3px solid #fce300; /* Yellow border for playable cards */
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.4);
+        }
+        .card.disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+            width: 100%;
+        }
+
+        .controls button {
+            padding: 0.8rem 1.6rem;
+            border-radius: 0.75rem;
+            border: none;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+            color: white;
+            background-color: #2563eb; /* Blue-600 */
+        }
+        .controls button:hover:not(:disabled) {
+            background-color: #1d4ed8; /* Blue-700 */
+            transform: translateY(-2px);
+        }
+        .controls button:disabled {
+            background-color: #a0aec0; /* Gray-400 */
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        #uno-button {
+            background-color: #f59e0b; /* Orange */
+        }
+        #uno-button:hover:not(:disabled) {
+            background-color: #d97706;
+        }
+        #draw-card-button {
+            background-color: #22c55e; /* Green */
+        }
+        #draw-card-button:hover:not(:disabled) {
+            background-color: #16a34a;
+        }
+
+        .turn-indicator-bar {
+            width: 100%;
+            height: 10px;
+            background-color: #cbd5e0;
+            border-radius: 5px;
+            margin-top: 1rem;
+            overflow: hidden;
+            position: relative;
+        }
+
+        .turn-progress {
+            height: 100%;
+            background-color: #48bb78; /* Green progress */
+            width: 0%;
+            transition: width 0.5s ease-out;
+            position: absolute;
+            left: 0;
+        }
+
+        .current-color-indicator {
+            margin-top: 1rem;
+            font-size: 1.3rem;
+            font-weight: bold;
+            color: #2d3748;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 0.5rem;
+            background-color: #f7fafc;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        .current-color-box {
+            width: 25px;
+            height: 25px;
+            border-radius: 4px;
+            border: 1px solid rgba(0,0,0,0.2);
+        }
+        /* Specific colors for current color box */
+        .current-color-box.red { background-color: #ef4444; }
+        .current-color-box.yellow { background-color: #f59e0b; }
+        .current-color-box.green { background-color: #22c55e; }
+        .current-color-box.blue { background-color: #3b82f6; }
+
+
+        /* Wild Color Selection Modal */
+        .wild-color-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 2000;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity 0.3s ease-in-out, visibility 0.3s ease-in-out;
+        }
+
+        .wild-color-modal.show {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .wild-color-picker {
+            background-color: white;
+            padding: 2rem;
+            border-radius: 1rem;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            text-align: center;
+        }
+
+        .wild-color-picker h3 {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 1.5rem;
+        }
+
+        .color-options {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .color-box {
+            width: 60px;
+            height: 60px;
+            border-radius: 0.75rem;
+            cursor: pointer;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+            transition: transform 0.1s ease-out, box-shadow 0.1s ease-out;
+        }
+        .color-box:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+        }
+        .color-box.red { background-color: #ef4444; }
+        .color-box.yellow { background-color: #f59e0b; }
+        .color-box.green { background-color: #22c55e; }
+        .color-box.blue { background-color: #3b82f6; }
+
+
+        /* Message Box */
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #f59e0b; /* Yellow for alerts */
+            color: white;
+            padding: 1.5rem 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            z-index: 3000; /* Higher than modal */
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            font-size: 1.25rem;
+            font-weight: bold;
+            opacity: 0;
+            transition: opacity 0.3s ease-in-out;
+        }
+        .message-box.show {
+            opacity: 1;
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 1.5rem;
+                gap: 1rem;
+                max-width: 95%;
+            }
+            h1 {
+                font-size: 2.2rem;
+            }
+            .player-area h2, .ai-area h2 {
+                font-size: 1.3rem;
+            }
+            .ai-card-back {
+                width: 40px;
+                height: 60px;
+            }
+            .draw-pile, .discard-pile {
+                width: 70px;
+                height: 100px;
+                font-size: 1.5rem;
+            }
+            .discard-card {
+                font-size: 1rem;
+            }
+            .card {
+                width: 60px;
+                height: 85px;
+                font-size: 1rem;
+            }
+            .controls button {
+                padding: 0.6rem 1.2rem;
+                font-size: 0.9rem;
+            }
+            .current-color-indicator {
+                font-size: 1.1rem;
+            }
+            .current-color-box {
+                width: 20px;
+                height: 20px;
+            }
+            .wild-color-picker h3 {
+                font-size: 1.5rem;
+            }
+            .color-box {
+                width: 50px;
+                height: 50px;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                padding: 1rem;
+                gap: 0.75rem;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+            .player-area h2, .ai-area h2 {
+                font-size: 1.1rem;
+            }
+            .ai-hand-display {
+                min-height: 50px;
+            }
+            .ai-card-back {
+                width: 35px;
+                height: 50px;
+            }
+            .table-center {
+                gap: 0.75rem;
+                margin: 1rem 0;
+            }
+            .draw-pile, .discard-pile {
+                width: 60px;
+                height: 85px;
+                font-size: 1.2rem;
+            }
+            .discard-card {
+                font-size: 0.8rem;
+                padding: 3px;
+            }
+            .card {
+                width: 50px;
+                height: 70px;
+                font-size: 0.8rem;
+                padding: 3px;
+            }
+            .controls {
+                flex-direction: column;
+                gap: 0.75rem;
+            }
+            .controls button {
+                width: 100%;
+                padding: 0.5rem 1rem;
+                font-size: 0.8rem;
+            }
+            .current-color-indicator {
+                font-size: 1rem;
+            }
+            .current-color-box {
+                width: 15px;
+                height: 15px;
+            }
+            .wild-color-picker h3 {
+                font-size: 1.2rem;
+            }
+            .color-box {
+                width: 40px;
+                height: 40px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-uno-blue flex items-center justify-center min-h-screen p-4">
+    <div class="game-container">
+        <h1>Uno!</h1>
+
+        <div class="ai-area">
+            <h2 id="ai-hand-info">AI's Hand (<span id="ai-card-count">7</span> Cards)</h2>
+            <div id="ai-hand-display" class="ai-hand-display">
+                <!-- AI card backs will be rendered here -->
+            </div>
+        </div>
+
+        <div class="table-center">
+            <div id="draw-pile" class="draw-pile">
+                <i class="fas fa-plus"></i> <!-- Placeholder for draw pile -->
+            </div>
+            <div id="discard-pile" class="discard-pile">
+                <!-- Top card of discard pile will be inserted here -->
+            </div>
+        </div>
+
+        <div id="current-color-indicator" class="current-color-indicator">
+            Current Color: <div id="current-color-box" class="current-color-box red"></div> <span id="current-color-text">Red</span>
+        </div>
+
+        <div class="player-area">
+            <h2 id="player-hand-info">Your Hand (<span id="player-card-count">7</span> Cards)</h2>
+            <div id="player-hand" class="player-hand">
+                <!-- Player's cards will be inserted here -->
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="draw-card-button">Draw Card</button>
+            <button id="uno-button" disabled>UNO!</button>
+            <button id="new-game-button">New Game</button>
+        </div>
+    </div>
+
+    <!-- Wild Color Selection Modal -->
+    <div id="wild-color-modal" class="wild-color-modal">
+        <div class="wild-color-picker">
+            <h3>Choose a Color</h3>
+            <div class="color-options">
+                <div class="color-box red" data-color="red"></div>
+                <div class="color-box yellow" data-color="yellow"></div>
+                <div class="color-box green" data-color="green"></div>
+                <div class="color-box blue" data-color="blue"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Box for game outcomes -->
+    <div id="message-box" class="message-box">
+        <p id="message-text"></p>
+    </div>
+
+    <script>
+        // Game Constants
+        const COLORS = ['red', 'yellow', 'green', 'blue'];
+        const NUMBER_CARDS = ['0', '1', '2', '3', '4', '5', '6', '7', '8', '9'];
+        const ACTION_CARDS = ['skip', 'reverse', 'draw2'];
+        const WILD_CARDS = ['wild', 'wild4'];
+        const INITIAL_HAND_SIZE = 7;
+        const PLAYER = 'player';
+        const AI = 'ai';
+
+        // DOM Elements
+        const aiCardCountElement = document.getElementById('ai-card-count');
+        const aiHandDisplayElement = document.getElementById('ai-hand-display');
+        const drawPileElement = document.getElementById('draw-pile');
+        const discardPileElement = document.getElementById('discard-pile');
+        const playerCardCountElement = document.getElementById('player-card-count');
+        const playerHandElement = document.getElementById('player-hand');
+        const drawCardButton = document.getElementById('draw-card-button');
+        const unoButton = document.getElementById('uno-button');
+        const newGameButton = document.getElementById('new-game-button');
+        const currentColorIndicator = document.getElementById('current-color-indicator');
+        const currentColorBox = document.getElementById('current-color-box');
+        const currentColorText = document.getElementById('current-color-text');
+        const wildColorModal = document.getElementById('wild-color-modal');
+        const colorOptions = wildColorModal.querySelector('.color-options');
+        const messageBox = document.getElementById('message-box');
+        const messageText = document.getElementById('message-text');
+
+        // Game State Variables
+        let deck = [];
+        let discardPile = [];
+        let playerHand = [];
+        let aiHand = [];
+        let currentPlayer = PLAYER;
+        let currentColor = ''; // The active color on the discard pile
+        let gameDirection = 1; // 1 for clockwise (player -> AI), -1 for counter-clockwise (AI -> player)
+        let unoCalled = { [PLAYER]: false, [AI]: false }; // Tracks if UNO has been called by player/AI
+        let pendingDrawCards = 0; // Tracks +2 or +4 cards
+        let gameOver = false;
+        let messageTimeoutId;
+
+        /**
+         * Shows a message box that disappears automatically after a delay.
+         * @param {string} message The message to display.
+         * @param {number} duration The duration in milliseconds to display the message (default 2000).
+         */
+        function showMessageBox(message, duration = 2000) {
+            messageText.textContent = message;
+            messageBox.style.display = 'flex';
+            messageBox.offsetWidth; // Trigger reflow
+            messageBox.classList.add('show');
+
+            if (messageTimeoutId) {
+                clearTimeout(messageTimeoutId);
+            }
+
+            messageTimeoutId = setTimeout(() => {
+                messageBox.classList.remove('show');
+                setTimeout(() => {
+                    messageBox.style.display = 'none';
+                }, 300); // Match CSS transition duration for opacity
+            }, duration);
+        }
+
+        /**
+         * Card class definition.
+         */
+        class Card {
+            constructor(color, value) {
+                this.color = color; // 'red', 'yellow', 'green', 'blue', 'wild'
+                this.value = value; // '0'-'9', 'skip', 'reverse', 'draw2', 'wild', 'wild4'
+            }
+
+            isWild() {
+                return this.value === 'wild' || this.value === 'wild4';
+            }
+
+            // Get the display symbol for action cards
+            getDisplayValue() {
+                if (this.isWild()) return 'WILD';
+                switch (this.value) {
+                    case 'skip': return 'SKIP';
+                    case 'reverse': return 'REV';
+                    case 'draw2': return '+2';
+                    case 'wild4': return '+4 WILD';
+                    default: return this.value;
+                }
+            }
+
+            // Get the display class for the card color
+            getColorClass() {
+                if (this.color === 'wild') return 'wild';
+                return this.color;
+            }
+
+            // Returns an SVG for wild card color indicators
+            getWildIndicatorsHtml() {
+                if (this.isWild()) {
+                    return `
+                        <div class="flex">
+                            <div class="wild-indicator red"></div>
+                            <div class="wild-indicator yellow"></div>
+                            <div class="wild-indicator green"></div>
+                            <div class="wild-indicator blue"></div>
+                        </div>
+                    `;
+                }
+                return '';
+            }
+        }
+
+        /**
+         * Creates a standard Uno deck.
+         * @returns {Array<Card>} Shuffled array of Uno Card objects.
+         */
+        function createDeck() {
+            let newDeck = [];
+
+            // Number cards (0-9)
+            COLORS.forEach(color => {
+                newDeck.push(new Card(color, '0')); // One '0' of each color
+                for (let i = 1; i <= 9; i++) {
+                    newDeck.push(new Card(color, String(i))); // Two of each number 1-9
+                    newDeck.push(new Card(color, String(i)));
+                }
+            });
+
+            // Action cards (Skip, Reverse, Draw2)
+            COLORS.forEach(color => {
+                ACTION_CARDS.forEach(action => {
+                    newDeck.push(new Card(color, action)); // Two of each action card
+                    newDeck.push(new Card(color, action));
+                });
+            });
+
+            // Wild cards (Wild, Wild Draw4)
+            for (let i = 0; i < 4; i++) {
+                newDeck.push(new Card('wild', 'wild'));
+                newDeck.push(new Card('wild', 'wild4'));
+            }
+
+            // Shuffle the deck (Fisher-Yates)
+            for (let i = newDeck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newDeck[i], newDeck[j]] = [newDeck[j], newDeck[i]];
+            }
+            return newDeck;
+        }
+
+        /**
+         * Renders a single card element.
+         * @param {Card} card The card object.
+         * @param {string} type 'hand' for player hand, 'discard' for discard pile.
+         * @param {boolean} playable If true, card is highlighted as playable.
+         * @returns {HTMLElement} The card DOM element.
+         */
+        function renderCard(card, type = 'hand', playable = false) {
+            const cardDiv = document.createElement('div');
+            cardDiv.classList.add('card', card.getColorClass());
+
+            if (type === 'discard') {
+                cardDiv.classList.remove('card'); // Remove base card class
+                cardDiv.classList.add('discard-card'); // Add discard-specific class
+            }
+
+            cardDiv.innerHTML = `
+                <div class="suit-top">${card.getWildIndicatorsHtml() || card.getDisplayValue()}</div>
+                <div class="value">${card.getDisplayValue()}</div>
+                <div class="suit-bottom">${card.getWildIndicatorsHtml() || card.getDisplayValue()}</div>
+            `;
+
+            if (playable) {
+                cardDiv.classList.add('playable');
+            } else if (type === 'hand' && currentPlayer === PLAYER && !gameOver) {
+                 cardDiv.classList.add('disabled'); // Dim non-playable cards for player
+            }
+            return cardDiv;
+        }
+
+        /**
+         * Renders the player's and AI's hands.
+         */
+        function renderHands() {
+            // Player's Hand
+            playerHandElement.innerHTML = '';
+            const playableCards = getPlayableCards(playerHand, discardPile[0], currentColor);
+            playerHand.forEach((card, index) => {
+                const cardEl = renderCard(card, 'hand', playableCards.includes(card));
+                if (!cardEl.classList.contains('disabled')) { // Only add listener if not disabled
+                    cardEl.addEventListener('click', () => handlePlayerPlayCard(card, index));
+                }
+                playerHandElement.appendChild(cardEl);
+            });
+            playerCardCountElement.textContent = playerHand.length;
+
+            // AI's Hand (only card backs)
+            aiHandDisplayElement.innerHTML = '';
+            for (let i = 0; i < aiHand.length; i++) {
+                const aiCardBack = document.createElement('div');
+                aiCardBack.classList.add('ai-card-back');
+                aiCardBack.innerHTML = '<i class="fas fa-circle"></i>'; // Simple dot icon for card back
+                aiHandDisplayElement.appendChild(aiCardBack);
+            }
+            aiCardCountElement.textContent = aiHand.length;
+
+            // Update button states
+            updateControlButtons();
+        }
+
+        /**
+         * Renders the discard pile.
+         */
+        function renderDiscardPile() {
+            discardPileElement.innerHTML = '';
+            if (discardPile.length > 0) {
+                const topCard = discardPile[0];
+                const cardEl = renderCard(topCard, 'discard');
+                discardPileElement.appendChild(cardEl);
+
+                // Update current color indicator
+                currentColorBox.className = 'current-color-box ' + currentColor;
+                currentColorText.textContent = currentColor.charAt(0).toUpperCase() + currentColor.slice(1);
+            } else {
+                currentColorBox.className = 'current-color-box'; // Clear color
+                currentColorText.textContent = 'None';
+            }
+        }
+
+        /**
+         * Determines if a card is playable based on the discard pile's top card and current color.
+         * @param {Card} card The card to check.
+         * @param {Card} topDiscardCard The top card of the discard pile.
+         * @param {string} activeColor The current active color (set by wild cards).
+         * @returns {boolean} True if playable, false otherwise.
+         */
+        function isCardPlayable(card, topDiscardCard, activeColor) {
+            if (card.isWild()) return true; // Wild cards can always be played
+
+            // Match by color or value
+            return card.color === activeColor || card.value === topDiscardCard.value;
+        }
+
+        /**
+         * Gets all playable cards from a hand.
+         * @param {Array<Card>} hand The hand to check.
+         * @param {Card} topDiscardCard The top card of the discard pile.
+         * @param {string} activeColor The current active color.
+         * @returns {Array<Card>} An array of playable cards.
+         */
+        function getPlayableCards(hand, topDiscardCard, activeColor) {
+            return hand.filter(card => isCardPlayable(card, topDiscardCard, activeColor));
+        }
+
+        /**
+         * Updates the state of the control buttons.
+         */
+        function updateControlButtons() {
+            const playableCards = getPlayableCards(playerHand, discardPile[0], currentColor);
+
+            drawCardButton.disabled = gameOver || (currentPlayer !== PLAYER);
+            unoButton.disabled = gameOver || (playerHand.length !== 2) || (currentPlayer !== PLAYER) || unoCalled[PLAYER];
+
+            // If there are pending draw cards (+2 or +4), the only action is to draw
+            if (pendingDrawCards > 0) {
+                drawCardButton.disabled = false;
+                playerHandElement.querySelectorAll('.card').forEach(cardEl => cardEl.classList.add('disabled')); // Disable playing cards
+                showMessageBox(`Draw ${pendingDrawCards} cards!`, 2000);
+            } else {
+                // If no playable cards, only allow drawing
+                if (playableCards.length === 0 && currentPlayer === PLAYER) {
+                    drawCardButton.disabled = false;
+                } else if (currentPlayer === PLAYER) {
+                    drawCardButton.disabled = true; // Disable if playable cards exist
+                }
+            }
+        }
+
+        /**
+         * Advances to the next player's turn. Handles draw penalties and game end.
+         * @param {boolean} skipNext If true, the next player's turn is skipped (e.g., from Skip card).
+         */
+        function startTurn() {
+            if (gameOver) return;
+
+            // Check if game ended (current player played last card)
+            if (playerHand.length === 0 || aiHand.length === 0) {
+                endGame();
+                return;
+            }
+
+            renderHands(); // Re-render to update highlights/AI card backs
+            updateControlButtons();
+
+            // Start the next player's turn
+            if (currentPlayer === AI && !gameOver) {
+                setTimeout(aiTurn, 1500); // Delay AI's turn for better UX
+            } else if (currentPlayer === PLAYER && !gameOver) {
+                const playableCards = getPlayableCards(playerHand, discardPile[0], currentColor);
+                if (playableCards.length === 0 && pendingDrawCards === 0) {
+                    showMessageBox('No playable cards. Draw a card!', 1500);
+                    drawCardButton.disabled = false; // Enable draw if no playable
+                }
+            }
+        }
+
+        /**
+         * Deals initial hands to players and sets up the discard pile.
+         */
+        function dealInitialHands() {
+            deck = createDeck();
+            discardPile = [];
+            playerHand = [];
+            aiHand = [];
+            currentColor = '';
+            gameDirection = 1;
+            unoCalled = { [PLAYER]: false, [AI]: false };
+            pendingDrawCards = 0;
+            gameOver = false;
+            currentPlayer = PLAYER; // Player always starts
+
+            // Deal 7 cards to each
+            for (let i = 0; i < INITIAL_HAND_SIZE; i++) {
+                playerHand.push(deck.pop());
+                aiHand.push(deck.pop());
+            }
+
+            // Place first card on discard pile (must not be a wild4)
+            let firstCard = deck.pop();
+            while (firstCard.value === 'wild4' || firstCard.value === 'draw2' || firstCard.value === 'skip' || firstCard.value === 'reverse') {
+                deck.unshift(firstCard); // Put it back to the bottom of the deck
+                firstCard = deck.pop();
+            }
+            discardPile.unshift(firstCard);
+            currentColor = firstCard.color; // Set initial color
+
+            // If first card is a non-wild action card, apply its effect
+            if (firstCard.value === 'skip') {
+                showMessageBox('First card is SKIP! AI\'s turn is skipped. You go again!', 2000);
+                setTimeout(startTurn, 2100); // Player goes immediately
+            } else if (firstCard.value === 'reverse') {
+                showMessageBox('First card is REVERSE! Direction reversed. AI goes first!', 2000);
+                gameDirection *= -1; // Reverse direction
+                currentPlayer = AI; // AI starts
+                setTimeout(startTurn, 2100);
+            } else if (firstCard.value === 'draw2') {
+                showMessageBox('First card is DRAW 2! AI draws 2 and loses turn. You go again!', 2000);
+                pendingDrawCards = 2; // AI draws
+                setTimeout(() => {
+                    drawCards(AI, pendingDrawCards);
+                    pendingDrawCards = 0;
+                    startTurn(); // Player goes again
+                }, 2100);
+            } else if (firstCard.isWild()) {
+                // If first card is a plain wild, player chooses color
+                showMessageBox('First card is WILD! Choose a color.', 2000);
+                requestColorSelection(PLAYER);
+            } else {
+                showMessageBox('Game started! Your turn.', 2000);
+                setTimeout(startTurn, 2100);
+            }
+
+            renderHands();
+            renderDiscardPile();
+        }
+
+        /**
+         * Handles a player clicking on a card in their hand to play it.
+         * @param {Card} card The card object.
+         * @param {number} index The index of the card in the player's hand.
+         */
+        function handlePlayerPlayCard(card, index) {
+            if (currentPlayer !== PLAYER || gameOver || pendingDrawCards > 0) return;
+
+            if (!isCardPlayable(card, discardPile[0], currentColor)) {
+                showMessageBox('Invalid move! That card cannot be played.', 1500);
+                return;
+            }
+
+            // Check for UNO! call if player has 2 cards and didn't call UNO
+            if (playerHand.length === 2 && !unoCalled[PLAYER]) {
+                showMessageBox('You must call UNO! before playing this card!', 1500);
+                return; // Prevent playing until UNO is called
+            }
+
+            // Player successfully plays card
+            playCard(PLAYER, card, index);
+        }
+
+        /**
+         * Plays a card from a player's hand.
+         * @param {string} playerType 'player' or 'ai'.
+         * @param {Card} card The card object to play.
+         * @param {number} index The index of the card in the hand.
+         */
+        function playCard(playerType, card, index) {
+            const hand = playerType === PLAYER ? playerHand : aiHand;
+            const cardEl = playerType === PLAYER ? playerHandElement.children[index] : null;
+
+            // Remove card from hand
+            hand.splice(index, 1);
+
+            // Add to discard pile (always at the beginning for new top card)
+            discardPile.unshift(card);
+            currentColor = card.color; // Update current color (will be overridden by wild)
+
+            // Update UNO called status
+            unoCalled[playerType] = false; // Reset after playing
+
+            renderHands();
+            renderDiscardPile();
+
+            // Apply card effects
+            if (card.isWild()) {
+                if (playerType === PLAYER) {
+                    requestColorSelection(PLAYER);
+                } else {
+                    // AI chooses color
+                    const chosenColor = aiChooseWildColor();
+                    currentColor = chosenColor;
+                    showMessageBox(`AI played WILD! New color is ${chosenColor.toUpperCase()}`, 1500);
+                    renderDiscardPile(); // Update discard pile to show new chosen color
+                    setTimeout(() => applyActionCardEffect(card, playerType), 500);
+                }
+            } else {
+                applyActionCardEffect(card, playerType);
+            }
+        }
+
+        /**
+         * Applies the effect of action cards (Skip, Reverse, Draw2, Wild4).
+         * @param {Card} card The card that was played.
+         * @param {string} playedBy 'player' or 'ai'.
+         */
+        function applyActionCardEffect(card, playedBy) {
+            if (gameOver) return;
+
+            if (card.value === 'skip') {
+                showMessageBox(`${playedBy === PLAYER ? 'You played' : 'AI played'} SKIP! Next turn skipped.`, 1500);
+                setTimeout(() => nextTurn(true), 1600); // Pass turn twice
+            } else if (card.value === 'reverse') {
+                gameDirection *= -1;
+                showMessageBox(`${playedBy === PLAYER ? 'You played' : 'AI played'} REVERSE! Direction reversed.`, 1500);
+                setTimeout(() => nextTurn(), 1600);
+            } else if (card.value === 'draw2') {
+                pendingDrawCards += 2;
+                showMessageBox(`${playedBy === PLAYER ? 'You played' : 'AI played'} +2! Next player draws 2 and skips turn.`, 1500);
+                setTimeout(() => nextTurn(), 1600); // Next player is about to be forced to draw
+            } else if (card.value === 'wild4') {
+                pendingDrawCards += 4;
+                showMessageBox(`${playedBy === PLAYER ? 'You played' : 'AI played'} WILD +4! Next player draws 4 and skips turn.`, 1500);
+                setTimeout(() => nextTurn(), 1600); // Next player is about to be forced to draw
+            } else {
+                // If it's a regular number card or a wild card (after color selection)
+                setTimeout(() => nextTurn(), 500); // Short delay before next turn
+            }
+        }
+
+        /**
+         * Advances to the next player's turn. Handles draw penalties and game end.
+         * @param {boolean} skipCurrentPlayer If true, the current player's turn is skipped (e.g., from Skip card or Draw penalty).
+         */
+        function nextTurn(skipCurrentPlayer = false) {
+            if (gameOver) return;
+
+            // Check if game ended (current player played last card)
+            if (playerHand.length === 0 || aiHand.length === 0) {
+                endGame();
+                return;
+            }
+
+            if (skipCurrentPlayer) {
+                // Determine who the player to penalize is. This is the player whose turn it *would have been*.
+                const playerToPenalize = (currentPlayer === PLAYER) ? AI : PLAYER; // Person whose turn IS skipped.
+                
+                if (pendingDrawCards > 0) {
+                    drawCards(playerToPenalize, pendingDrawCards);
+                    showMessageBox(`${playerToPenalize === PLAYER ? 'You' : 'AI'} drew ${pendingDrawCards} cards! Turn skipped.`, 2000);
+                    pendingDrawCards = 0; // Reset pending draws
+                } else {
+                    showMessageBox(`${playerToPenalize === PLAYER ? 'Your' : 'AI\'s'} turn was skipped!`, 1500);
+                }
+
+                // Now, determine the *actual* next player after the skip
+                // The current player effectively gets another turn if the next player is skipped.
+                // So, currentPlayer remains the same.
+            } else {
+                // Regular turn progression
+                currentPlayer = (currentPlayer === PLAYER) ? AI : PLAYER;
+            }
+            
+            // Call startTurn to handle AI turn logic or enable player controls
+            startTurn();
+        }
+
+
+        /**
+         * Handles the player drawing a card from the draw pile.
+         */
+        function handlePlayerDrawCard() {
+            if (currentPlayer !== PLAYER || gameOver) return;
+
+            if (pendingDrawCards > 0) {
+                drawCards(PLAYER, pendingDrawCards);
+                showMessageBox(`You drew ${pendingDrawCards} cards!`, 1500);
+                pendingDrawCards = 0; // Reset after drawing
+                nextTurn(true); // Player's turn is skipped after drawing penalty
+            } else {
+                // If no pending draws, draw one card normally
+                const drawnCards = drawCards(PLAYER, 1);
+                const drawnCard = drawnCards[0];
+                if (!drawnCard) return; // No cards left in deck
+
+                showMessageBox('You drew a card.', 1000);
+                // After drawing, check if the drawn card is playable
+                if (isCardPlayable(drawnCard, discardPile[0], currentColor)) {
+                    // Player can choose to play the drawn card or not.
+                    // For simplicity, we'll allow them to play it now. If they don't, next turn happens.
+                    showMessageBox('The card you drew is playable. You can play it or click "End Turn".', 2000);
+                    renderHands(); // Update hand with new card, highlight it if playable
+                    updateControlButtons(); // Update button states (draw should be disabled now)
+                    
+                    // Modify the "Draw Card" button to become "End Turn"
+                    drawCardButton.textContent = "End Turn";
+                    drawCardButton.removeEventListener('click', handlePlayerDrawCard);
+                    drawCardButton.addEventListener('click', function endTurnAfterDraw() {
+                        drawCardButton.textContent = "Draw Card"; // Reset button text
+                        drawCardButton.removeEventListener('click', endTurnAfterDraw); // Remove this specific listener
+                        drawCardButton.addEventListener('click', handlePlayerDrawCard); // Add back original listener
+                        nextTurn(); // Pass turn
+                    });
+
+                } else {
+                    showMessageBox('No playable cards after drawing. Turn ends.', 1500);
+                    setTimeout(() => nextTurn(), 1000); // Turn ends after drawing non-playable card
+                }
+            }
+        }
+
+
+        /**
+         * Draws cards for a specific player.
+         * @param {string} playerType 'player' or 'ai'.
+         * @param {number} numCards The number of cards to draw.
+         * @returns {Array<Card>} Array of drawn cards.
+         */
+        function drawCards(playerType, numCards) {
+            const hand = playerType === PLAYER ? playerHand : aiHand;
+            let drawn = [];
+            for (let i = 0; i < numCards; i++) {
+                if (deck.length === 0) {
+                    if (discardPile.length <= 1) { // Only top card in discard, can't reshuffle
+                        showMessageBox('No more cards to draw. Game might be stuck or ending soon.', 2000);
+                        gameOver = true; // Potentially end game if no cards left
+                        return drawn;
+                    }
+                    reshuffleDeck();
+                    showMessageBox('Deck is empty, reshuffling discard pile!', 1500);
+                }
+                const card = deck.pop();
+                hand.push(card);
+                drawn.push(card);
+            }
+            renderHands();
+            return drawn;
+        }
+
+        /**
+         * Reshuffles the discard pile back into the deck, keeping the top card.
+         */
+        function reshuffleDeck() {
+            if (discardPile.length > 1) {
+                const topCard = discardPile.shift(); // Keep top card on discard pile
+                deck = discardPile;
+                discardPile = [topCard];
+                // Shuffle the new deck
+                for (let i = deck.length - 1; i > 0; i--) {
+                    const j = Math.floor(Math.random() * (i + 1));
+                    [deck[i], deck[j]] = [deck[j], deck[i]];
+                }
+            }
+        }
+
+        /**
+         * Handles the "UNO!" button click.
+         */
+        function handleUnoCall() {
+            if (currentPlayer !== PLAYER || gameOver) return;
+            if (playerHand.length === 1) {
+                unoCalled[PLAYER] = true;
+                showMessageBox('You called UNO!', 1500);
+                unoButton.disabled = true; // Disable button after calling
+            } else {
+                showMessageBox('You can only call UNO! when you have 1 card left!', 1500);
+            }
+        }
+
+        /**
+         * AI's turn logic.
+         */
+        function aiTurn() {
+            if (gameOver || currentPlayer !== AI) return;
+
+            // Handle pending draw cards from previous player's action
+            if (pendingDrawCards > 0) {
+                drawCards(AI, pendingDrawCards);
+                showMessageBox(`AI draws ${pendingDrawCards} cards due to a +${pendingDrawCards} card.`, 2000);
+                pendingDrawCards = 0; // Reset
+                setTimeout(() => nextTurn(true), 2100); // AI's turn is skipped
+                return;
+            }
+
+            const playable = getPlayableCards(aiHand, discardPile[0], currentColor);
+
+            if (playable.length > 0) {
+                // AI plays a card
+                let cardToPlay = aiChooseCardToPlay(playable);
+
+                // Call UNO if it's the second to last card
+                if (aiHand.length === 2) {
+                    unoCalled[AI] = true;
+                    showMessageBox('AI calls UNO!', 1000);
+                }
+
+                const index = aiHand.indexOf(cardToPlay);
+                playCard(AI, cardToPlay, index);
+                showMessageBox(`AI played a ${cardToPlay.getDisplayValue()} ${cardToPlay.isWild() ? '' : cardToPlay.color} card.`, 1500);
+
+            } else {
+                // AI draws a card
+                showMessageBox('AI draws a card.', 1000);
+                const drawnCards = drawCards(AI, 1);
+                const drawnCard = drawnCards[0];
+                if (!drawnCard) { // No cards left to draw
+                     setTimeout(() => nextTurn(), 100); // Try to end turn, game should detect game over
+                     return;
+                }
+
+                // Check if the drawn card is playable. If so, AI plays it.
+                if (isCardPlayable(drawnCard, discardPile[0], currentColor)) {
+                    showMessageBox(`AI drew a playable card and plays it.`, 1500);
+                    // Find index of the drawn card, then play it
+                    const index = aiHand.indexOf(drawnCard);
+                    // Call UNO if it's the second to last card (after playing this one)
+                    if (aiHand.length === 2) { // Before playing the card, hand has 2, after 1
+                        unoCalled[AI] = true;
+                        showMessageBox('AI calls UNO!', 1000);
+                    }
+                    playCard(AI, drawnCard, index);
+                } else {
+                    showMessageBox('AI drew a non-playable card. Turn ends.', 1500);
+                    setTimeout(() => nextTurn(), 1000); // AI's turn ends
+                }
+            }
+        }
+
+        /**
+         * AI strategy to choose a card to play from playable cards.
+         * Basic strategy:
+         * 1. If has a WILD4, play it.
+         * 2. If has a regular WILD, play it.
+         * 3. Play any action card of matching color/value.
+         * 4. Play any number card (prioritize discarding cards of current color if possible to change color).
+         * @param {Array<Card>} playableCards Array of cards AI can play.
+         * @returns {Card} The card AI chooses to play.
+         */
+        function aiChooseCardToPlay(playableCards) {
+            // Prioritize Wild Draw 4
+            let wild4 = playableCards.find(card => card.value === 'wild4');
+            if (wild4) return wild4;
+
+            // Prioritize regular Wild
+            let wild = playableCards.find(card => card.value === 'wild');
+            if (wild) return wild;
+
+            // Try to play a matching color action card (skip, reverse, draw2) to affect next player
+            let actionCard = playableCards.find(card => ACTION_CARDS.includes(card.value) && card.color === currentColor);
+            if (actionCard) return actionCard;
+
+            // Try to play a number card of matching color
+            let numberCardMatchColor = playableCards.find(card => NUMBER_CARDS.includes(card.value) && card.color === currentColor);
+            if (numberCardMatchColor) return numberCardMatchColor;
+
+            // If no color match, play any action card (matching value)
+            actionCard = playableCards.find(card => ACTION_CARDS.includes(card.value));
+            if (actionCard) return actionCard;
+
+            // Fallback: Play any number card (matching value)
+            return playableCards[0];
+        }
+
+
+        /**
+         * AI chooses a color after playing a Wild card.
+         * Chooses the color it has most of.
+         * @returns {string} The chosen color.
+         */
+        function aiChooseWildColor() {
+            const colorCounts = { 'red': 0, 'yellow': 0, 'green': 0, 'blue': 0 };
+            aiHand.forEach(card => {
+                if (COLORS.includes(card.color)) {
+                    colorCounts[card.color]++;
+                }
+            });
+
+            let maxCount = -1;
+            let chosenColor = COLORS[Math.floor(Math.random() * COLORS.length)]; // Default to random
+
+            for (const color of COLORS) {
+                if (colorCounts[color] > maxCount) {
+                    maxCount = colorCounts[color];
+                    chosenColor = color;
+                }
+            }
+            return chosenColor;
+        }
+
+
+        /**
+         * Prompts the player to choose a color after playing a Wild card.
+         * @param {string} playerType 'player'
+         */
+        function requestColorSelection(playerType) {
+            if (playerType === PLAYER) {
+                wildColorModal.classList.add('show');
+            }
+            // For AI, this is handled directly in aiTurn
+        }
+
+        /**
+         * Handles player's color selection from the modal.
+         * @param {Event} event The click event.
+         */
+        function handleColorSelection(event) {
+            const chosenColor = event.target.dataset.color;
+            if (chosenColor && wildColorModal.classList.contains('show')) {
+                currentColor = chosenColor;
+                showMessageBox(`Color changed to ${chosenColor.toUpperCase()}!`, 1500);
+                wildColorModal.classList.remove('show');
+                renderDiscardPile(); // Update discard pile to show new chosen color
+                // Now that color is chosen, proceed with next turn logic
+                setTimeout(() => applyActionCardEffect(discardPile[0], PLAYER), 500);
+            }
+        }
+
+        /**
+         * Handles the game ending.
+         */
+        function endGame() {
+            gameOver = true;
+            updateControlButtons();
+            const winner = playerHand.length === 0 ? 'You' : 'AI';
+            showMessageBox(`Game Over! ${winner} won the round!`, 5000);
+            newGameButton.disabled = false; // Enable new game button
+        }
+
+        // Event Listeners
+        drawCardButton.addEventListener('click', handlePlayerDrawCard);
+        unoButton.addEventListener('click', handleUnoCall);
+        newGameButton.addEventListener('click', () => {
+            initializeGame();
+            showMessageBox('New game started!');
+        });
+        colorOptions.querySelectorAll('.color-box').forEach(box => {
+            box.addEventListener('click', handleColorSelection);
+        });
+
+        /**
+         * Initializes the game state and starts the first turn.
+         */
+        function initializeGame() {
+            dealInitialHands();
+            renderHands();
+            renderDiscardPile();
+            updateControlButtons();
+            // The initial card deal will trigger the first turn's start logic
+        }
+
+        // Initial game setup on window load
+        window.onload = initializeGame;
+    </script>
+</body>
+</html>

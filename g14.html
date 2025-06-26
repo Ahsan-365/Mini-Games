@@ -1,0 +1,464 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Hangman Game</title>
+    <!-- Inter Font from Google Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            background-color: #f0f0f0; /* Light grey background */
+            margin: 0;
+            padding: 20px;
+            box-sizing: border-box;
+            flex-direction: column;
+        }
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            max-width: 90%;
+            width: 700px; /* Max width for larger screens */
+            align-items: center;
+            text-align: center;
+        }
+        canvas {
+            background-color: #e0f2f7; /* Light blue for canvas background */
+            border: 2px solid #334155; /* Darker border for canvas */
+            border-radius: 10px;
+            width: 100%; /* Make canvas responsive */
+            max-width: 300px; /* Max width for canvas */
+            height: auto; /* Maintain aspect ratio */
+        }
+        .word-display {
+            font-size: 2.5rem; /* Larger font for word */
+            font-weight: 700;
+            letter-spacing: 5px;
+            margin-bottom: 20px;
+            color: #1e293b; /* Dark text */
+            min-height: 40px; /* To prevent layout shift */
+        }
+        .incorrect-letters {
+            font-size: 1.25rem;
+            color: #ef4444; /* Red for incorrect letters */
+            margin-top: 10px;
+            min-height: 25px; /* To prevent layout shift */
+        }
+        .keyboard {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(40px, 1fr)); /* Responsive grid */
+            gap: 8px;
+            width: 100%;
+            max-width: 600px; /* Max width for keyboard */
+            margin-top: 20px;
+        }
+        .keyboard button {
+            background-color: #3b82f6; /* Blue button */
+            color: white;
+            padding: 12px 0;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 4px #2563eb; /* Darker blue shadow */
+            border: none;
+            outline: none;
+        }
+        .keyboard button:hover:not(:disabled) {
+            background-color: #2563eb; /* Darker blue on hover */
+            transform: translateY(-2px);
+            box-shadow: 0 6px #1d4ed8;
+        }
+        .keyboard button:active:not(:disabled) {
+            background-color: #1d4ed8; /* Even darker blue on active */
+            transform: translateY(0);
+            box-shadow: 0 2px #1e40af;
+        }
+        .keyboard button:disabled {
+            background-color: #9ca3af; /* Grey for disabled */
+            color: #d1d5db;
+            cursor: not-allowed;
+            box-shadow: 0 4px #6b7280;
+        }
+        .message-box {
+            font-size: 1.5rem;
+            font-weight: 700;
+            margin-top: 20px;
+            min-height: 30px; /* To prevent layout shift */
+        }
+        .message-box.win {
+            color: #22c55e; /* Green for win */
+        }
+        .message-box.lose {
+            color: #dc2626; /* Red for lose */
+        }
+        .new-game-button {
+            background-color: #10b981; /* Green button */
+            color: white;
+            padding: 15px 30px;
+            border-radius: 10px;
+            font-size: 1.2rem;
+            font-weight: 700;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 4px #047857;
+            border: none;
+            outline: none;
+            margin-top: 20px;
+        }
+        .new-game-button:hover {
+            background-color: #047857;
+            transform: translateY(-2px);
+            box-shadow: 0 6px #065f46;
+        }
+        .new-game-button:active {
+            background-color: #065f46;
+            transform: translateY(0);
+            box-shadow: 0 2px #0f766e;
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 600px) {
+            .game-container {
+                padding: 20px;
+                gap: 15px;
+            }
+            .word-display {
+                font-size: 2rem;
+                letter-spacing: 3px;
+            }
+            .incorrect-letters {
+                font-size: 1rem;
+            }
+            .keyboard button {
+                font-size: 0.9rem;
+                padding: 10px 0;
+            }
+            .message-box {
+                font-size: 1.2rem;
+            }
+            .new-game-button {
+                padding: 12px 25px;
+                font-size: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <h1 class="text-3xl font-bold text-gray-800 mb-4">Hangman Game</h1>
+
+        <div class="level-selection mb-4 flex items-center justify-center">
+            <label for="gameLevel" class="text-lg font-semibold text-gray-700">Select Level:</label>
+            <select id="gameLevel" class="ml-2 p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
+                <option value="easy">Easy</option>
+                <option value="medium" selected>Medium</option>
+                <option value="hard">Hard</option>
+            </select>
+        </div>
+
+        <canvas id="hangmanCanvas" width="300" height="300"></canvas>
+
+        <div id="wordDisplay" class="word-display"></div>
+        <div id="incorrectLetters" class="incorrect-letters">Incorrect Guesses: </div>
+        <div id="messageBox" class="message-box">Press a letter to start guessing!</div>
+
+        <div id="keyboard" class="keyboard">
+            <!-- Buttons will be generated by JavaScript -->
+        </div>
+
+        <button id="newGameButton" class="new-game-button">New Game</button>
+    </div>
+
+    <script>
+        const wordsByLevel = {
+            easy: [
+                "APPLE", "HOUSE", "DOG", "CAT", "SUN", "MOON", "FISH", "BIRD",
+                "BOOK", "TABLE", "CHAIR", "WATER", "FOOD", "HAPPY", "SAD",
+                "RUN", "JUMP", "SING", "PLAY", "READ"
+            ],
+            medium: [
+                "PROGRAMMING", "COMPUTER", "DEVELOPER", "ALGORITHM", "ENGINEER",
+                "APPLICATION", "DATABASE", "FRAMEWORK", "INTERFACE", "INTERNET",
+                "WEBSITE", "PYTHON", "HTML", "CSS", "REACT", "ANGULAR",
+                "VUEJS", "FIREBASE", "CLOUD", "SECURITY", "SERVER", "CLIENT",
+                "NETWORK", "PROTOCOL", "DEBUGGING", "SYNTAX", "FUNCTION", "VARIABLE", "CONSTANT"
+            ],
+            hard: [
+                "CRYPTOGRAPHY", "INFRASTRUCTURE", "ARCHITECT", "CONSTELLATION",
+                "PHILANTHROPY", "UBIQUITOUS", "ZEPHYR", "JUXTAPOSE", "KALEIDOSCOPE",
+                "ONOMATOPOEIA", "PHLEGMATIC", "SERENDIPITY", "PNEUMONIA", "RHYTHM",
+                "FUCHSIA", "EMERALD", "OBLIVION", "WHISPER", "QUARTZ", "MYSTERY"
+            ]
+        };
+
+        const maxGuessesByLevel = {
+            easy: 8,
+            medium: 6,
+            hard: 4
+        };
+
+        let chosenWord = '';
+        let guessedLetters = [];
+        let incorrectGuesses = 0;
+        let currentMaxIncorrectGuesses = maxGuessesByLevel.medium; // Default to medium
+
+        const canvas = document.getElementById('hangmanCanvas');
+        const ctx = canvas.getContext('2d');
+        const wordDisplay = document.getElementById('wordDisplay');
+        const incorrectLettersDisplay = document.getElementById('incorrectLetters');
+        const keyboardDiv = document.getElementById('keyboard');
+        const messageBox = document.getElementById('messageBox');
+        const newGameButton = document.getElementById('newGameButton');
+        const gameLevelSelect = document.getElementById('gameLevel');
+
+        // Function to draw the hangman parts with more detail
+        function drawHangman() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
+            ctx.strokeStyle = '#334155'; // Darker color for gallows
+            ctx.lineWidth = 4;
+
+            // Define coordinates relative to canvas size for responsiveness
+            const scale = canvas.width / 300; // Original canvas width was 300
+            const p = (val) => val * scale; // Helper for scaling
+
+            // Ground
+            ctx.beginPath();
+            ctx.moveTo(p(10), p(290));
+            ctx.lineTo(p(290), p(290));
+            ctx.stroke();
+
+            // Pole
+            ctx.beginPath();
+            ctx.moveTo(p(70), p(290));
+            ctx.lineTo(p(70), p(30));
+            ctx.stroke();
+
+            // Top bar
+            ctx.beginPath();
+            ctx.moveTo(p(70), p(30));
+            ctx.lineTo(p(200), p(30));
+            ctx.stroke();
+
+            // Rope stand
+            ctx.beginPath();
+            ctx.moveTo(p(200), p(30));
+            ctx.lineTo(p(200), p(70));
+            ctx.stroke();
+
+            // Man parts based on incorrectGuesses
+            // Total stages for hangman illustration is currentMaxIncorrectGuesses
+            // We need to map incorrectGuesses to the steps of drawing.
+            const totalDrawingSteps = currentMaxIncorrectGuesses;
+            const currentDrawingStep = incorrectGuesses;
+
+            // Adjust drawing logic based on the number of available steps
+            if (currentDrawingStep >= 1) { // Head
+                ctx.beginPath();
+                ctx.arc(p(200), p(95), p(25), 0, Math.PI * 2, true);
+                ctx.stroke();
+            }
+            if (currentDrawingStep >= 2) { // Body
+                ctx.beginPath();
+                ctx.moveTo(p(200), p(120));
+                ctx.lineTo(p(200), p(190));
+                ctx.stroke();
+            }
+            if (currentDrawingStep >= 3) { // Left Arm
+                ctx.beginPath();
+                ctx.moveTo(p(200), p(130));
+                ctx.lineTo(p(160), p(170));
+                ctx.stroke();
+            }
+            if (currentDrawingStep >= 4) { // Right Arm
+                ctx.beginPath();
+                ctx.moveTo(p(200), p(130));
+                ctx.lineTo(p(240), p(170));
+                ctx.stroke();
+            }
+            if (currentDrawingStep >= 5) { // Left Leg
+                ctx.beginPath();
+                ctx.moveTo(p(200), p(190));
+                ctx.lineTo(p(170), p(240));
+                ctx.stroke();
+            }
+            if (currentDrawingStep >= 6) { // Right Leg
+                ctx.beginPath();
+                ctx.moveTo(p(200), p(190));
+                ctx.lineTo(p(230), p(240));
+                ctx.stroke();
+            }
+
+            // Additional details for more 'illustration' feel on specific incorrect guess counts
+            if (incorrectGuesses > 0 && incorrectGuesses <= currentMaxIncorrectGuesses) {
+                // Draw eyes on the head when there's at least one incorrect guess
+                ctx.beginPath();
+                ctx.arc(p(190), p(90), p(3), 0, Math.PI * 2, true); // Left eye
+                ctx.arc(p(210), p(90), p(3), 0, Math.PI * 2, true); // Right eye
+                ctx.fill(); // Fill eyes
+            }
+
+            if (incorrectGuesses === currentMaxIncorrectGuesses) {
+                // Draw a sad mouth when game is lost
+                ctx.beginPath();
+                ctx.arc(p(200), p(105), p(10), 0, Math.PI, false); // Sad mouth
+                ctx.stroke();
+
+                // Draw crosses for eyes when game is lost
+                ctx.clearRect(p(185), p(85), p(10), p(10)); // Clear space for left eye cross
+                ctx.clearRect(p(205), p(85), p(10), p(10)); // Clear space for right eye cross
+                ctx.beginPath();
+                ctx.moveTo(p(185), p(85));
+                ctx.lineTo(p(195), p(95));
+                ctx.moveTo(p(195), p(85));
+                ctx.lineTo(p(185), p(95));
+                ctx.stroke();
+                ctx.beginPath();
+                ctx.moveTo(p(205), p(85));
+                ctx.lineTo(p(215), p(95));
+                ctx.moveTo(p(215), p(85));
+                ctx.lineTo(p(205), p(95));
+                ctx.stroke();
+            } else if (incorrectGuesses > 0) {
+                 // Draw a simple straight line for mouth when not lost but some guesses wrong
+                ctx.beginPath();
+                ctx.moveTo(p(190), p(105));
+                ctx.lineTo(p(210), p(105));
+                ctx.stroke();
+            }
+        }
+
+
+        // Function to update the displayed word
+        function updateWordDisplay() {
+            let display = '';
+            let wordGuessed = true;
+            for (const char of chosenWord) {
+                if (guessedLetters.includes(char)) {
+                    display += char + ' ';
+                } else {
+                    display += '_ ';
+                    wordGuessed = false;
+                }
+            }
+            wordDisplay.textContent = display.trim();
+            return wordGuessed;
+        }
+
+        // Function to update incorrect letters
+        function updateIncorrectLettersDisplay() {
+            const incorrect = guessedLetters.filter(letter => !chosenWord.includes(letter)).join(', ');
+            incorrectLettersDisplay.textContent = `Incorrect Guesses: ${incorrect}`;
+        }
+
+        // Function to generate keyboard buttons
+        function createKeyboard() {
+            keyboardDiv.innerHTML = ''; // Clear previous keyboard
+            for (let i = 65; i <= 90; i++) { // ASCII for A-Z
+                const letter = String.fromCharCode(i);
+                const button = document.createElement('button');
+                button.textContent = letter;
+                button.id = `key-${letter}`;
+                button.addEventListener('click', () => handleGuess(letter));
+                keyboardDiv.appendChild(button);
+            }
+        }
+
+        // Handle a letter guess
+        function handleGuess(letter) {
+            if (guessedLetters.includes(letter) || incorrectGuesses >= currentMaxIncorrectGuesses) {
+                return; // Already guessed or game over
+            }
+
+            guessedLetters.push(letter);
+            document.getElementById(`key-${letter}`).disabled = true;
+
+            if (chosenWord.includes(letter)) {
+                const wordGuessed = updateWordDisplay();
+                if (wordGuessed) {
+                    messageBox.textContent = 'Congratulations! You won!';
+                    messageBox.className = 'message-box win';
+                    disableAllButtons();
+                } else {
+                    messageBox.textContent = 'Good guess!';
+                    messageBox.className = 'message-box';
+                }
+            } else {
+                incorrectGuesses++;
+                drawHangman();
+                updateIncorrectLettersDisplay();
+                messageBox.textContent = `Incorrect guess! ${currentMaxIncorrectGuesses - incorrectGuesses} attempts left.`;
+                messageBox.className = 'message-box';
+                if (incorrectGuesses >= currentMaxIncorrectGuesses) {
+                    messageBox.textContent = `Game Over! The word was "${chosenWord}".`;
+                    messageBox.className = 'message-box lose';
+                    disableAllButtons();
+                }
+            }
+        }
+
+        // Disable all keyboard buttons
+        function disableAllButtons() {
+            const buttons = keyboardDiv.querySelectorAll('button');
+            buttons.forEach(button => button.disabled = true);
+        }
+
+        // Initialize the game
+        function initializeGame() {
+            const selectedLevel = gameLevelSelect.value;
+            const wordsForLevel = wordsByLevel[selectedLevel];
+            currentMaxIncorrectGuesses = maxGuessesByLevel[selectedLevel];
+
+            chosenWord = wordsForLevel[Math.floor(Math.random() * wordsForLevel.length)];
+            guessedLetters = [];
+            incorrectGuesses = 0;
+
+            messageBox.textContent = 'Press a letter to start guessing!';
+            messageBox.className = 'message-box';
+            incorrectLettersDisplay.textContent = 'Incorrect Guesses:';
+
+            createKeyboard(); // Regenerate keyboard to enable all buttons
+            drawHangman(); // Reset hangman drawing
+            updateWordDisplay(); // Show initial underscores
+        }
+
+        // Event listener for New Game button
+        newGameButton.addEventListener('click', initializeGame);
+
+        // Event listener for Level selection change
+        gameLevelSelect.addEventListener('change', initializeGame);
+
+        // Initial game setup on window load
+        window.onload = function() {
+            initializeGame();
+            // Adjust canvas size to be responsive on initial load and resize
+            function resizeCanvas() {
+                const parentWidth = canvas.parentElement.clientWidth;
+                // Set a max width to prevent it from getting too large on very wide screens
+                const targetWidth = Math.min(parentWidth * 0.4, 300); // 40% of parent width, max 300px
+                canvas.width = targetWidth;
+                canvas.height = targetWidth; // Keep it square
+                drawHangman(); // Redraw content after resize
+            }
+
+            // Initial resize
+            resizeCanvas();
+            // Add event listener for window resize
+            window.addEventListener('resize', resizeCanvas);
+        };
+    </script>
+</body>
+</html>

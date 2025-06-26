@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Blackjack Game</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a4d2e; /* Dark green for casino table feel */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 1rem;
+            box-sizing: border-box;
+            overflow-y: auto; /* Allow vertical scrolling if needed */
+        }
+
+        .game-container {
+            background-color: #276749; /* Slightly lighter green for the table area */
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.4);
+            padding: 2rem;
+            text-align: center;
+            width: 100%;
+            max-width: 800px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            box-sizing: border-box;
+            border: 5px solid #1a202c; /* Dark border */
+        }
+
+        h1 {
+            font-size: 2.8rem;
+            font-weight: bold;
+            color: #f7fafc; /* White text */
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+            margin-bottom: 1rem;
+        }
+
+        .hand-section {
+            background-color: rgba(0, 0, 0, 0.2); /* Semi-transparent dark background */
+            border-radius: 1rem;
+            padding: 1.25rem;
+            width: 100%;
+            margin-bottom: 1rem;
+        }
+
+        .hand-section h2 {
+            font-size: 1.8rem;
+            font-weight: bold;
+            color: #f7fafc;
+            margin-bottom: 0.75rem;
+            text-shadow: 1px 1px 3px rgba(0,0,0,0.4);
+        }
+
+        .cards-container {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 0.75rem;
+            min-height: 100px; /* Ensure space for cards */
+        }
+
+        .card {
+            background-color: #ffffff;
+            border: 1px solid #a0aec0;
+            border-radius: 0.5rem;
+            width: 80px; /* Standard card width */
+            height: 110px; /* Standard card height */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            align-items: center;
+            padding: 5px;
+            font-size: 1.2rem;
+            font-weight: bold;
+            box-shadow: 2px 2px 5px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            position: relative;
+            transform-origin: center;
+            transition: transform 0.3s ease-out; /* For dealt animation */
+        }
+
+        .card.hidden-card {
+            background-color: #1a202c; /* Back of the card */
+            color: transparent;
+            font-size: 0; /* Hide text */
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
+        }
+
+        .card .suit-top, .card .suit-bottom {
+            font-size: 0.8em;
+            line-height: 1;
+        }
+
+        .card .value {
+            font-size: 1.5em;
+        }
+
+        .card.red-suit { color: #dc2626; } /* Red for Hearts/Diamonds */
+        .card.black-suit { color: #1a202c; } /* Black for Spades/Clubs */
+
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            justify-content: center;
+            margin-top: 1.5rem;
+            width: 100%;
+        }
+
+        .controls button {
+            padding: 0.9rem 1.8rem;
+            border-radius: 0.75rem;
+            border: none;
+            font-size: 1.1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            color: white;
+            background-color: #3b82f6; /* Blue-500 */
+        }
+        .controls button:hover:not(:disabled) {
+            background-color: #2563eb; /* Blue-600 */
+            transform: translateY(-2px);
+        }
+        .controls button:disabled {
+            background-color: #a0aec0; /* Gray-400 */
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* Message Box */
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #f59e0b; /* Yellow for alerts */
+            color: white;
+            padding: 1.5rem 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.4);
+            z-index: 1000;
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            font-size: 1.25rem;
+            font-weight: bold;
+            opacity: 0; /* Start invisible */
+            transition: opacity 0.3s ease-in-out; /* Smooth fade effect */
+        }
+
+        .message-box.show {
+            opacity: 1; /* Fade in */
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 1.5rem;
+                gap: 1rem;
+                max-width: 95%;
+            }
+            h1 {
+                font-size: 2.2rem;
+            }
+            .hand-section h2 {
+                font-size: 1.5rem;
+            }
+            .card {
+                width: 70px;
+                height: 100px;
+                font-size: 1rem;
+            }
+            .controls {
+                gap: 1rem;
+            }
+            .controls button {
+                padding: 0.7rem 1.4rem;
+                font-size: 1rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                padding: 1rem;
+                gap: 0.75rem;
+            }
+            h1 {
+                font-size: 1.8rem;
+            }
+            .hand-section h2 {
+                font-size: 1.3rem;
+            }
+            .card {
+                width: 60px;
+                height: 90px;
+                font-size: 0.9rem;
+                border-radius: 0.4rem;
+            }
+            .controls {
+                flex-direction: column; /* Stack buttons vertically */
+                gap: 0.75rem;
+            }
+            .controls button {
+                width: 100%;
+                padding: 0.6rem 1.2rem;
+                font-size: 0.9rem;
+            }
+        }
+        @media (max-width: 320px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+            .hand-section h2 {
+                font-size: 1.1rem;
+            }
+            .card {
+                width: 50px;
+                height: 80px;
+                font-size: 0.8rem;
+                padding: 3px;
+            }
+        }
+    </style>
+</head>
+<body class="bg-dark-green flex items-center justify-center min-h-screen p-4">
+    <div class="game-container">
+        <h1>Blackjack</h1>
+
+        <div class="hand-section dealer-hand">
+            <h2 id="dealer-score-text">Dealer's Hand (<span id="dealer-score-value">0</span>)</h2>
+            <div id="dealer-cards" class="cards-container">
+                <!-- Dealer's cards will be inserted here -->
+            </div>
+        </div>
+
+        <div class="hand-section player-hand">
+            <h2 id="player-score-text">Your Hand (<span id="player-score-value">0</span>)</h2>
+            <div id="player-cards" class="cards-container">
+                <!-- Player's cards will be inserted here -->
+            </div>
+        </div>
+
+        <div class="controls">
+            <button id="hit-button">Hit</button>
+            <button id="stand-button">Stand</button>
+            <button id="new-game-button">New Game</button>
+        </div>
+    </div>
+
+    <!-- Message Box for game outcomes -->
+    <div id="message-box" class="message-box">
+        <p id="message-text"></p>
+    </div>
+
+    <script>
+        const suits = ['♠', '♥', '♦', '♣'];
+        const values = ['2', '3', '4', '5', '6', '7', '8', '9', '10', 'J', 'Q', 'K', 'A'];
+
+        const dealerCardsElement = document.getElementById('dealer-cards');
+        const playerCardsElement = document.getElementById('player-cards');
+        const dealerScoreValueElement = document.getElementById('dealer-score-value');
+        const playerScoreValueElement = document.getElementById('player-score-value');
+        const hitButton = document.getElementById('hit-button');
+        const standButton = document.getElementById('stand-button');
+        const newGameButton = document.getElementById('new-game-button');
+        const messageBox = document.getElementById('message-box');
+        const messageText = document.getElementById('message-text');
+
+        let deck = [];
+        let playerCards = [];
+        let dealerCards = [];
+        let gameOver = false;
+        let messageTimeoutId;
+
+        /**
+         * Shows a message box that disappears automatically after a delay.
+         * @param {string} message The message to display.
+         * @param {number} duration The duration in milliseconds to display the message (default 2000).
+         */
+        function showMessageBox(message, duration = 2000) {
+            messageText.textContent = message;
+            messageBox.style.display = 'flex';
+            messageBox.offsetWidth; // Trigger reflow
+            messageBox.classList.add('show');
+
+            if (messageTimeoutId) {
+                clearTimeout(messageTimeoutId);
+            }
+
+            messageTimeoutId = setTimeout(() => {
+                messageBox.classList.remove('show');
+                setTimeout(() => {
+                    messageBox.style.display = 'none';
+                }, 300); // Match CSS transition duration for opacity
+            }, duration);
+        }
+
+        /**
+         * Creates a standard 52-card deck and shuffles it.
+         * @returns {Array<Object>} An array of card objects.
+         */
+        function createDeck() {
+            let newDeck = [];
+            for (let i = 0; i < suits.length; i++) {
+                for (let j = 0; j < values.length; j++) {
+                    newDeck.push({ value: values[j], suit: suits[i] });
+                }
+            }
+            // Shuffle the deck using Fisher-Yates algorithm
+            for (let i = newDeck.length - 1; i > 0; i--) {
+                const j = Math.floor(Math.random() * (i + 1));
+                [newDeck[i], newDeck[j]] = [newDeck[j], newDeck[i]];
+            }
+            return newDeck;
+        }
+
+        /**
+         * Calculates the value of a hand, handling Aces (1 or 11).
+         * @param {Array<Object>} hand An array of card objects.
+         * @returns {number} The total value of the hand.
+         */
+        function getHandValue(hand) {
+            let value = 0;
+            let numAces = 0;
+            for (let i = 0; i < hand.length; i++) {
+                const card = hand[i];
+                if (card.value === 'A') {
+                    numAces++;
+                    value += 11;
+                } else if (['K', 'Q', 'J'].includes(card.value)) {
+                    value += 10;
+                } else {
+                    value += parseInt(card.value);
+                }
+            }
+            // Adjust for Aces if hand value is over 21
+            while (value > 21 && numAces > 0) {
+                value -= 10;
+                numAces--;
+            }
+            return value;
+        }
+
+        /**
+         * Creates and returns a DOM element for a card.
+         * @param {Object} card The card object {value, suit}.
+         * @param {boolean} isHidden If true, the card is rendered face down.
+         * @returns {HTMLElement} The card div element.
+         */
+        function createCardElement(card, isHidden = false) {
+            const cardDiv = document.createElement('div');
+            cardDiv.classList.add('card');
+            if (isHidden) {
+                cardDiv.classList.add('hidden-card');
+                // You could add a background image for a card back here
+            } else {
+                const suitClass = (card.suit === '♥' || card.suit === '♦') ? 'red-suit' : 'black-suit';
+                cardDiv.classList.add(suitClass);
+                cardDiv.innerHTML = `
+                    <div class="suit-top">${card.suit}</div>
+                    <div class="value">${card.value}</div>
+                    <div class="suit-bottom">${card.suit}</div>
+                `;
+            }
+            return cardDiv;
+        }
+
+        /**
+         * Renders the cards in the player's and dealer's hands.
+         * @param {boolean} revealDealer If true, dealer's hidden card is shown.
+         */
+        function renderHands(revealDealer = false) {
+            // Player's Hand
+            playerCardsElement.innerHTML = '';
+            for (const card of playerCards) {
+                playerCardsElement.appendChild(createCardElement(card));
+            }
+            playerScoreValueElement.textContent = getHandValue(playerCards);
+
+            // Dealer's Hand
+            dealerCardsElement.innerHTML = '';
+            // Dealer's first card is hidden until revealDealer is true
+            dealerCardsElement.appendChild(createCardElement(dealerCards[0], !revealDealer));
+            if (dealerCards.length > 1) {
+                for (let i = 1; i < dealerCards.length; i++) {
+                    dealerCardsElement.appendChild(createCardElement(dealerCards[i], false));
+                }
+            }
+            // Only show partial score for dealer if first card is hidden
+            if (revealDealer) {
+                dealerScoreValueElement.textContent = getHandValue(dealerCards);
+            } else {
+                // Approximate dealer's visible score (e.g., if first card is hidden)
+                // This is a common practice in casino blackjack.
+                let visibleDealerValue = getHandValue([dealerCards[1]]); // Value of the visible card
+                if (dealerCards[1].value === 'A') { // If visible is Ace, it could be 11
+                    visibleDealerValue = 11;
+                } else if (['K', 'Q', 'J'].includes(dealerCards[1].value)) {
+                     visibleDealerValue = 10;
+                } else {
+                    visibleDealerValue = parseInt(dealerCards[1].value);
+                }
+                dealerScoreValueElement.textContent = visibleDealerValue + (dealerCards[0].hidden ? '+' : ''); // Add + to indicate hidden card
+                if (!dealerCards[0].hidden && dealerCards[0].value === 'A') { // If first card is A and visible
+                    dealerScoreValueElement.textContent = '11/' + (10 + getHandValue([dealerCards[1]])); // Show 11/x for Ace up
+                } else if (!dealerCards[0].hidden) {
+                    dealerScoreValueElement.textContent = getHandValue(dealerCards); // Fully visible, show total
+                } else {
+                    // For hidden card, just show value of second card
+                    dealerScoreValueElement.textContent = getHandValue([dealerCards[1]]) + '+';
+                }
+            }
+        }
+
+        /**
+         * Deals initial cards to player and dealer.
+         */
+        function dealInitialCards() {
+            playerCards = [];
+            dealerCards = [];
+
+            // Deal two cards to player
+            playerCards.push(deck.pop());
+            playerCards.push(deck.pop());
+
+            // Deal two cards to dealer, one hidden
+            dealerCards.push(deck.pop());
+            dealerCards.push(deck.pop());
+            dealerCards[0].hidden = true; // Mark first dealer card as hidden
+
+            renderHands(false); // Render with dealer's first card hidden
+        }
+
+        /**
+         * Starts a new game of Blackjack.
+         */
+        function newGame() {
+            deck = createDeck();
+            gameOver = false;
+            dealInitialCards();
+            updateButtonState(true);
+
+            const playerScore = getHandValue(playerCards);
+            if (playerScore === 21) {
+                showMessageBox('Blackjack! You win!', 3000);
+                endGame();
+            } else {
+                showMessageBox('New game started! Hit or Stand?', 2000);
+            }
+        }
+
+        /**
+         * Player chooses to 'Hit' (take another card).
+         */
+        function hit() {
+            if (gameOver) return;
+
+            playerCards.push(deck.pop());
+            renderHands(false); // Keep dealer card hidden
+
+            const playerScore = getHandValue(playerCards);
+            if (playerScore > 21) {
+                showMessageBox('Bust! You lose.', 3000);
+                endGame();
+            } else if (playerScore === 21) {
+                showMessageBox('21! Standing...', 1500);
+                stand();
+            }
+        }
+
+        /**
+         * Player chooses to 'Stand' (no more cards). Dealer's turn.
+         */
+        function stand() {
+            if (gameOver) return;
+
+            updateButtonState(false); // Disable player controls
+            dealerCards[0].hidden = false; // Reveal dealer's hidden card
+            renderHands(true);
+
+            // Dealer's turn logic
+            setTimeout(() => {
+                while (getHandValue(dealerCards) < 17) {
+                    dealerCards.push(deck.pop());
+                    renderHands(true);
+                }
+                setTimeout(determineWinner, 1000); // Allow time for last dealer card to show
+            }, 1000); // Initial delay before dealer acts
+        }
+
+        /**
+         * Determines the winner of the game.
+         */
+        function determineWinner() {
+            const playerScore = getHandValue(playerCards);
+            const dealerScore = getHandValue(dealerCards);
+
+            let message = '';
+            if (playerScore > 21) {
+                message = 'You busted. Dealer wins!';
+            } else if (dealerScore > 21) {
+                message = 'Dealer busted! You win!';
+            } else if (playerScore > dealerScore) {
+                message = 'You win!';
+            } else if (dealerScore > playerScore) {
+                message = 'Dealer wins!';
+            } else {
+                message = 'Push! It\'s a tie.';
+            }
+            showMessageBox(message, 3000);
+            endGame();
+        }
+
+        /**
+         * Ends the current game.
+         */
+        function endGame() {
+            gameOver = true;
+            updateButtonState(false);
+            // Ensure dealer's card is revealed at the end
+            dealerCards[0].hidden = false;
+            renderHands(true);
+        }
+
+        /**
+         * Updates the enabled/disabled state of player action buttons.
+         * @param {boolean} enable If true, buttons are enabled; otherwise, disabled.
+         */
+        function updateButtonState(enable) {
+            hitButton.disabled = !enable;
+            standButton.disabled = !enable;
+            newGameButton.disabled = false; // Always allow starting a new game
+        }
+
+        // Event Listeners
+        hitButton.addEventListener('click', hit);
+        standButton.addEventListener('click', stand);
+        newGameButton.addEventListener('click', newGame);
+
+        // Initialize the game on page load
+        window.onload = newGame;
+    </script>
+</body>
+</html>

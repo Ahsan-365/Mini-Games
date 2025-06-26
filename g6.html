@@ -1,0 +1,864 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reversi Game</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 1rem;
+            box-sizing: border-box;
+            overflow-y: auto; /* Allow vertical scrolling if needed */
+        }
+
+        .game-container {
+            background-color: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            text-align: center;
+            width: 100%;
+            max-width: 800px; /* Max width for the entire game container */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        .game-info {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 1.5rem;
+            margin-bottom: 1rem;
+            width: 100%;
+        }
+
+        .player-score, .player-turn {
+            padding: 0.8rem 1.5rem;
+            border-radius: 0.75rem;
+            font-size: 1.1rem;
+            font-weight: bold;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .player-score.black { background-color: #2d3748; color: white; } /* Dark Gray */
+        .player-score.white { background-color: #edf2f7; color: #2d3748; } /* Light Gray */
+        .player-turn.black-turn { background-color: #4a5568; color: white; }
+        .player-turn.white-turn { background-color: #cbd5e0; color: #2d3748; }
+
+        .disc-icon {
+            width: 1.2rem;
+            height: 1.2rem;
+            border-radius: 50%;
+            border: 1px solid rgba(0,0,0,0.2);
+        }
+        .disc-icon.black { background-color: black; }
+        .disc-icon.white { background-color: white; }
+
+
+        .board-grid {
+            display: grid;
+            grid-template-columns: repeat(8, 1fr);
+            grid-template-rows: repeat(8, 1fr);
+            aspect-ratio: 1 / 1; /* Keep board square */
+            width: 100%;
+            max-width: 600px; /* Max width for the board itself */
+            background-color: #2f855a; /* Darker green board background */
+            border-radius: 0.5rem;
+            box-shadow: inset 0 0 15px rgba(0, 0, 0, 0.4);
+            overflow: hidden; /* Ensure cells stay within rounded corners */
+        }
+
+        .board-cell {
+            background-color: #38a169; /* Green cell background */
+            border: 1px solid rgba(0,0,0,0.1); /* Subtle cell borders */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            position: relative;
+        }
+
+        .board-cell:not(.valid-move):not(.occupied):hover {
+            background-color: #276749; /* Darker green on hover for non-valid/occupied */
+        }
+
+        .disc {
+            width: 80%;
+            height: 80%;
+            border-radius: 50%;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.4);
+            transition: transform 0.3s ease-out, background-color 0.3s ease;
+            transform-style: preserve-3d; /* For flip animation */
+            backface-visibility: hidden; /* For flip animation */
+        }
+
+        .disc.black { background-color: black; }
+        .disc.white { background-color: white; }
+
+        /* Flip animation */
+        .disc.flipping-to-white {
+            transform: rotateY(180deg);
+            background-color: white;
+        }
+        .disc.flipping-to-black {
+            transform: rotateY(180deg);
+            background-color: black;
+        }
+
+        .disc.flipped-white {
+             background-color: white;
+             transform: rotateY(180deg); /* Maintain flipped state */
+        }
+        .disc.flipped-black {
+            background-color: black;
+            transform: rotateY(180deg); /* Maintain flipped state */
+        }
+
+
+        .valid-move {
+            background-color: #6ee7b7; /* Light green for valid moves */
+            cursor: pointer;
+            position: relative;
+        }
+
+        .valid-move::after {
+            content: '';
+            position: absolute;
+            width: 30%;
+            height: 30%;
+            background-color: rgba(255, 255, 255, 0.4); /* Subtle indicator dot */
+            border-radius: 50%;
+            animation: pulse 1s infinite alternate;
+        }
+
+        @keyframes pulse {
+            from { transform: scale(0.8); opacity: 0.6; }
+            to { transform: scale(1); opacity: 1; }
+        }
+
+        .controls-top {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 1rem;
+            width: 100%;
+        }
+
+        .controls-top label, .controls-top select {
+            padding: 0.5rem 0.8rem;
+            border-radius: 0.5rem;
+            border: 1px solid #cbd5e0;
+            background-color: #f7fafc;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .controls-top button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            border: none;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background-color: #3b82f6; /* Blue-500 */
+            color: white;
+        }
+        .controls-top button:hover {
+            background-color: #2563eb; /* Blue-600 */
+            transform: translateY(-2px);
+        }
+
+        .controls-bottom {
+            margin-top: 1.5rem;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .controls-bottom button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            border: none;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background-color: #3b82f6; /* Blue-500 */
+            color: white;
+        }
+        .controls-bottom button:hover {
+            background-color: #2563eb; /* Blue-600 */
+            transform: translateY(-2px);
+        }
+
+        /* Message Box */
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #4a5568;
+            color: white;
+            padding: 1.5rem 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            font-size: 1.25rem;
+            font-weight: bold;
+            opacity: 0; /* Start invisible */
+            transition: opacity 0.3s ease-in-out; /* Smooth fade effect */
+        }
+
+        .message-box.show {
+            opacity: 1; /* Fade in */
+        }
+
+        /* Responsive Adjustments */
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 1.5rem;
+                gap: 1rem;
+                max-width: 95%;
+            }
+            h1 {
+                font-size: 2rem;
+            }
+            .game-info {
+                gap: 1rem;
+            }
+            .player-score, .player-turn {
+                padding: 0.6rem 1rem;
+                font-size: 1rem;
+            }
+            .disc-icon {
+                width: 1rem;
+                height: 1rem;
+            }
+            .controls-top select, .controls-top label, .controls-top button {
+                padding: 0.4rem 0.7rem;
+                font-size: 0.85rem;
+            }
+            .controls-bottom button {
+                padding: 0.6rem 1.2rem;
+                font-size: 0.9rem;
+            }
+        }
+
+        @media (max-width: 480px) {
+            .game-container {
+                padding: 1rem;
+                gap: 0.75rem;
+            }
+            h1 {
+                font-size: 1.75rem;
+            }
+            .game-info {
+                flex-direction: column; /* Stack info vertically */
+                gap: 0.75rem;
+            }
+            .player-score, .player-turn {
+                width: 100%; /* Full width for info sections */
+                justify-content: center;
+                padding: 0.5rem 0.8rem;
+                font-size: 0.9rem;
+            }
+            .board-grid {
+                max-width: 95vw; /* Allow board to stretch more */
+            }
+            .board-cell {
+                /* No specific pixel width, let grid handle it. Aspect ratio keeps square. */
+            }
+        }
+        @media (max-width: 320px) {
+            h1 {
+                font-size: 1.5rem;
+            }
+            .controls-top select, .controls-top label, .controls-top button {
+                font-size: 0.75rem;
+                padding: 0.3rem 0.6rem;
+            }
+            .controls-bottom button {
+                font-size: 0.8rem;
+                padding: 0.5rem 1rem;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div class="game-container">
+        <h1 class="text-3xl font-bold text-gray-800">Reversi</h1>
+
+        <div class="controls-top">
+            <label for="game-mode-select" class="font-semibold text-gray-700">Mode:</label>
+            <select id="game-mode-select" class="bg-white">
+                <option value="player-vs-player">Player vs Player</option>
+                <option value="player-vs-ai">Player vs AI</option>
+            </select>
+            <button id="new-game-button">New Game</button>
+        </div>
+
+        <div class="game-info">
+            <div id="black-score" class="player-score black">
+                <div class="disc-icon black"></div> Black: <span id="black-score-value">2</span>
+            </div>
+            <div id="white-score" class="player-score white">
+                <div class="disc-icon white"></div> White: <span id="white-score-value">2</span>
+            </div>
+            <div id="current-player-turn" class="player-turn black-turn">
+                <div class="disc-icon black"></div> Current Turn: <span id="player-turn-text">Black</span>
+            </div>
+        </div>
+
+        <div id="board-grid" class="board-grid">
+            <!-- Board cells will be dynamically generated here -->
+        </div>
+
+        <div class="controls-bottom">
+            <button id="pass-turn-button" class="bg-yellow-500 text-white">Pass Turn</button>
+        </div>
+    </div>
+
+    <!-- Message Box for game outcomes -->
+    <div id="message-box" class="message-box">
+        <p id="message-text"></p>
+    </div>
+
+    <script>
+        const EMPTY = 0;
+        const BLACK = 1;
+        const WHITE = 2;
+        const BOARD_SIZE = 8; // Reversi is always 8x8
+
+        const boardGrid = document.getElementById('board-grid');
+        const blackScoreElement = document.getElementById('black-score-value');
+        const whiteScoreElement = document.getElementById('white-score-value');
+        const currentPlayerTurnElement = document.getElementById('current-player-turn');
+        const playerTurnTextElement = document.getElementById('player-turn-text');
+        const newGameButton = document.getElementById('new-game-button');
+        const passTurnButton = document.getElementById('pass-turn-button');
+        const gameModeSelect = document.getElementById('game-mode-select'); // New: Game Mode Select
+
+        const messageBox = document.getElementById('message-box');
+        const messageText = document.getElementById('message-text');
+
+        let board = []; // 2D array representing the game board
+        let currentPlayer = BLACK;
+        let gameOver = false;
+        let messageTimeoutId;
+        let gameMode = 'player-vs-player'; // Default mode
+
+        // Directions to check for flips (row_delta, col_delta)
+        const directions = [
+            [-1, 0], [1, 0], [0, -1], [0, 1], // Horizontal & Vertical
+            [-1, -1], [-1, 1], [1, -1], [1, 1]  // Diagonals
+        ];
+
+        /**
+         * Shows a message box that disappears automatically after a delay.
+         * @param {string} message The message to display.
+         * @param {number} duration The duration in milliseconds to display the message (default 2000).
+         */
+        function showMessageBox(message, duration = 2000) {
+            messageText.textContent = message;
+            messageBox.style.display = 'flex';
+            messageBox.offsetWidth; // Trigger reflow
+            messageBox.classList.add('show');
+
+            if (messageTimeoutId) {
+                clearTimeout(messageTimeoutId);
+            }
+
+            messageTimeoutId = setTimeout(() => {
+                messageBox.classList.remove('show');
+                setTimeout(() => {
+                    messageBox.style.display = 'none';
+                }, 300); // Match CSS transition duration for opacity
+            }, duration);
+        }
+
+        /**
+         * Initializes a new Reversi game.
+         */
+        function newGame() {
+            board = [];
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                board.push(Array(BOARD_SIZE).fill(EMPTY));
+            }
+
+            // Set initial four discs
+            board[3][3] = WHITE;
+            board[3][4] = BLACK;
+            board[4][3] = BLACK;
+            board[4][4] = WHITE;
+
+            currentPlayer = BLACK;
+            gameOver = false;
+            gameMode = gameModeSelect.value; // Get the current game mode
+            renderBoard();
+            updateGameInfo();
+            showMessageBox('Game Started! Black goes first.');
+
+            // If AI is Player 2 and AI starts (not typically in Reversi, but for generality)
+            // Reversi always starts with Black (PLAYER_1). AI is Player 2 (WHITE).
+            // So, AI will only move if it's WHITE's turn.
+        }
+
+        /**
+         * Renders the board based on the current `board` array state.
+         * Clears and recreates all cells and discs.
+         */
+        function renderBoard() {
+            boardGrid.innerHTML = '';
+            const isAITurn = (gameMode === 'player-vs-ai' && currentPlayer === WHITE);
+
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    const cell = document.createElement('div');
+                    cell.classList.add('board-cell');
+                    cell.dataset.row = r;
+                    cell.dataset.col = c;
+
+                    // Only add click listener if it's not AI's turn or game is over
+                    if (!isAITurn && !gameOver) {
+                        cell.addEventListener('click', () => handleCellClick(r, c));
+                    } else {
+                        cell.style.cursor = 'default'; // Indicate no interaction
+                    }
+
+
+                    if (board[r][c] !== EMPTY) {
+                        const disc = document.createElement('div');
+                        disc.classList.add('disc', board[r][c] === BLACK ? 'black' : 'white');
+                        cell.appendChild(disc);
+                    }
+                    boardGrid.appendChild(cell);
+                }
+            }
+            highlightValidMoves(); // Highlight moves for the current player
+        }
+
+        /**
+         * Updates the score display and current player turn indicator.
+         */
+        function updateGameInfo() {
+            let blackCount = 0;
+            let whiteCount = 0;
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    if (board[r][c] === BLACK) {
+                        blackCount++;
+                    } else if (board[r][c] === WHITE) {
+                        whiteCount++;
+                    }
+                }
+            }
+            blackScoreElement.textContent = blackCount;
+            whiteScoreElement.textContent = whiteCount;
+
+            // Update turn text and styling based on current player and game mode
+            let turnText = currentPlayer === BLACK ? 'Black' : 'White';
+            let turnClass = currentPlayer === BLACK ? 'black-turn' : 'white-turn';
+            let discIconColor = currentPlayer === BLACK ? 'black' : 'white';
+
+            if (gameMode === 'player-vs-ai' && currentPlayer === WHITE && !gameOver) {
+                turnText = 'AI';
+            }
+
+            playerTurnTextElement.textContent = turnText;
+            currentPlayerTurnElement.classList.remove('black-turn', 'white-turn'); // Remove previous classes
+            currentPlayerTurnElement.classList.add(turnClass);
+            currentPlayerTurnElement.querySelector('.disc-icon').classList.remove('black', 'white');
+            currentPlayerTurnElement.querySelector('.disc-icon').classList.add(discIconColor);
+        }
+
+        /**
+         * Checks if a move at (row, col) is valid for the current player.
+         * Returns an array of discs that would be flipped.
+         * @param {Array<Array<number>>} currentBoard The board state to check against.
+         * @param {number} r Row index.
+         * @param {number} c Column index.
+         * @param {number} player The player making the move.
+         * @returns {Array<Array<number>>} List of [row, col] pairs of discs to flip, or empty array if invalid.
+         */
+        function isValidMove(currentBoard, r, c, player) {
+            if (currentBoard[r][c] !== EMPTY) {
+                return []; // Cell is already occupied
+            }
+
+            const opponent = player === BLACK ? WHITE : BLACK;
+            let flippedDiscs = [];
+
+            directions.forEach(([dr, dc]) => {
+                let currentFlipped = [];
+                let row = r + dr;
+                let col = c + dc;
+
+                // Traverse in this direction
+                while (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE && currentBoard[row][col] === opponent) {
+                    currentFlipped.push([row, col]);
+                    row += dr;
+                    col += dc;
+                }
+
+                // If we hit the current player's disc after trapping opponents, this direction is valid
+                if (row >= 0 && row < BOARD_SIZE && col >= 0 && col < BOARD_SIZE && currentBoard[row][col] === player) {
+                    flippedDiscs = flippedDiscs.concat(currentFlipped);
+                }
+            });
+
+            return flippedDiscs;
+        }
+
+        /**
+         * Finds all valid moves for a given player on a given board.
+         * @param {Array<Array<number>>} currentBoard The board state to check.
+         * @param {number} player The player for whom to find moves.
+         * @returns {Array<Array<number>>} List of [row, col] pairs for valid moves.
+         */
+        function getValidMoves(currentBoard, player) {
+            const validMoves = [];
+            for (let r = 0; r < BOARD_SIZE; r++) {
+                for (let c = 0; c < BOARD_SIZE; c++) {
+                    if (isValidMove(currentBoard, r, c, player).length > 0) {
+                        validMoves.push([r, c]);
+                    }
+                }
+            }
+            return validMoves;
+        }
+
+        /**
+         * Adds 'valid-move' class to cells where the current player can make a move.
+         */
+        function highlightValidMoves() {
+            // Remove existing highlights
+            document.querySelectorAll('.board-cell').forEach(cell => {
+                cell.classList.remove('valid-move');
+            });
+
+            if (gameOver || (gameMode === 'player-vs-ai' && currentPlayer === WHITE)) return; // Don't highlight for AI
+
+            const validMoves = getValidMoves(board, currentPlayer); // Use global board
+            validMoves.forEach(([r, c]) => {
+                const cell = boardGrid.children[r * BOARD_SIZE + c];
+                if (cell) {
+                    cell.classList.add('valid-move');
+                }
+            });
+        }
+
+        /**
+         * Handles a click on a board cell (for human player).
+         * @param {number} r Row index of the clicked cell.
+         * @param {number} c Column index of the clicked cell.
+         */
+        function handleCellClick(r, c) {
+            if (gameOver || (gameMode === 'player-vs-ai' && currentPlayer === WHITE)) {
+                if (gameMode === 'player-vs-ai' && currentPlayer === WHITE) {
+                    showMessageBox('It\'s the AI\'s turn!');
+                } else {
+                    showMessageBox('Game is over! Start a New Game.');
+                }
+                return;
+            }
+
+            const discsToFlip = isValidMove(board, r, c, currentPlayer);
+
+            if (discsToFlip.length === 0) {
+                showMessageBox('Invalid move! Please select a valid empty cell.');
+                return;
+            }
+
+            makeMove(r, c, currentPlayer, discsToFlip);
+        }
+
+        /**
+         * Core function to apply a move to the board and trigger animations.
+         * Used by both human and AI.
+         * @param {number} r Row for the new disc.
+         * @param {number} c Column for the new disc.
+         * @param {number} player The player making the move.
+         * @param {Array<Array<number>>} discsToFlip Array of [row, col] for discs to flip.
+         */
+        function makeMove(r, c, player, discsToFlip) {
+            // Place the current player's disc
+            board[r][c] = player;
+            const clickedCell = boardGrid.children[r * BOARD_SIZE + c];
+            const newDisc = document.createElement('div');
+            newDisc.classList.add('disc', player === BLACK ? 'black' : 'white');
+            clickedCell.appendChild(newDisc);
+
+            // Flip captured discs with animation
+            discsToFlip.forEach(([flipR, flipC]) => {
+                board[flipR][flipC] = player; // Update logical board
+                const discElement = boardGrid.children[flipR * BOARD_SIZE + flipC].querySelector('.disc');
+                if (discElement) {
+                    discElement.classList.remove('black', 'white', 'flipped-black', 'flipped-white');
+                    if (player === BLACK) {
+                        discElement.classList.add('flipping-to-black');
+                    } else {
+                        discElement.classList.add('flipping-to-white');
+                    }
+
+                    discElement.addEventListener('transitionend', function handler() {
+                        discElement.classList.remove('flipping-to-black', 'flipping-to-white');
+                        discElement.classList.add(player === BLACK ? 'black' : 'white');
+                        discElement.classList.add(player === BLACK ? 'flipped-black' : 'flipped-white');
+                        discElement.removeEventListener('transitionend', handler);
+                    });
+                }
+            });
+
+            // After move, check game state
+            setTimeout(checkGameState, 600); // Allow time for flip animations
+        }
+
+        /**
+         * Advances the turn, checking for valid moves and game end.
+         */
+        function checkGameState() {
+            updateGameInfo(); // Update scores after flips
+
+            let nextPlayer = currentPlayer === BLACK ? WHITE : BLACK;
+            let currentValidMoves = getValidMoves(board, currentPlayer);
+            let nextValidMoves = getValidMoves(board, nextPlayer);
+
+            if (currentValidMoves.length === 0 && nextValidMoves.length === 0) {
+                // Game over: no one can make a move
+                gameOver = true;
+                const blackCount = parseInt(blackScoreElement.textContent);
+                const whiteCount = parseInt(whiteScoreElement.textContent);
+
+                if (blackCount > whiteCount) {
+                    showMessageBox(`Game Over! Black wins with ${blackCount} to ${whiteCount}!`, 5000);
+                } else if (whiteCount > blackCount) {
+                    showMessageBox(`Game Over! White wins with ${whiteCount} to ${blackCount}!`, 5000);
+                } else {
+                    showMessageBox(`Game Over! It's a Draw! Both have ${blackCount} discs.`, 5000);
+                }
+            } else if (nextValidMoves.length === 0) {
+                // Next player has no valid moves, current player goes again
+                const passingPlayerName = nextPlayer === BLACK ? 'Black' : 'White';
+                const playingPlayerName = currentPlayer === BLACK ? 'Black' : 'White';
+                showMessageBox(`${passingPlayerName} has no valid moves. ${playingPlayerName} plays again!`);
+                // Turn remains with current player, no switch
+            } else {
+                // Switch to next player
+                currentPlayer = nextPlayer;
+            }
+
+            updateGameInfo();
+            renderBoard(); // Re-render to update highlights/cursor based on new turn
+
+            // If it's AI's turn, trigger AI move
+            if (gameMode === 'player-vs-ai' && currentPlayer === WHITE && !gameOver) {
+                setTimeout(aiMove, 1000); // Delay AI move for better user experience
+            }
+        }
+
+        /**
+         * Allows the current player to pass their turn if they have no valid moves.
+         * The game logic automatically passes if no moves are available, but this button
+         * gives explicit control/acknowledgement.
+         */
+        function passTurn() {
+            if (gameOver) {
+                showMessageBox('Game is already over!');
+                return;
+            }
+            if (gameMode === 'player-vs-ai' && currentPlayer === WHITE) {
+                 showMessageBox('It\'s the AI\'s turn, you cannot pass!');
+                 return;
+            }
+
+            const validMoves = getValidMoves(board, currentPlayer);
+            if (validMoves.length > 0) {
+                showMessageBox('You have valid moves! Cannot pass.');
+            } else {
+                showMessageBox(`${currentPlayer === BLACK ? 'Black' : 'White'} passes turn.`);
+                // Force switch to next player as current player had no moves
+                currentPlayer = currentPlayer === BLACK ? WHITE : BLACK;
+                setTimeout(checkGameState, 300); // Check state after passing
+            }
+        }
+
+        /**
+         * AI logic for making a move (Player 2 / WHITE).
+         * Prioritizes winning, blocking, corners, then maximizing flips.
+         */
+        function aiMove() {
+            if (gameOver || currentPlayer !== WHITE) return;
+
+            let bestMove = null;
+            let maxFlipped = -1; // To store max flips for non-strategic moves
+
+            const validMoves = getValidMoves(board, WHITE);
+
+            if (validMoves.length === 0) {
+                // AI has no moves, force a pass. This should be handled by checkGameState already,
+                // but as a safeguard.
+                showMessageBox('AI has no valid moves and passes.');
+                setTimeout(checkGameState, 300);
+                return;
+            }
+
+            // Shuffle valid moves to add some randomness for variety if multiple moves are equally good
+            validMoves.sort(() => Math.random() - 0.5);
+
+            // 1. Prioritize winning moves for AI
+            for (const [r, c] of validMoves) {
+                // Simulate move
+                const tempBoard = JSON.parse(JSON.stringify(board)); // Deep copy
+                const simulatedFlipped = isValidMove(tempBoard, r, c, WHITE);
+                simulatedFlipped.forEach(([fr, fc]) => tempBoard[fr][fc] = WHITE);
+                tempBoard[r][c] = WHITE;
+
+                if (checkWinConditionReversi(tempBoard, WHITE)) { // Custom simplified check
+                    bestMove = [r, c];
+                    break;
+                }
+            }
+
+            // 2. Prioritize blocking moves for opponent (Black)
+            if (!bestMove) {
+                for (const [r, c] of validMoves) {
+                    const tempBoard = JSON.parse(JSON.stringify(board));
+                    const simulatedFlipped = isValidMove(tempBoard, r, c, WHITE);
+                    simulatedFlipped.forEach(([fr, fc]) => tempBoard[fr][fc] = WHITE);
+                    tempBoard[r][c] = WHITE;
+
+                    // Check if opponent would have a winning move after this move
+                    // We need to simulate opponent's next turn on this tempBoard
+                    let opponentHasWinningMove = false;
+                    const opponentValidMoves = getValidMoves(tempBoard, BLACK);
+                    for (const [or, oc] of opponentValidMoves) {
+                         const tempBoardOpponent = JSON.parse(JSON.stringify(tempBoard));
+                         const opponentSimulatedFlipped = isValidMove(tempBoardOpponent, or, oc, BLACK);
+                         opponentSimulatedFlipped.forEach(([fr, fc]) => tempBoardOpponent[fr][fc] = BLACK);
+                         tempBoardOpponent[or][oc] = BLACK;
+                         if (checkWinConditionReversi(tempBoardOpponent, BLACK)) { // If opponent wins, this AI move is bad
+                             opponentHasWinningMove = true;
+                             break;
+                         }
+                    }
+                    if (!opponentHasWinningMove) {
+                        // This move prevents opponent from winning. Check if it's a corner.
+                        if ((r === 0 && c === 0) || (r === 0 && c === BOARD_SIZE - 1) ||
+                            (r === BOARD_SIZE - 1 && c === 0) || (r === BOARD_SIZE - 1 && c === BOARD_SIZE - 1)) {
+                            bestMove = [r,c]; // Prioritize blocking corners
+                            break;
+                        } else if (!bestMove) { // Just a blocking move, but not a corner, keep looking for better.
+                            bestMove = [r,c]; // Assign it but don't break, allowing other checks to override if better
+                        }
+                    }
+                }
+            }
+
+            // 3. Prioritize corners (if not already handled by win/block)
+            if (!bestMove) {
+                const corners = [[0, 0], [0, BOARD_SIZE - 1], [BOARD_SIZE - 1, 0], [BOARD_SIZE - 1, BOARD_SIZE - 1]];
+                for (const [r, c] of validMoves) {
+                    if (corners.some(corner => corner[0] === r && corner[1] === c)) {
+                        bestMove = [r, c];
+                        break;
+                    }
+                }
+            }
+
+            // 4. Fallback: choose move that flips most discs
+            if (!bestMove) {
+                for (const [r, c] of validMoves) {
+                    const currentFlippedCount = isValidMove(board, r, c, WHITE).length;
+                    if (currentFlippedCount > maxFlipped) {
+                        maxFlipped = currentFlippedCount;
+                        bestMove = [r, c];
+                    }
+                }
+            }
+
+            // If still no bestMove (shouldn't happen with proper validMoves, but safeguard)
+            if (!bestMove && validMoves.length > 0) {
+                 bestMove = validMoves[Math.floor(Math.random() * validMoves.length)];
+                 console.warn("AI fallback to random move unexpectedly.");
+            }
+
+
+            if (bestMove) {
+                const [r, c] = bestMove;
+                makeMove(r, c, WHITE, isValidMove(board, r, c, WHITE));
+            }
+        }
+
+        // Simplified win condition check for AI evaluation
+        // In Reversi, the game isn't won until no moves are left for either player.
+        // This helper is for checking if a *potential* state leads to an advantage or game end.
+        function checkWinConditionReversi(tempBoard, player) {
+            const opponent = player === BLACK ? WHITE : BLACK;
+            const playerMoves = getValidMoves(tempBoard, player);
+            const opponentMoves = getValidMoves(tempBoard, opponent);
+
+            // If opponent has no moves AND current player has moves, it's a strong position
+            if (opponentMoves.length === 0 && playerMoves.length > 0) return true;
+
+            // If both have no moves, check final score
+            if (playerMoves.length === 0 && opponentMoves.length === 0) {
+                let blackCount = 0;
+                let whiteCount = 0;
+                for (let r = 0; r < BOARD_SIZE; r++) {
+                    for (let c = 0; c < BOARD_SIZE; c++) {
+                        if (tempBoard[r][c] === BLACK) blackCount++;
+                        else if (tempBoard[r][c] === WHITE) whiteCount++;
+                    }
+                }
+                if (player === BLACK && blackCount > whiteCount) return true;
+                if (player === WHITE && whiteCount > blackCount) return true;
+            }
+            return false;
+        }
+
+        // Event Listeners
+        newGameButton.addEventListener('click', newGame);
+        passTurnButton.addEventListener('click', passTurn);
+        gameModeSelect.addEventListener('change', newGame); // Start new game when mode changes
+
+        // Initialize the first game on page load
+        window.onload = newGame;
+    </script>
+</body>
+</html>

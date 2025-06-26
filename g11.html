@@ -1,0 +1,267 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Enhanced Clicker Game</title>
+    <style>
+        /* Body styling for centering and basic aesthetics */
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #f0f0f0; /* Light background by default */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Modern font */
+            color: #333; /* Dark text for light mode */
+            transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transition for dark mode */
+        }
+
+        /* Dark mode specific styles for the body */
+        body.dark-mode {
+            background-color: #2c2c2c; /* Dark background */
+            color: #e0e0e0; /* Light text for dark mode */
+        }
+
+        /* Container for the game elements */
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #ffffff; /* Light container background */
+            padding: 30px;
+            border-radius: 15px; /* Rounded corners */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Soft shadow */
+            transition: background-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transition */
+        }
+
+        /* Dark mode specific styles for the container */
+        body.dark-mode .container {
+            background-color: #3a3a3a; /* Darker container background */
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); /* More pronounced shadow in dark mode */
+        }
+
+        /* Styling for the main clickable area */
+        .click-area {
+            width: 220px;
+            height: 220px;
+            background-color: #4CAF50; /* Green background */
+            border-radius: 50%; /* Circular shape */
+            display: flex;
+            flex-direction: column; /* Changed to column to stack emoji and text */
+            justify-content: center;
+            align-items: center;
+            font-size: 1em; /* Base font size for general text */
+            color: white;
+            cursor: pointer;
+            user-select: none; /* Prevent text selection */
+            box-shadow: 0 8px 20px rgba(0, 150, 0, 0.3); /* Green shadow */
+            transition: transform 0.1s ease-in-out, background-color 0.3s ease; /* Smooth transitions */
+            position: relative; /* Needed for positioning the click feedback ripple */
+            overflow: hidden; /* Ensures the ripple doesn't go outside the circle */
+        }
+
+        /* Styling for the emoji within the click area */
+        .click-area .emoji {
+            font-size: 4em; /* Size for the coin emoji */
+            margin-bottom: 5px; /* Space between emoji and text */
+        }
+
+        /* Styling for the text within the click area */
+        .click-area .text {
+            font-size: 1.2em; /* Size for the "Click Me!" text */
+            font-weight: bold;
+        }
+
+        /* Active state for the click area */
+        .click-area:active {
+            transform: scale(0.96); /* Shrink on click */
+            background-color: #45a049; /* Darker green on click */
+        }
+
+        /* Styling for the click feedback ripple animation */
+        .click-feedback {
+            position: absolute;
+            background-color: rgba(255, 255, 255, 0.7); /* White, semi-transparent ripple */
+            border-radius: 50%;
+            transform: scale(0); /* Start hidden */
+            animation: click-ripple 0.4s forwards; /* Apply the ripple animation */
+            pointer-events: none; /* Allows clicks to go through the ripple */
+        }
+
+        /* Keyframes for the click ripple animation */
+        @keyframes click-ripple {
+            to {
+                transform: scale(1.5); /* Expand the ripple */
+                opacity: 0; /* Fade out the ripple */
+            }
+        }
+
+        /* Styling for the score display */
+        #score {
+            margin-top: 30px;
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #2196F3; /* Blue color for score */
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); /* Subtle text shadow */
+        }
+
+        /* Dark mode specific score color */
+        body.dark-mode #score {
+            color: #64B5F6; /* Lighter blue in dark mode */
+        }
+
+        /* Container for control buttons */
+        .controls {
+            margin-top: 20px;
+            display: flex;
+            gap: 15px; /* Spacing between buttons */
+        }
+
+        /* Base styling for buttons */
+        button {
+            padding: 10px 20px;
+            font-size: 1em;
+            border: none;
+            border-radius: 8px; /* Rounded button corners */
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease; /* Smooth transitions */
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1); /* Button shadow */
+            /* Added for perfect text centering */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        /* Styling for the reset button */
+        #resetButton {
+            background-color: #f44336; /* Red background */
+            color: white;
+        }
+
+        /* Hover state for the reset button */
+        #resetButton:hover {
+            background-color: #da190b; /* Darker red on hover */
+            transform: translateY(-2px); /* Slight lift on hover */
+        }
+
+        /* Styling for the dark mode toggle button */
+        #darkModeToggle {
+            background-color: #607d8b; /* Grey background */
+            color: white;
+        }
+
+        /* Hover state for the dark mode toggle button */
+        #darkModeToggle:hover {
+            background-color: #455a64; /* Darker grey on hover */
+            transform: translateY(-2px); /* Slight lift on hover */
+        }
+
+        /* Dark mode specific styling for the dark mode toggle button */
+        body.dark-mode #darkModeToggle {
+            background-color: #90a4ae; /* Lighter grey in dark mode */
+            color: #333; /* Darker text in dark mode */
+        }
+        body.dark-mode #darkModeToggle:hover {
+            background-color: #78909c; /* Slightly darker lighter grey on hover */
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="clickArea" class="click-area">
+            <span class="emoji">&#128176;</span> <!-- Coin emoji for illustration -->
+            <span class="text">Click Me!</span> <!-- The "Click Me!" text -->
+        </div>
+        <div id="score">Score: 0</div>
+        <div class="controls">
+            <button id="resetButton">Reset Score</button>
+            <button id="darkModeToggle">Toggle Dark Mode</button>
+        </div>
+    </div>
+
+    <script>
+        // Initialize score
+        let score = 0;
+
+        // Get DOM elements
+        const clickArea = document.getElementById('clickArea');
+        const scoreDisplay = document.getElementById('score');
+        const resetButton = document.getElementById('resetButton');
+        const darkModeToggle = document.getElementById('darkModeToggle');
+        const body = document.body;
+
+        /**
+         * Loads saved score and dark mode preference from local storage when the page loads.
+         */
+        document.addEventListener('DOMContentLoaded', () => {
+            // Load saved score
+            const savedScore = localStorage.getItem('clickerScore');
+            if (savedScore !== null) {
+                score = parseInt(savedScore, 10); // Parse string to integer
+                scoreDisplay.textContent = 'Score: ' + score;
+            }
+
+            // Load dark mode preference
+            const isDarkMode = localStorage.getItem('darkMode') === 'true';
+            if (isDarkMode) {
+                body.classList.add('dark-mode'); // Apply dark mode if previously set
+            }
+        });
+
+        /**
+         * Event listener for clicks on the click area.
+         * Increments score, updates display, saves to local storage, and shows click feedback.
+         */
+        clickArea.addEventListener('click', (event) => {
+            score++; // Increment score
+            scoreDisplay.textContent = 'Score: ' + score; // Update score display
+            localStorage.setItem('clickerScore', score); // Save score to local storage
+
+            // Create click feedback element
+            const feedback = document.createElement('div');
+            feedback.classList.add('click-feedback');
+
+            // Get the position and dimensions of the click area
+            const rect = clickArea.getBoundingClientRect();
+
+            // Set the size of the ripple to be larger than the click area
+            feedback.style.width = feedback.style.height = Math.max(rect.width, rect.height) + 'px';
+
+            // Position the ripple at the click point relative to the click area
+            feedback.style.left = (event.clientX - rect.left - feedback.offsetWidth / 2) + 'px';
+            feedback.style.top = (event.clientY - rect.top - feedback.offsetHeight / 2) + 'px';
+
+            // Append the feedback element to the click area
+            clickArea.appendChild(feedback);
+
+            // Remove the feedback element after its animation ends
+            feedback.addEventListener('animationend', () => {
+                feedback.remove();
+            });
+        });
+
+        /**
+         * Event listener for the reset button.
+         * Resets the score to 0 and updates local storage.
+         */
+        resetButton.addEventListener('click', () => {
+            score = 0; // Reset score
+            scoreDisplay.textContent = 'Score: ' + score; // Update score display
+            localStorage.setItem('clickerScore', score); // Reset saved score in local storage
+        });
+
+        /**
+         * Event listener for the dark mode toggle button.
+         * Toggles the 'dark-mode' class on the body and saves the preference to local storage.
+         */
+        darkModeToggle.addEventListener('click', () => {
+            body.classList.toggle('dark-mode'); // Toggle dark mode class
+            const isDarkMode = body.classList.contains('dark-mode'); // Check current dark mode state
+            localStorage.setItem('darkMode', isDarkMode); // Save dark mode preference to local storage
+        });
+    </script>
+</body>
+</html>

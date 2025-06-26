@@ -1,0 +1,469 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cookie Clicker Master</title> <!-- Updated Title -->
+    <style>
+        /* General Body Styling */
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh; /* Ensures body takes full viewport height */
+            margin: 0;
+            background-color: #fcefe3; /* Light background for a warm cookie theme */
+            font-family: 'Arial Rounded MT Bold', 'Helvetica Rounded', sans-serif;
+            color: #5a3d2b; /* Dark brown for text, like chocolate */
+            user-select: none; /* Prevent text selection on click */
+            /* Removed overflow: hidden; to allow scrolling if content is too tall */
+            position: relative; /* For background illustration */
+        }
+
+        /* Subtle background pattern to enhance bakery theme */
+        body::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-image: radial-gradient(#ffe0b2 1px, transparent 1px), radial-gradient(#ffcc80 1px, transparent 1px);
+            background-size: 20px 20px;
+            background-position: 0 0, 10px 10px;
+            opacity: 0.2;
+            z-index: -1; /* Send it behind other content */
+        }
+
+        /* Main Game Area Container */
+        #game-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            /* Changed justify-content to start so content flows from top */
+            justify-content: flex-start;
+            padding: 30px; /* Increased padding */
+            border-radius: 20px; /* More rounded corners */
+            background-color: #fff;
+            box-shadow: 0 12px 24px rgba(0,0,0,0.2); /* Deeper shadow */
+            width: 90%; /* Use percentage for responsiveness */
+            max-width: 400px; /* Max width for desktop */
+            box-sizing: border-box; /* Include padding in width */
+            position: relative;
+            z-index: 1; /* Ensure it's above the background */
+            /* Added margin-top and margin-bottom to ensure some spacing from top/bottom of viewport */
+            margin-top: 20px;
+            margin-bottom: 20px;
+        }
+
+        /* Cookie Button Styling */
+        #cookie {
+            width: 250px; /* Larger cookie */
+            height: 250px;
+            background-color: transparent; /* Make background transparent for SVG */
+            border-radius: 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            font-size: 1.5em; /* Text will be hidden later, but kept for reference */
+            font-weight: bold;
+            cursor: pointer;
+            transition: transform 0.1s ease-out;
+            position: relative;
+            overflow: hidden; /* For floating score */
+        }
+
+        #cookie:active {
+            transform: scale(0.95); /* Shrink effect on click */
+        }
+
+        /* SVG Cookie Illustration */
+        #cookie svg {
+            width: 100%;
+            height: 100%;
+            display: block; /* Remove extra space below SVG */
+            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2)); /* Shadow for the SVG */
+        }
+
+        /* Score and CPS Display */
+        #score {
+            margin-top: 25px; /* Adjusted margin */
+            font-size: 3em; /* Larger score */
+            font-weight: bold;
+            color: #d35400; /* Orange-brown for score */
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
+        }
+        #cps-display {
+            font-size: 1.3em; /* Larger CPS display */
+            color: #7f8c8d; /* Grey for CPS */
+            margin-top: 5px;
+        }
+
+        /* Floating Score Animation */
+        .floating-score {
+            position: absolute;
+            color: #27ae60; /* Green for positive effect */
+            font-size: 1.8em; /* Larger floating score */
+            font-weight: bold;
+            animation: fadeOutUp 1s forwards;
+            pointer-events: none; /* Allows clicks to pass through */
+            z-index: 1000;
+        }
+
+        @keyframes fadeOutUp {
+            0% { opacity: 1; transform: translateY(0); }
+            100% { opacity: 0; transform: translateY(-50px); }
+        }
+
+        /* Upgrades Container */
+        .upgrades-container {
+            display: flex;
+            flex-direction: column;
+            gap: 15px; /* Increased gap */
+            margin-top: 30px; /* More space above upgrades */
+            width: 100%;
+            max-width: 350px; /* Wider upgrade buttons */
+        }
+
+        /* Upgrade Button Styling */
+        .upgrade-button {
+            padding: 12px 20px; /* More padding */
+            border: none;
+            border-radius: 10px; /* More rounded */
+            background-color: #8e44ad; /* Purple for upgrades */
+            color: white;
+            font-size: 1.2em; /* Larger text */
+            font-weight: bold;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+            box-shadow: 0 5px 10px rgba(0,0,0,0.15); /* Soft shadow */
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .upgrade-button:hover {
+            background-color: #9b59b6; /* Lighter purple on hover */
+            transform: translateY(-3px); /* More pronounced lift */
+            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
+        }
+        .upgrade-button:active {
+            transform: translateY(0);
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+        }
+        .upgrade-button:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+            opacity: 0.6;
+        }
+        .upgrade-cost {
+            font-size: 0.9em;
+            opacity: 0.9;
+            font-weight: normal; /* Less bold for cost */
+        }
+
+        /* Reset Button Styling */
+        #resetButton {
+            margin-top: 25px; /* Space above the button */
+            padding: 10px 20px;
+            font-size: 1em;
+            background-color: #f44336; /* Red for reset */
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
+            /* Flexbox for centering text */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            width: 100%; /* Make it full width of game-area container */
+            max-width: 350px; /* Match upgrade buttons width */
+        }
+        #resetButton:hover {
+            background-color: #da190b; /* Darker red on hover */
+            transform: translateY(-2px);
+            box-shadow: 0 5px 10px rgba(0,0,0,0.15);
+        }
+        #resetButton:active {
+            transform: translateY(0);
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+    </style>
+</head>
+<body>
+    <div id="game-area">
+        <h1>Cookie Clicker Master</h1> <!-- Game Title -->
+        <div id="cookie">
+            <!-- SVG Cookie Illustration -->
+            <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <!-- Cookie base -->
+                <circle cx="100" cy="100" r="90" fill="#e0b080"/>
+                <!-- Inner shadow for depth -->
+                <circle cx="100" cy="100" r="90" fill="url(#shadowGradient)"/>
+                <defs>
+                    <radialGradient id="shadowGradient" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(100 100) rotate(90) scale(180)">
+                        <stop offset="0.5" stop-color="#000000" stop-opacity="0"/>
+                        <stop offset="1" stop-color="#000000" stop-opacity="0.2"/>
+                    </radialGradient>
+                </defs>
+
+                <!-- Chocolate Chips -->
+                <circle cx="55" cy="45" r="15" fill="#4a2b1f"/>
+                <circle cx="130" cy="60" r="12" fill="#4a2b1f"/>
+                <circle cx="80" cy="120" r="18" fill="#4a2b1f"/>
+                <circle cx="150" cy="130" r="10" fill="#4a2b1f"/>
+                <circle cx="60" cy="160" r="14" fill="#4a2b1f"/>
+                <circle cx="110" cy="70" r="10" fill="#4a2b1f"/>
+                <circle cx="140" cy="90" r="16" fill="#4a2b1f"/>
+            </svg>
+        </div>
+        <div id="score">0 Cookies</div>
+        <div id="cps-display">0 Cookies/sec</div>
+
+        <div class="upgrades-container">
+            <h2>Upgrades</h2>
+            <button id="autoClickerButton" class="upgrade-button">
+                <span>Cursor (<span id="autoClickerCount">0</span>)</span>
+                <span class="upgrade-cost">Cost: <span id="autoClickerCost">10</span></span>
+            </button>
+            <button id="grandmaButton" class="upgrade-button">
+                <span>Grandma (<span id="grandmaCount">0</span>)</span>
+                <span class="upgrade-cost">Cost: <span id="grandmaCost">100</span></span>
+            </button>
+            <!-- New Upgrade: Oven -->
+            <button id="ovenButton" class="upgrade-button">
+                <span>Oven (<span id="ovenCount">0</span>)</span>
+                <span class="upgrade-cost">Cost: <span id="ovenCost">500</span></span>
+            </button>
+        </div>
+
+        <!-- Reset Button Added -->
+        <button id="resetButton">Reset Game</button>
+    </div>
+
+    <script>
+        // Game state variables
+        let cookies = 0;
+        let autoClickers = 0;
+        let grandmas = 0;
+        let ovens = 0; // New upgrade count
+        let cookiesPerSecond = 0;
+
+        // Initial costs (will be reset to these values)
+        const initialAutoClickerCost = 10;
+        const initialGrandmaCost = 100;
+        const initialOvenCost = 500;
+
+        // Current costs (these change during gameplay)
+        let autoClickerCost = initialAutoClickerCost;
+        let grandmaCost = initialGrandmaCost;
+        let ovenCost = initialOvenCost;
+
+        // CPS values for each upgrade
+        const autoClickerCps = 0.1; // Each auto clicker gives 0.1 cookies/sec
+        const grandmaCps = 1; // Each grandma gives 1 cookie/sec
+        const ovenCps = 5; // Each oven gives 5 cookies/sec
+
+        // DOM elements
+        const cookieButton = document.getElementById('cookie');
+        const scoreDisplay = document.getElementById('score');
+        const cpsDisplay = document.getElementById('cps-display');
+
+        const autoClickerButton = document.getElementById('autoClickerButton');
+        const autoClickerCountDisplay = document.getElementById('autoClickerCount');
+        const autoClickerCostDisplay = document.getElementById('autoClickerCost');
+
+        const grandmaButton = document.getElementById('grandmaButton');
+        const grandmaCountDisplay = document.getElementById('grandmaCount');
+        const grandmaCostDisplay = document.getElementById('grandmaCost');
+
+        const ovenButton = document.getElementById('ovenButton');
+        const ovenCountDisplay = document.getElementById('ovenCount');
+        const ovenCostDisplay = document.getElementById('ovenCost');
+
+        const resetButton = document.getElementById('resetButton'); // Get the new reset button
+
+        /**
+         * Saves the current game state to local storage.
+         */
+        function saveGame() {
+            const gameState = {
+                cookies: cookies,
+                autoClickers: autoClickers,
+                grandmas: grandmas,
+                ovens: ovens,
+                autoClickerCost: autoClickerCost,
+                grandmaCost: grandmaCost,
+                ovenCost: ovenCost
+            };
+            localStorage.setItem('cookieClickerGame', JSON.stringify(gameState));
+        }
+
+        /**
+         * Loads game state from local storage.
+         */
+        function loadGame() {
+            const savedState = localStorage.getItem('cookieClickerGame');
+            if (savedState) {
+                const parsedState = JSON.parse(savedState);
+                cookies = parsedState.cookies || 0;
+                autoClickers = parsedState.autoClickers || 0;
+                grandmas = parsedState.grandmas || 0;
+                ovens = parsedState.ovens || 0;
+                autoClickerCost = parsedState.autoClickerCost || initialAutoClickerCost;
+                grandmaCost = parsedState.grandmaCost || initialGrandmaCost;
+                ovenCost = parsedState.ovenCost || initialOvenCost;
+            }
+        }
+
+        /**
+         * Resets the game to its initial state.
+         */
+        function resetGame() {
+            cookies = 0;
+            autoClickers = 0;
+            grandmas = 0;
+            ovens = 0;
+            cookiesPerSecond = 0; // Important to reset CPS as well
+            autoClickerCost = initialAutoClickerCost;
+            grandmaCost = initialGrandmaCost;
+            ovenCost = initialOvenCost;
+
+            localStorage.removeItem('cookieClickerGame'); // Clear saved data
+            updateAllDisplays(); // Update all UI elements
+            saveGame(); // Save the reset state
+        }
+
+        /**
+         * Calculates and updates the total cookies per second (CPS).
+         */
+        function calculateCps() {
+            cookiesPerSecond = (autoClickers * autoClickerCps) +
+                               (grandmas * grandmaCps) +
+                               (ovens * ovenCps);
+        }
+
+        /**
+         * Updates the main score and CPS displays.
+         */
+        function updateScoreDisplay() {
+            scoreDisplay.textContent = Math.floor(cookies).toLocaleString() + ' Cookies';
+            cpsDisplay.textContent = cookiesPerSecond.toFixed(1) + ' Cookies/sec';
+        }
+
+        /**
+         * Updates the display and enabled/disabled state of all upgrade buttons.
+         */
+        function updateUpgradeButtons() {
+            autoClickerCountDisplay.textContent = autoClickers;
+            autoClickerCostDisplay.textContent = autoClickerCost.toLocaleString();
+            autoClickerButton.disabled = cookies < autoClickerCost;
+
+            grandmaCountDisplay.textContent = grandmas;
+            grandmaCostDisplay.textContent = grandmaCost.toLocaleString();
+            grandmaButton.disabled = cookies < grandmaCost;
+
+            ovenCountDisplay.textContent = ovens;
+            ovenCostDisplay.textContent = ovenCost.toLocaleString();
+            ovenButton.disabled = cookies < ovenCost;
+        }
+
+        /**
+         * A helper function to call all necessary UI update functions.
+         */
+        function updateAllDisplays() {
+            calculateCps();
+            updateScoreDisplay();
+            updateUpgradeButtons();
+        }
+
+        /**
+         * Handles a cookie click event.
+         * Increments cookies, updates displays, and shows a floating score animation.
+         * @param {MouseEvent} event - The click event object.
+         */
+        cookieButton.addEventListener('click', (event) => {
+            cookies++;
+            updateAllDisplays();
+            saveGame(); // Save game after manual click
+
+            // Create floating score animation
+            const floatingScore = document.createElement('div');
+            floatingScore.textContent = '+1';
+            floatingScore.className = 'floating-score';
+            // Position the floating score relative to the click point on the page
+            floatingScore.style.left = event.clientX + 'px';
+            floatingScore.style.top = event.clientY - 20 + 'px'; // Offset slightly above click
+            document.body.appendChild(floatingScore);
+
+            // Remove the floating score element after its animation ends
+            floatingScore.addEventListener('animationend', () => {
+                floatingScore.remove();
+            });
+        });
+
+        /**
+         * Event listener for Auto Clicker purchase button.
+         */
+        autoClickerButton.addEventListener('click', () => {
+            if (cookies >= autoClickerCost) {
+                cookies -= autoClickerCost;
+                autoClickers++;
+                autoClickerCost = Math.ceil(autoClickerCost * 1.15); // Increase cost
+                updateAllDisplays(); // Update all displays after purchase
+                saveGame(); // Save game after purchase
+            }
+        });
+
+        /**
+         * Event listener for Grandma purchase button.
+         */
+        grandmaButton.addEventListener('click', () => {
+            if (cookies >= grandmaCost) {
+                cookies -= grandmaCost;
+                grandmas++;
+                grandmaCost = Math.ceil(grandmaCost * 1.15); // Increase cost
+                updateAllDisplays(); // Update all displays after purchase
+                saveGame(); // Save game after purchase
+            }
+        });
+
+        /**
+         * Event listener for Oven purchase button (new upgrade).
+         */
+        ovenButton.addEventListener('click', () => {
+            if (cookies >= ovenCost) {
+                cookies -= ovenCost;
+                ovens++;
+                ovenCost = Math.ceil(ovenCost * 1.15); // Increase cost
+                updateAllDisplays(); // Update all displays after purchase
+                saveGame(); // Save game after purchase
+            }
+        });
+
+        /**
+         * Event listener for the Reset Game button.
+         */
+        resetButton.addEventListener('click', resetGame);
+
+        /**
+         * Game loop: adds cookies from passive income and updates UI.
+         */
+        setInterval(() => {
+            cookies += cookiesPerSecond;
+            updateAllDisplays(); // Update all displays periodically
+            saveGame(); // Save game state periodically
+        }, 1000); // Update every second
+
+        // Initial setup on page load
+        document.addEventListener('DOMContentLoaded', () => {
+            loadGame(); // Load game state
+            updateAllDisplays(); // Initial update of all displays
+        });
+    </script>
+</body>
+</html>

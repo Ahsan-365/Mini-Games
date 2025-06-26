@@ -1,0 +1,1367 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Crossword Puzzle Game</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 1rem;
+            box-sizing: border-box;
+            overflow-y: auto; /* Allow vertical scrolling if content is too tall */
+        }
+
+        .game-container {
+            background-color: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            text-align: center;
+            width: 100%;
+            max-width: 900px; /* Max width for the whole container */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            box-sizing: border-box;
+        }
+
+        .crossword-grid {
+            display: grid;
+            border: 2px solid #4a5568;
+            background-color: #cbd5e0; /* Background for empty cells */
+            max-width: 100%; /* Ensure grid doesn't overflow */
+            margin: 0 auto;
+            border-radius: 0.5rem;
+            overflow: hidden; /* Ensures rounded corners are applied */
+        }
+
+        .grid-cell {
+            width: 40px; /* Base size for cells */
+            height: 40px;
+            background-color: #ffffff;
+            border: 1px solid #a0aec0; /* Lighter border for individual cells */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+        }
+
+        .grid-cell.empty {
+            background-color: #2d3748; /* Darker color for empty/black cells */
+            pointer-events: none; /* No interaction for empty cells */
+        }
+
+        .grid-cell input {
+            width: 90%;
+            height: 90%;
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: bold;
+            text-transform: uppercase;
+            border: none;
+            background: transparent;
+            outline: none;
+            color: #2d3748;
+        }
+
+        .cell-number {
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            font-size: 0.7rem;
+            color: #4a5568;
+            font-weight: bold;
+        }
+
+        .clues-container {
+            display: flex;
+            flex-wrap: wrap; /* Allow columns to wrap */
+            gap: 2rem;
+            justify-content: center;
+            width: 100%;
+        }
+
+        .clue-section {
+            flex: 1; /* Allow sections to grow */
+            min-width: 250px; /* Minimum width for each clue section */
+            background-color: #edf2f7;
+            padding: 1rem;
+            border-radius: 0.75rem;
+            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
+            text-align: left;
+        }
+
+        .clue-section h3 {
+            font-size: 1.25rem;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 0.75rem;
+            border-bottom: 2px solid #a0aec0;
+            padding-bottom: 0.5rem;
+        }
+
+        .clue-list li {
+            margin-bottom: 0.5rem;
+            cursor: pointer;
+            padding: 0.25rem 0;
+            border-radius: 0.25rem;
+            transition: background-color 0.2s ease;
+        }
+
+        .clue-list li:hover {
+            background-color: #dbeafe; /* Light blue on hover */
+        }
+
+        .clue-list li.highlighted {
+            background-color: #bee3f8; /* Brighter blue for selected clue */
+            font-weight: bold;
+            color: #2b6cb0;
+        }
+
+        .grid-cell.highlighted {
+            background-color: #90cdf4; /* Blue highlight for grid cells */
+        }
+
+        .grid-cell.correct {
+            background-color: #a7f3d0; /* Green for correct */
+        }
+
+        .grid-cell.incorrect {
+            background-color: #fecaca; /* Red for incorrect */
+        }
+
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #4a5568;
+            color: white;
+            padding: 1.5rem 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            font-size: 1.25rem;
+            font-weight: bold;
+        }
+
+        .message-box button {
+            background-color: #4299e1; /* Blue button */
+            color: white;
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.5rem;
+            border: none;
+            cursor: pointer;
+            font-size: 1rem;
+            font-weight: bold;
+            transition: background-color 0.3s ease;
+        }
+
+        .message-box button:hover {
+            background-color: #3182ce; /* Darker blue on hover */
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            .game-container {
+                padding: 1.5rem;
+                gap: 1rem;
+            }
+            .grid-cell {
+                width: 35px; /* Slightly smaller cells */
+                height: 35px;
+            }
+            .grid-cell input {
+                font-size: 1.3rem;
+            }
+            .cell-number {
+                font-size: 0.6rem;
+            }
+            h1 {
+                font-size: 1.75rem;
+            }
+            .clues-container {
+                flex-direction: column; /* Stack clue sections vertically */
+                gap: 1rem;
+            }
+            .clue-section {
+                min-width: unset; /* Remove min-width to allow full flexibility */
+            }
+        }
+        @media (max-width: 480px) {
+            .game-container {
+                padding: 1rem;
+                gap: 0.75rem;
+            }
+            .grid-cell {
+                width: 30px; /* Even smaller cells for very small screens */
+                height: 30px;
+            }
+            .grid-cell input {
+                font-size: 1.1rem;
+            }
+            .cell-number {
+                font-size: 0.5rem;
+            }
+            h1 {
+                font-size: 1.5rem;
+            }
+            .controls button {
+                padding: 0.6rem 0.8rem;
+                font-size: 0.9rem;
+            }
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div class="game-container">
+        <h1 class="text-3xl font-bold text-gray-800 mb-4">Crossword Puzzle</h1>
+
+        <div class="controls flex gap-4 mb-4">
+            <button id="check-button" class="px-6 py-2 bg-blue-500 text-white font-bold rounded-xl shadow-lg hover:bg-blue-600 transition duration-300 ease-in-out transform hover:scale-105">
+                Check Answers
+            </button>
+            <button id="clear-button" class="px-6 py-2 bg-yellow-500 text-white font-bold rounded-xl shadow-lg hover:bg-yellow-600 transition duration-300 ease-in-out transform hover:scale-105">
+                Clear Board
+            </button>
+            <button id="new-game-button" class="px-6 py-2 bg-green-500 text-white font-bold rounded-xl shadow-lg hover:bg-green-600 transition duration-300 ease-in-out transform hover:scale-105">
+                New Puzzle
+            </button>
+        </div>
+
+        <div id="crossword-grid" class="crossword-grid">
+            <!-- Crossword grid cells will be dynamically inserted here -->
+        </div>
+
+        <div class="clues-container mt-6">
+            <div class="clue-section across-clues">
+                <h3>Across</h3>
+                <ol id="across-clues" class="clue-list">
+                    <!-- Across clues will be dynamically inserted here -->
+                </ol>
+            </div>
+            <div class="clue-section down-clues">
+                <h3>Down</h3>
+                <ol id="down-clues" class="clue-list">
+                    <!-- Down clues will be dynamically inserted here -->
+                </ol>
+            </div>
+        </div>
+    </div>
+
+    <!-- Message Box for game outcomes -->
+    <div id="message-box" class="message-box">
+        <p id="message-text"></p>
+        <button id="message-button">OK</button>
+    </div>
+
+    <script>
+        // Puzzle data structure:
+        // Each puzzle has a name, gridSize (rows, cols), and an array of words.
+        // Each word has the word itself, a clue, starting row/col, and direction.
+        const puzzles = [
+            {
+                name: "Beginner's Delight",
+                gridSize: { rows: 7, cols: 7 },
+                words: [
+                    { word: "CAT", clue: "A common house pet", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "DOG", clue: "Man's best friend", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "SUN", clue: "The star our planet orbits", start: { row: 2, col: 2 }, direction: "across" },
+                    { word: "MOON", clue: "Earth's natural satellite", start: { row: 0, col: 4 }, direction: "down" },
+                    { word: "CAR", clue: "Vehicle with wheels", start: { row: 4, col: 0 }, direction: "across" },
+                    { word: "PEN", clue: "Writing instrument", start: { row: 2, col: 4 }, direction: "down" },
+                    { word: "NET", clue: "Something used to catch fish", start: { row: 3, col: 3 }, direction: "across" },
+                    { word: "EAT", clue: "To consume food", start: { row: 3, col: 3 }, direction: "down" },
+                ]
+            },
+            {
+                 name: "Nature's Wonders",
+                 gridSize: { rows: 8, cols: 8 },
+                 words: [
+                    { word: "TREE", clue: "Tall plant with a trunk", start: { row: 0, col: 1 }, direction: "down" },
+                    { word: "ROOT", clue: "Underground part of a plant", start: { row: 0, col: 1 }, direction: "across" },
+                    { word: "SKY", clue: "Above the clouds", start: { row: 2, col: 0 }, direction: "across" },
+                    { word: "BIRD", clue: "Feathered flying animal", start: { row: 2, col: 3 }, direction: "down" },
+                    { word: "FLOWERS", clue: "Colorful blooms", start: { row: 4, col: 1 }, direction: "across" },
+                    { word: "RIVER", clue: "Large natural stream of water", start: { row: 1, col: 5 }, direction: "down" },
+                    { word: "LAKE", clue: "Body of still water", start: { row: 6, col: 3 }, direction: "across" },
+                    { word: "ROCK", clue: "Hard, solid mineral material", start: { row: 3, col: 6 }, direction: "down" },
+                    { word: "SUN", clue: "Energy from our star", start: { row: 5, col: 0 }, direction: "down" },
+                 ]
+            },
+            {
+                name: "Everyday Objects",
+                gridSize: { rows: 9, cols: 9 },
+                words: [
+                    { word: "TABLE", clue: "Piece of furniture with a flat top", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "CHAIR", clue: "A seat for one person", start: { row: 0, col: 2 }, direction: "down" },
+                    { word: "KNIFE", clue: "Utensil for cutting", start: { row: 1, col: 4 }, direction: "across" },
+                    { word: "FORK", clue: "Utensil for piercing food", start: { row: 1, col: 4 }, direction: "down" },
+                    { word: "PLATE", clue: "Flat dish for serving food", start: { row: 3, col: 1 }, direction: "across" },
+                    { word: "CUP", clue: "Container for drinking", start: { row: 3, col: 5 }, direction: "down" },
+                    { word: "BOOK", clue: "Collection of written pages", start: { row: 5, col: 0 }, direction: "across" },
+                    { word: "LAMP", clue: "Device for giving light", start: { row: 2, col: 7 }, direction: "down" },
+                    { word: "PHONE", clue: "Device for communication", start: { row: 6, col: 4 }, direction: "across" },
+                    { word: "REMOTE", clue: "Controls devices from a distance", start: { row: 0, col: 8 }, direction: "down" },
+                ]
+            },
+            {
+                name: "Food Fun",
+                gridSize: { rows: 6, cols: 6 },
+                words: [
+                    { word: "BREAD", clue: "Baked staple food", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "RICE", clue: "Grain used in many cuisines", start: { row: 0, col: 2 }, direction: "down" },
+                    { word: "MILK", clue: "White dairy drink", start: { row: 1, col: 1 }, direction: "across" },
+                    { word: "EGG", clue: "Oval food from a hen", start: { row: 1, col: 4 }, direction: "down" },
+                    { word: "CHEESE", clue: "Solid dairy product", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "MEAT", clue: "Animal flesh as food", start: { row: 2, col: 3 }, direction: "down" },
+                    { word: "SOUP", clue: "Liquid food with ingredients", start: { row: 5, col: 2 }, direction: "across" },
+                ]
+            },
+            {
+                name: "Around the House",
+                gridSize: { rows: 7, cols: 7 },
+                words: [
+                    { word: "DOOR", clue: "Entrance to a room", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "WINDOW", clue: "Opening for light and air", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "FLOOR", clue: "Surface you walk on", start: { row: 2, col: 0 }, direction: "across" },
+                    { word: "WALL", clue: "Vertical surface enclosing a room", start: { row: 0, col: 3 }, direction: "down" },
+                    { word: "ROOF", clue: "Top covering of a building", start: { row: 4, col: 2 }, direction: "across" },
+                    { word: "BED", clue: "Furniture for sleeping", start: { row: 1, col: 5 }, direction: "down" },
+                    { word: "SOFA", clue: "Long upholstered seat", start: { row: 6, col: 0 }, direction: "across" },
+                ]
+            },
+            {
+                name: "Travel Time",
+                gridSize: { rows: 7, cols: 7 },
+                words: [
+                    { word: "PLANE", clue: "Aircraft for flying", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "TRAIN", clue: "Vehicle on rails", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "BUS", clue: "Large road vehicle", start: { row: 2, col: 1 }, direction: "across" },
+                    { word: "SHIP", clue: "Large watercraft", start: { row: 0, col: 4 }, direction: "down" },
+                    { word: "MAP", clue: "Drawing of an area", start: { row: 4, col: 0 }, direction: "across" },
+                    { word: "TOUR", clue: "Guided trip", start: { row: 2, col: 5 }, direction: "down" },
+                    { word: "BAG", clue: "Container for belongings", start: { row: 6, col: 1 }, direction: "across" },
+                ]
+            },
+            {
+                name: "School Days",
+                gridSize: { rows: 6, cols: 6 },
+                words: [
+                    { word: "BOOK", clue: "For reading and learning", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "DESK", clue: "Table for studying", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "PENCI", clue: "For writing or drawing", start: { row: 1, col: 1 }, direction: "across" },
+                    { word: "RULER", clue: "Tool for measuring", start: { row: 0, col: 3 }, direction: "down" },
+                    { word: "ERASER", clue: "To rub out mistakes", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "GLUE", clue: "Sticky substance", start: { row: 2, col: 5 }, direction: "down" },
+                ]
+            },
+            {
+                name: "Body Parts",
+                gridSize: { rows: 7, cols: 7 },
+                words: [
+                    { word: "HEAD", clue: "Top part of the body", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "HAND", clue: "At the end of your arm", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "EYE", clue: "Used for seeing", start: { row: 2, col: 1 }, direction: "across" },
+                    { word: "NOSE", clue: "Used for smelling", start: { row: 0, col: 3 }, direction: "down" },
+                    { word: "MOUTH", clue: "Used for speaking and eating", start: { row: 4, col: 0 }, direction: "across" },
+                    { word: "LEG", clue: "Used for walking", start: { row: 2, col: 5 }, direction: "down" },
+                    { word: "FOOT", clue: "At the end of your leg", start: { row: 6, col: 1 }, direction: "across" },
+                ]
+            },
+            {
+                name: "Colors",
+                gridSize: { rows: 6, cols: 6 },
+                words: [
+                    { word: "RED", clue: "Color of a stop sign", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "BLUE", clue: "Color of the sky", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "GREEN", clue: "Color of grass", start: { row: 1, col: 1 }, direction: "across" },
+                    { word: "YELLOW", clue: "Color of the sun", start: { row: 0, col: 3 }, direction: "down" },
+                    { word: "PURPLE", clue: "Mix of red and blue", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "PINK", clue: "Light red", start: { row: 2, col: 5 }, direction: "down" },
+                ]
+            },
+            {
+                name: "Numbers",
+                gridSize: { rows: 7, cols: 7 },
+                words: [
+                    { word: "ONE", clue: "First counting number", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "TWO", clue: "After one", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "THREE", clue: "One more than two", start: { row: 2, col: 0 }, direction: "across" },
+                    { word: "FOUR", clue: "Twice two", start: { row: 0, col: 3 }, direction: "down" },
+                    { word: "FIVE", clue: "Number of fingers on a hand", start: { row: 4, col: 0 }, direction: "across" },
+                    { word: "SIX", clue: "After five", start: { row: 2, col: 5 }, direction: "down" },
+                    { word: "TEN", clue: "Fingers on two hands", start: { row: 6, col: 1 }, direction: "across" },
+                ]
+            },
+            {
+                name: "Shapes",
+                gridSize: { rows: 7, cols: 7 },
+                words: [
+                    { word: "CIRCLE", clue: "Round shape", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "SQUARE", clue: "Four equal sides", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "TRIANGLE", clue: "Three-sided shape", start: { row: 2, col: 0 }, direction: "across" },
+                    { word: "OVAL", clue: "Egg-shaped", start: { row: 0, col: 4 }, direction: "down" },
+                    { word: "STAR", clue: "Five-pointed shape", start: { row: 4, col: 0 }, direction: "across" },
+                    { word: "HEART", clue: "Symbol of love", start: { row: 2, col: 6 }, direction: "down" },
+                ]
+            },
+            {
+                name: "Farm Animals",
+                gridSize: { rows: 8, cols: 8 },
+                words: [
+                    { word: "COW", clue: "Produces milk", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "PIG", clue: "Oinks and loves mud", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "SHEEP", clue: "Produces wool", start: { row: 1, col: 2 }, direction: "across" },
+                    { word: "HORSE", clue: "Ridable animal", start: { row: 0, col: 5 }, direction: "down" },
+                    { word: "DUCK", clue: "Quacks and swims", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "GOAT", clue: "Climbs mountains", start: { row: 2, col: 7 }, direction: "down" },
+                    { word: "CHICKEN", clue: "Lays eggs", start: { row: 5, col: 0 }, direction: "across" },
+                    { word: "BARN", clue: "Farm building", start: { row: 4, col: 3 }, direction: "down" },
+                ]
+            },
+            {
+                name: "Sports",
+                gridSize: { rows: 8, cols: 8 },
+                words: [
+                    { word: "BALL", clue: "Used in many sports", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "GAME", clue: "Played for fun or competition", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "RUN", clue: "To move quickly on foot", start: { row: 1, col: 2 }, direction: "across" },
+                    { word: "JUMP", clue: "To push off the ground", start: { row: 0, col: 4 }, direction: "down" },
+                    { word: "SWIM", clue: "To move in water", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "TEAM", clue: "Group of players", start: { row: 2, col: 6 }, direction: "down" },
+                    { word: "SCORE", clue: "Points in a game", start: { row: 5, col: 0 }, direction: "across" },
+                    { word: "GOAL", clue: "Objective in many sports", start: { row: 4, col: 3 }, direction: "down" },
+                ]
+            },
+            {
+                name: "Musical Instruments",
+                gridSize: { rows: 9, cols: 9 },
+                words: [
+                    { word: "GUITAR", clue: "Stringed instrument", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "DRUMS", clue: "Percussion instrument", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "PIANO", clue: "Keyboard instrument", start: { row: 2, col: 0 }, direction: "across" },
+                    { word: "FLUTE", clue: "Woodwind instrument", start: { row: 0, col: 4 }, direction: "down" },
+                    { word: "TRUMPET", clue: "Brass instrument", start: { row: 4, col: 0 }, direction: "across" },
+                    { word: "VIOLIN", clue: "Smallest string instrument", start: { row: 1, col: 6 }, direction: "down" },
+                    { word: "SAX", clue: "Saxophone (abbr.)", start: { row: 6, col: 0 }, direction: "across" },
+                    { word: "HARP", clue: "Large string instrument", start: { row: 3, col: 8 }, direction: "down" },
+                ]
+            },
+            {
+                name: "Weather Words",
+                gridSize: { rows: 7, cols: 7 },
+                words: [
+                    { word: "RAIN", clue: "Water falling from sky", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "WIND", clue: "Moving air", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "CLOUD", clue: "White mass in sky", start: { row: 1, col: 1 }, direction: "across" },
+                    { word: "SNOW", clue: "Frozen precipitation", start: { row: 0, col: 3 }, direction: "down" },
+                    { word: "SUNNY", clue: "Full of sunshine", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "FOG", clue: "Thick mist", start: { row: 2, col: 5 }, direction: "down" },
+                    { word: "STORM", clue: "Bad weather", start: { row: 5, col: 1 }, direction: "across" },
+                ]
+            },
+            {
+                name: "Kitchen Utensils",
+                gridSize: { rows: 8, cols: 8 },
+                words: [
+                    { word: "SPOON", clue: "For eating soup", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "FORK", clue: "For eating solid food", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "KNIFE", clue: "For cutting", start: { row: 1, col: 2 }, direction: "across" },
+                    { word: "PLATE", clue: "For serving food", start: { row: 0, col: 4 }, direction: "down" },
+                    { word: "BOWL", clue: "Deep dish", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "CUP", clue: "For drinking", start: { row: 2, col: 6 }, direction: "down" },
+                    { word: "POT", clue: "For cooking", start: { row: 5, col: 1 }, direction: "across" },
+                    { word: "PAN", clue: "For frying", start: { row: 4, col: 3 }, direction: "down" },
+                ]
+            },
+            {
+                name: "Tools",
+                gridSize: { rows: 7, cols: 7 },
+                words: [
+                    { word: "HAMMER", clue: "For hitting nails", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "SAW", clue: "For cutting wood", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "SCREW", clue: "Threaded fastener", start: { row: 1, col: 1 }, direction: "across" },
+                    { word: "AXE", clue: "For chopping wood", start: { row: 0, col: 4 }, direction: "down" },
+                    { word: "DRILL", clue: "For making holes", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "WRENCH", clue: "For turning nuts", start: { row: 2, col: 6 }, direction: "down" },
+                    { word: "LEVEL", clue: "For checking flatness", start: { row: 5, col: 1 }, direction: "across" },
+                ]
+            },
+            {
+                name: "Professions",
+                gridSize: { rows: 8, cols: 8 },
+                words: [
+                    { word: "DOCTOR", clue: "Heals people", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "NURSE", clue: "Assists doctors", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "TEACHER", clue: "Educates students", start: { row: 1, col: 2 }, direction: "across" },
+                    { word: "PILOT", clue: "Flies planes", start: { row: 0, col: 5 }, direction: "down" },
+                    { word: "CHEF", clue: "Cooks food professionally", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "POLICE", clue: "Maintains law and order", start: { row: 2, col: 7 }, direction: "down" },
+                    { word: "ARTIST", clue: "Creates art", start: { row: 5, col: 0 }, direction: "across" },
+                    { word: "FARMER", clue: "Works on a farm", start: { row: 4, col: 3 }, direction: "down" },
+                ]
+            },
+            {
+                name: "Countries",
+                gridSize: { rows: 9, cols: 9 },
+                words: [
+                    { word: "INDIA", clue: "Country in South Asia", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "CHINA", clue: "Most populous country", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "JAPAN", clue: "Island nation in East Asia", start: { row: 1, col: 2 }, direction: "across" },
+                    { word: "FRANCE", clue: "European country, capital Paris", start: { row: 0, col: 5 }, direction: "down" },
+                    { word: "CANADA", clue: "North American country", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "MEXICO", clue: "South of USA", start: { row: 2, col: 7 }, direction: "down" },
+                    { word: "BRAZIL", clue: "Largest South American country", start: { row: 5, col: 0 }, direction: "across" },
+                    { word: "ITALY", clue: "Boot-shaped country", start: { row: 4, col: 3 }, direction: "down" },
+                ]
+            },
+            {
+                name: "Space Exploration",
+                gridSize: { rows: 8, cols: 8 },
+                words: [
+                    { word: "STAR", clue: "Celestial body of gas", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "ROCKET", clue: "Launches spacecraft", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "PLANET", clue: "Orbits a star", start: { row: 1, col: 2 }, direction: "across" },
+                    { word: "EARTH", clue: "Our home planet", start: { row: 0, col: 5 }, direction: "down" },
+                    { word: "MOON", clue: "Earth's natural satellite", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "MARS", clue: "The Red Planet", start: { row: 2, col: 7 }, direction: "down" },
+                    { word: "GALAXY", clue: "Vast system of stars", start: { row: 5, col: 0 }, direction: "across" },
+                    { word: "NEBULA", clue: "Interstellar cloud of dust", start: { row: 4, col: 3 }, direction: "down" },
+                ]
+            },
+            {
+                name: "Technology",
+                gridSize: { rows: 7, cols: 7 },
+                words: [
+                    { word: "PHONE", clue: "Mobile communication device", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "LAPTOP", clue: "Portable computer", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "MOUSE", clue: "Computer pointing device", start: { row: 1, col: 1 }, direction: "across" },
+                    { word: "CODE", clue: "Instructions for computer", start: { row: 0, col: 4 }, direction: "down" },
+                    { word: "WEB", clue: "World Wide ___", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "APP", clue: "Software application", start: { row: 2, col: 6 }, direction: "down" },
+                    { word: "DATA", clue: "Information for processing", start: { row: 5, col: 1 }, direction: "across" },
+                ]
+            },
+            {
+                name: "Emotions",
+                gridSize: { rows: 6, cols: 6 },
+                words: [
+                    { word: "HAPPY", clue: "Feeling joy", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "SAD", clue: "Feeling sorrow", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "ANGRY", clue: "Feeling mad", start: { row: 1, col: 1 }, direction: "across" },
+                    { word: "FEAR", clue: "Feeling scared", start: { row: 0, col: 3 }, direction: "down" },
+                    { word: "LOVE", clue: "Strong affection", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "CALM", clue: "Peaceful feeling", start: { row: 2, col: 5 }, direction: "down" },
+                ]
+            },
+            {
+                name: "Family Members",
+                gridSize: { rows: 7, cols: 7 },
+                words: [
+                    { word: "MOM", clue: "Your mother", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "DAD", clue: "Your father", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "SISTER", clue: "Female sibling", start: { row: 1, col: 1 }, direction: "across" },
+                    { word: "BROTHER", clue: "Male sibling", start: { row: 0, col: 4 }, direction: "down" },
+                    { word: "AUNT", clue: "Sister of your parent", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "UNCLE", clue: "Brother of your parent", start: { row: 2, col: 6 }, direction: "down" },
+                    { word: "COUSIN", clue: "Child of your aunt/uncle", start: { row: 5, col: 1 }, direction: "across" },
+                ]
+            },
+            {
+                name: "At the Beach",
+                gridSize: { rows: 7, cols: 7 },
+                words: [
+                    { word: "SAND", clue: "Found on beaches", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "SEA", clue: "Large body of saltwater", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "SUN", clue: "Shines brightly at the beach", start: { row: 1, col: 1 }, direction: "across" },
+                    { word: "WAVE", clue: "Moves in the ocean", start: { row: 0, col: 3 }, direction: "down" },
+                    { word: "SHELL", clue: "Found on the shore", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "FISH", clue: "Swims in the ocean", start: { row: 2, col: 5 }, direction: "down" },
+                    { word: "BOAT", clue: "Floats on water", start: { row: 5, col: 1 }, direction: "across" },
+                ]
+            },
+            {
+                name: "In the Garden",
+                gridSize: { rows: 8, cols: 8 },
+                words: [
+                    { word: "PLANT", clue: "Grows in soil", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "SOIL", clue: "Dirt for plants", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "FLOWER", clue: "Blooms in the garden", start: { row: 1, col: 2 }, direction: "across" },
+                    { word: "WATER", clue: "Essential for growth", start: { row: 0, col: 5 }, direction: "down" },
+                    { word: "LEAF", clue: "Part of a plant", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "BUG", clue: "Small insect", start: { row: 2, col: 7 }, direction: "down" },
+                    { word: "TREE", clue: "Large woody plant", start: { row: 5, col: 0 }, direction: "across" },
+                    { word: "SEED", clue: "Grows into a plant", start: { row: 4, col: 3 }, direction: "down" },
+                ]
+            },
+            {
+                name: "Furniture",
+                gridSize: { rows: 8, cols: 8 },
+                words: [
+                    { word: "CHAIR", clue: "For sitting", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "TABLE", clue: "Flat surface with legs", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "SOFA", clue: "Comfortable seat for multiple people", start: { row: 1, col: 2 }, direction: "across" },
+                    { word: "BED", clue: "For sleeping", start: { row: 0, col: 5 }, direction: "down" },
+                    { word: "DESK", clue: "For working or studying", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "LAMP", clue: "Provides light", start: { row: 2, col: 7 }, direction: "down" },
+                    { word: "RUG", clue: "Covers the floor", start: { row: 5, col: 0 }, direction: "across" },
+                    { word: "DRAWER", clue: "Sliding compartment", start: { row: 4, col: 3 }, direction: "down" },
+                ]
+            },
+            {
+                name: "Transportation",
+                gridSize: { rows: 9, cols: 9 },
+                words: [
+                    { word: "CAR", clue: "Drives on roads", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "BUS", clue: "Carries many passengers", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "TRAIN", clue: "Moves on tracks", start: { row: 1, col: 2 }, direction: "across" },
+                    { word: "BIKE", clue: "Two-wheeled vehicle", start: { row: 0, col: 5 }, direction: "down" },
+                    { word: "PLANE", clue: "Flies in the air", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "SHIP", clue: "Travels on water", start: { row: 2, col: 7 }, direction: "down" },
+                    { word: "TAXI", clue: "Hired car service", start: { row: 5, col: 0 }, direction: "across" },
+                    { word: "SCOOTER", clue: "Small motorcycle", start: { row: 4, col: 3 }, direction: "down" },
+                ]
+            },
+            {
+                name: "Tools 2.0",
+                gridSize: { rows: 7, cols: 7 },
+                words: [
+                    { word: "PLIERS", clue: "For gripping and bending", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "WRENCH", clue: "For turning nuts and bolts", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "SCREWDRIVER", clue: "For driving screws", start: { row: 1, col: 1 }, direction: "across" },
+                    { word: "RULER", clue: "For measuring straight lines", start: { row: 0, col: 4 }, direction: "down" },
+                    { word: "LEVEL", clue: "To check if a surface is flat", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "DRILL", clue: "For making holes", start: { row: 2, col: 6 }, direction: "down" },
+                    { word: "CLAW", clue: "Part of a hammer", start: { row: 5, col: 1 }, direction: "across" },
+                ]
+            },
+            {
+                name: "Fruit Salad",
+                gridSize: { rows: 8, cols: 8 },
+                words: [
+                    { word: "APPLE", clue: "Red or green fruit", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "PEAR", clue: "Green or yellow fruit", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "GRAPE", clue: "Small, round fruit in bunches", start: { row: 1, col: 2 }, direction: "across" },
+                    { word: "LEMON", clue: "Sour yellow fruit", start: { row: 0, col: 5 }, direction: "down" },
+                    { word: "BANANA", clue: "Yellow, curved fruit", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "BERRY", clue: "Small, juicy fruit", start: { row: 2, col: 7 }, direction: "down" },
+                    { word: "MANGO", clue: "Tropical stone fruit", start: { row: 5, col: 0 }, direction: "across" },
+                    { word: "KIWI", clue: "Fuzzy green fruit", start: { row: 4, col: 3 }, direction: "down" },
+                ]
+            },
+            {
+                name: "Vegetable Patch",
+                gridSize: { rows: 8, cols: 8 },
+                words: [
+                    { word: "CARROT", clue: "Orange root vegetable", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "ONION", clue: "Bulb vegetable, makes you cry", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "POTATO", clue: "Starchy tuber", start: { row: 1, col: 2 }, direction: "across" },
+                    { word: "PEAS", clue: "Small green seeds", start: { row: 0, col: 5 }, direction: "down" },
+                    { word: "TOMATO", clue: "Red fruit, often used as vegetable", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "BEAN", clue: "Legume seed", start: { row: 2, col: 7 }, direction: "down" },
+                    { word: "SPINACH", clue: "Green leafy vegetable", start: { row: 5, col: 0 }, direction: "across" },
+                    { word: "CORN", clue: "Yellow kernels on a cob", start: { row: 4, col: 3 }, direction: "down" },
+                ]
+            },
+            {
+                name: "Planets",
+                gridSize: { rows: 9, cols: 9 },
+                words: [
+                    { word: "EARTH", clue: "Our home planet", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "MARS", clue: "The Red Planet", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "VENUS", clue: "Second planet from the sun", start: { row: 1, col: 2 }, direction: "across" },
+                    { word: "JUPITER", clue: "Largest planet", start: { row: 0, col: 5 }, direction: "down" },
+                    { word: "SATURN", clue: "Planet with rings", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "URANUS", clue: "Ice giant planet", start: { row: 2, col: 7 }, direction: "down" },
+                    { word: "NEPTUNE", clue: "Farthest planet from the sun", start: { row: 5, col: 0 }, direction: "across" },
+                    { word: "MERCURY", clue: "Closest planet to the sun", start: { row: 4, col: 3 }, direction: "down" },
+                ]
+            },
+            {
+                name: "Holidays",
+                gridSize: { rows: 9, cols: 9 },
+                words: [
+                    { word: "CHRISTMAS", clue: "December holiday", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "EASTER", clue: "Spring holiday with eggs", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "HALLOWEEN", clue: "Spooky October holiday", start: { row: 2, col: 0 }, direction: "across" },
+                    { word: "THANKSGIVING", clue: "Autumn feast holiday", start: { row: 0, col: 5 }, direction: "down" },
+                    { word: "NEWYEAR", clue: "Celebrated on Jan 1", start: { row: 4, col: 0 }, direction: "across" },
+                    { word: "VALENTINE", clue: "Day of love", start: { row: 2, col: 7 }, direction: "down" },
+                    { word: "BIRTHDAY", clue: "Anniversary of birth", start: { row: 6, col: 0 }, direction: "across" },
+                    { word: "SUMMER", clue: "Warmest season", start: { row: 4, col: 3 }, direction: "down" },
+                ]
+            },
+            {
+                name: "Occupations",
+                gridSize: { rows: 8, cols: 8 },
+                words: [
+                    { word: "ENGINEER", clue: "Designs and builds", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "DESIGNER", clue: "Creates plans or drawings", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "PROGRAMMER", clue: "Writes computer code", start: { row: 1, col: 2 }, direction: "across" },
+                    { word: "WRITER", clue: "Composes books or articles", start: { row: 0, col: 5 }, direction: "down" },
+                    { word: "MANAGER", clue: "Oversees a team", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "LAWYER", clue: "Practices law", start: { row: 2, col: 7 }, direction: "down" },
+                    { word: "ACCOUNTANT", clue: "Manages financial records", start: { row: 5, col: 0 }, direction: "across" },
+                    { word: "SALES", clue: "Sells products or services", start: { row: 4, col: 3 }, direction: "down" },
+                ]
+            },
+            {
+                name: "Zoo Animals",
+                gridSize: { rows: 9, cols: 9 },
+                words: [
+                    { word: "LION", clue: "King of the jungle", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "TIGER", clue: "Large striped cat", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "ZEBRA", clue: "African horse with stripes", start: { row: 1, col: 2 }, direction: "across" },
+                    { word: "ELEPHANT", clue: "Largest land animal", start: { row: 0, col: 5 }, direction: "down" },
+                    { word: "GIRAFFE", clue: "Tallest animal", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "MONKEY", clue: "Primate that swings", start: { row: 2, col: 7 }, direction: "down" },
+                    { word: "PANDA", clue: "Bear that eats bamboo", start: { row: 5, col: 0 }, direction: "across" },
+                    { word: "HIPPO", clue: "Large water mammal", start: { row: 4, col: 3 }, direction: "down" },
+                ]
+            },
+            {
+                name: "Household Chores",
+                gridSize: { rows: 8, cols: 8 },
+                words: [
+                    { word: "WASH", clue: "Clean with water", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "CLEAN", clue: "Make tidy", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "DUST", clue: "Remove fine powder", start: { row: 1, col: 2 }, direction: "across" },
+                    { word: "SWEEP", clue: "Clean with a broom", start: { row: 0, col: 5 }, direction: "down" },
+                    { word: "COOK", clue: "Prepare food", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "MOP", clue: "Clean floor with wet tool", start: { row: 2, col: 7 }, direction: "down" },
+                    { word: "ORGANIZE", clue: "Arrange neatly", start: { row: 5, col: 0 }, direction: "across" },
+                    { word: "FOLD", clue: "Bend over on itself", start: { row: 4, col: 3 }, direction: "down" },
+                ]
+            },
+            {
+                name: "Computer Terms",
+                gridSize: { rows: 9, cols: 9 },
+                words: [
+                    { word: "CODE", clue: "Programming language", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "BUG", clue: "Software error", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "DATA", clue: "Information", start: { row: 1, col: 2 }, direction: "across" },
+                    { word: "FILE", clue: "Collection of data", start: { row: 0, col: 5 }, direction: "down" },
+                    { word: "VIRUS", clue: "Malicious software", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "SERVER", clue: "Provides services to clients", start: { row: 2, col: 7 }, direction: "down" },
+                    { word: "NETWORK", clue: "Connected computers", start: { row: 5, col: 0 }, direction: "across" },
+                    { word: "PRINTER", clue: "Outputs documents", start: { row: 4, col: 3 }, direction: "down" },
+                ]
+            },
+            {
+                name: "Garden Tools",
+                gridSize: { rows: 7, cols: 7 },
+                words: [
+                    { word: "SPADE", clue: "Digging tool", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "RAKE", clue: "Gathers leaves", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "HOE", clue: "Weeding tool", start: { row: 1, col: 1 }, direction: "across" },
+                    { word: "FORK", clue: "Digging or lifting tool", start: { row: 0, col: 4 }, direction: "down" },
+                    { word: "SHEARS", clue: "Cutting tool for plants", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "TROWEL", clue: "Small hand shovel", start: { row: 2, col: 6 }, direction: "down" },
+                    { word: "HOSE", clue: "For watering plants", start: { row: 5, col: 1 }, direction: "across" },
+                ]
+            },
+            {
+                name: "Birds",
+                gridSize: { rows: 8, cols: 8 },
+                words: [
+                    { word: "ROBIN", clue: "Small red-breasted bird", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "OWL", clue: "Nocturnal bird of prey", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "SPARROW", clue: "Small, common bird", start: { row: 1, col: 2 }, direction: "across" },
+                    { word: "EAGLE", clue: "Large bird of prey", start: { row: 0, col: 5 }, direction: "down" },
+                    { word: "DUCK", clue: "Waterfowl, quacks", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "SWAN", clue: "Large white waterfowl", start: { row: 2, col: 7 }, direction: "down" },
+                    { word: "PIGEON", clue: "Common city bird", start: { row: 5, col: 0 }, direction: "across" },
+                    { word: "CRANE", clue: "Long-legged bird", start: { row: 4, col: 3 }, direction: "down" },
+                ]
+            },
+            {
+                name: "Sea Creatures",
+                gridSize: { rows: 9, cols: 9 },
+                words: [
+                    { word: "FISH", clue: "Swims in water", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "WHALE", clue: "Largest mammal", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "SHARK", clue: "Predatory fish", start: { row: 1, col: 2 }, direction: "across" },
+                    { word: "DOLPHIN", clue: "Intelligent marine mammal", start: { row: 0, col: 5 }, direction: "down" },
+                    { word: "CRAB", clue: "Crustacean with claws", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "OCTOPUS", clue: "Eight-armed creature", start: { row: 2, col: 7 }, direction: "down" },
+                    { word: "JELLYFISH", clue: "Gelatinous marine animal", start: { row: 5, col: 0 }, direction: "across" },
+                    { word: "SEAL", clue: "Marine mammal, flippers", start: { row: 4, col: 3 }, direction: "down" },
+                ]
+            },
+            {
+                name: "Musical Genres",
+                gridSize: { rows: 8, cols: 8 },
+                words: [
+                    { word: "JAZZ", clue: "Improvised music", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "ROCK", clue: "Popular music genre", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "BLUES", clue: "Genre with origins in spirituals", start: { row: 1, col: 2 }, direction: "across" },
+                    { word: "POP", clue: "Popular music", start: { row: 0, col: 5 }, direction: "down" },
+                    { word: "FOLK", clue: "Traditional music", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "SOUL", clue: "Emotional music genre", start: { row: 2, col: 7 }, direction: "down" },
+                    { word: "FUNK", clue: "Rhythmic dance music", start: { row: 5, col: 0 }, direction: "across" },
+                    { word: "HIPHOP", clue: "Rhythmic music genre", start: { row: 4, col: 3 }, direction: "down" },
+                ]
+            },
+            {
+                name: "Camping Trip",
+                gridSize: { rows: 9, cols: 9 },
+                words: [
+                    { word: "TENT", clue: "Shelter for camping", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "CAMP", clue: "Outdoor stay", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "FIRE", clue: "For warmth and cooking", start: { row: 1, col: 2 }, direction: "across" },
+                    { word: "HIKE", clue: "Long walk", start: { row: 0, col: 5 }, direction: "down" },
+                    { word: "SLEEPING", clue: "Bag for sleeping outdoors", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "STARS", clue: "Shine brightly at night", start: { row: 2, col: 7 }, direction: "down" },
+                    { word: "FOREST", clue: "Area with many trees", start: { row: 5, col: 0 }, direction: "across" },
+                    { word: "MAP", clue: "For navigation", start: { row: 4, col: 3 }, direction: "down" },
+                ]
+            },
+            {
+                name: "Breakfast Foods",
+                gridSize: { rows: 8, cols: 8 },
+                words: [
+                    { word: "EGGS", clue: "Common breakfast item", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "TOAST", clue: "Browned bread", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "BACON", clue: "Crispy breakfast meat", start: { row: 1, col: 2 }, direction: "across" },
+                    { word: "COFFEE", clue: "Morning drink", start: { row: 0, col: 5 }, direction: "down" },
+                    { word: "PANCAKE", clue: "Flat cake for breakfast", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "JUICE", clue: "Fruit drink", start: { row: 2, col: 7 }, direction: "down" },
+                    { word: "CEREAL", clue: "Grain breakfast food", start: { row: 5, col: 0 }, direction: "across" },
+                    { word: "MILK", clue: "Dairy drink", start: { row: 4, col: 3 }, direction: "down" },
+                ]
+            },
+            {
+                name: "Summer Activities",
+                gridSize: { rows: 9, cols: 9 },
+                words: [
+                    { word: "SWIM", clue: "Activity in water", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "BEACH", clue: "Sandy shore", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "PICNIC", clue: "Outdoor meal", start: { row: 1, col: 2 }, direction: "across" },
+                    { word: "HIKE", clue: "Long walk in nature", start: { row: 0, col: 5 }, direction: "down" },
+                    { word: "BBQ", clue: "Outdoor cooking event", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "BIKING", clue: "Riding a bicycle", start: { row: 2, col: 7 }, direction: "down" },
+                    { word: "GARDENING", clue: "Working in a garden", start: { row: 5, col: 0 }, direction: "across" },
+                    { word: "CAMPING", clue: "Sleeping outdoors", start: { row: 4, col: 3 }, direction: "down" },
+                ]
+            },
+            {
+                name: "Winter Fun",
+                gridSize: { rows: 9, cols: 9 },
+                words: [
+                    { word: "SNOW", clue: "White frozen precipitation", start: { row: 0, col: 0 }, direction: "across" },
+                    { word: "ICE", clue: "Frozen water", start: { row: 0, col: 0 }, direction: "down" },
+                    { word: "SKATE", clue: "Glide on ice", start: { row: 1, col: 2 }, direction: "across" },
+                    { word: "COLD", clue: "Low temperature", start: { row: 0, col: 5 }, direction: "down" },
+                    { word: "COAT", clue: "Warm winter garment", start: { row: 3, col: 0 }, direction: "across" },
+                    { word: "GLOVE", clue: "Covers the hand", start: { row: 2, col: 7 }, direction: "down" },
+                    { word: "SCARF", clue: "Worn around the neck", start: { row: 5, col: 0 }, direction: "across" },
+                    { word: "WINTER", clue: "Coldest season", start: { row: 4, col: 3 }, direction: "down" },
+                ]
+            }
+        ];
+
+        let currentPuzzleIndex = 0; // Index of the current puzzle being played
+        let currentGridState = []; // 2D array to store the state of the grid (empty, letter, etc.)
+        let cellElements = []; // 2D array to store references to HTML input elements for easy access
+
+        // DOM elements
+        const crosswordGridContainer = document.getElementById('crossword-grid');
+        const acrossCluesList = document.getElementById('across-clues');
+        const downCluesList = document.getElementById('down-clues');
+        const checkButton = document.getElementById('check-button');
+        const clearButton = document.getElementById('clear-button');
+        const newGameButton = document.getElementById('new-game-button');
+        const messageBox = document.getElementById('message-box');
+        const messageText = document.getElementById('message-text');
+        const messageButton = document.getElementById('message-button');
+
+        // Function to show a message box
+        function showMessageBox(message) {
+            messageText.textContent = message;
+            messageBox.style.display = 'flex';
+        }
+
+        // Function to hide the message box
+        function hideMessageBox() {
+            messageBox.style.display = 'none';
+        }
+
+        // Initialize the message box button
+        messageButton.addEventListener('click', hideMessageBox);
+
+        /**
+         * Initializes the crossword grid and clues for the current puzzle.
+         */
+        function initializeGame() {
+            const puzzle = puzzles[currentPuzzleIndex];
+            const { rows, cols } = puzzle.gridSize;
+
+            // Clear previous grid and clues
+            crosswordGridContainer.innerHTML = '';
+            acrossCluesList.innerHTML = '';
+            downCluesList.innerHTML = '';
+            crosswordGridContainer.style.gridTemplateColumns = `repeat(${cols}, 1fr)`;
+
+            // Initialize grid state with empty cells
+            currentGridState = Array(rows).fill(null).map(() => Array(cols).fill(null));
+            cellElements = Array(rows).fill(null).map(() => Array(cols).fill(null));
+
+            // Mark cells occupied by words and assign clue numbers
+            let clueNumber = 1;
+            const clueStartPositions = {}; // To store positions that start a word for numbering
+
+            // First pass: Determine occupied cells and clue numbers
+            puzzle.words.forEach(word => {
+                let r = word.start.row;
+                let c = word.start.col;
+                // Assign a clue number if this cell hasn't been numbered for a word yet
+                const posKey = `${r}-${c}`;
+                if (!clueStartPositions[posKey]) {
+                    clueStartPositions[posKey] = clueNumber++;
+                }
+                word.clueNumber = clueStartPositions[posKey]; // Assign the number to the word object
+
+                for (let i = 0; i < word.word.length; i++) {
+                    // Check bounds before setting currentGridState
+                    if (r >= 0 && r < rows && c >= 0 && c < cols) {
+                        currentGridState[r][c] = { letter: '', correctLetter: word.word[i].toUpperCase(), words: [] };
+                    } else {
+                        console.error(`Word "${word.word}" goes out of bounds at row ${r}, col ${c}. Grid size: ${rows}x${cols}. Skipping this word.`);
+                        // Instead of breaking, continue to the next word to avoid stopping the whole puzzle generation
+                        break; // Exit loop for this word
+                    }
+
+                    if (word.direction === "across") {
+                        c++;
+                    } else { // down
+                        r++;
+                    }
+                }
+            });
+
+            // Second pass: Populate the 'words' array in each cell's state
+            puzzle.words.forEach(word => {
+                let r = word.start.row;
+                let c = word.start.col;
+                for (let i = 0; i < word.word.length; i++) {
+                     // Only add to words array if cell was successfully initialized in first pass
+                    if (r >= 0 && r < rows && c >= 0 && c < cols && currentGridState[r][c]) {
+                        currentGridState[r][c].words.push({
+                            wordIndex: puzzles[currentPuzzleIndex].words.indexOf(word), // Store index of the word
+                            direction: word.direction
+                        });
+                    }
+                    if (word.direction === "across") {
+                        c++;
+                    } else { // down
+                        r++;
+                    }
+                }
+            });
+
+
+            // Create grid cells
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    const cellDiv = document.createElement('div');
+                    cellDiv.classList.add('grid-cell');
+                    cellDiv.dataset.row = r;
+                    cellDiv.dataset.col = c;
+
+                    if (currentGridState[r][c] === null) {
+                        cellDiv.classList.add('empty');
+                    } else {
+                        const input = document.createElement('input');
+                        input.type = 'text';
+                        input.maxLength = '1';
+                        input.dataset.row = r;
+                        input.dataset.col = c;
+                        input.addEventListener('input', handleInput);
+                        input.addEventListener('keydown', handleKeyDown);
+                        input.addEventListener('focus', handleCellFocus);
+                        input.addEventListener('blur', handleCellBlur);
+                        cellDiv.appendChild(input);
+                        cellElements[r][c] = input; // Store reference to the input element
+
+                        // Add clue number to cell if it's a starting point
+                        const posKey = `${r}-${c}`;
+                        if (clueStartPositions[posKey]) {
+                            const numSpan = document.createElement('span');
+                            numSpan.classList.add('cell-number');
+                            numSpan.textContent = clueStartPositions[posKey];
+                            cellDiv.appendChild(numSpan);
+                        }
+                    }
+                    crosswordGridContainer.appendChild(cellDiv);
+                }
+            }
+
+            // Populate clues lists
+            const sortedAcrossClues = puzzle.words
+                .filter(w => w.direction === 'across' && w.clueNumber !== undefined) // Filter out words that were skipped due to bounds
+                .sort((a, b) => a.clueNumber - b.clueNumber);
+
+            sortedAcrossClues.forEach(word => {
+                const li = document.createElement('li');
+                li.innerHTML = `<strong data-clue-number="${word.clueNumber}">${word.clueNumber}.</strong> ${word.clue}`;
+                li.dataset.wordIndex = puzzles[currentPuzzleIndex].words.indexOf(word);
+                li.addEventListener('click', handleClueClick);
+                acrossCluesList.appendChild(li);
+            });
+
+            const sortedDownClues = puzzle.words
+                .filter(w => w.direction === 'down' && w.clueNumber !== undefined) // Filter out words that were skipped due to bounds
+                .sort((a, b) => a.clueNumber - b.clueNumber);
+
+            sortedDownClues.forEach(word => {
+                const li = document.createElement('li');
+                li.innerHTML = `<strong data-clue-number="${word.clueNumber}">${word.clueNumber}.</strong> ${word.clue}`;
+                li.dataset.wordIndex = puzzles[currentPuzzleIndex].words.indexOf(word);
+                li.addEventListener('click', handleClueClick);
+                downCluesList.appendChild(li);
+            });
+        }
+
+        /**
+         * Handles input in a cell, auto-advancing to the next cell.
+         * @param {Event} event The input event.
+         */
+        function handleInput(event) {
+            let input = event.target;
+            input.value = input.value.toUpperCase(); // Ensure uppercase
+
+            let r = parseInt(input.dataset.row);
+            let c = parseInt(input.dataset.col);
+
+            if (currentGridState[r] && currentGridState[r][c]) { // Check if the cell exists in grid state
+                currentGridState[r][c].letter = input.value; // Update grid state
+            }
+
+
+            if (input.value !== '') {
+                // Determine active word and move to next cell in that direction
+                // This is a simplified auto-advance. A more complex version would consider
+                // which word (across/down) the user is currently "working on".
+                // Prioritize across if available, otherwise down
+                const cellState = currentGridState[r][c];
+                if (cellState && cellState.words.length > 0) {
+                    let wordToAdvance = cellState.words.find(w => w.direction === "across") || cellState.words[0];
+                    const wordObj = puzzles[currentPuzzleIndex].words[wordToAdvance.wordIndex];
+
+                    let nextR = r, nextC = c;
+                    let foundNext = false;
+
+                    if (wordObj.direction === "across") {
+                        nextC++;
+                        // Find next cell in across direction
+                        while (nextC < puzzles[currentPuzzleIndex].gridSize.cols) {
+                            if (cellElements[r][nextC]) {
+                                cellElements[r][nextC].focus();
+                                foundNext = true;
+                                break;
+                            }
+                            nextC++;
+                        }
+                    } else { // down
+                        nextR++;
+                        // Find next cell in down direction
+                        while (nextR < puzzles[currentPuzzleIndex].gridSize.rows) {
+                            if (cellElements[nextR][c]) {
+                                cellElements[nextR][c].focus();
+                                foundNext = true;
+                                break;
+                            }
+                            nextR++;
+                        }
+                    }
+
+                    // If no next cell in the active word's direction, try the other direction
+                    if (!foundNext && cellState.words.length > 1) {
+                        wordToAdvance = cellState.words.find(w => w.direction !== wordToAdvance.direction);
+                        if (wordToAdvance) {
+                             const otherWordObj = puzzles[currentPuzzleIndex].words[wordToAdvance.wordIndex];
+                             nextR = r; nextC = c; // Reset for other direction
+
+                             if (otherWordObj.direction === "across") {
+                                 nextC++;
+                                 while (nextC < puzzles[currentPuzzleIndex].gridSize.cols) {
+                                     if (cellElements[r][nextC]) {
+                                         cellElements[r][nextC].focus();
+                                         foundNext = true;
+                                         break;
+                                     }
+                                     nextC++;
+                                 }
+                             } else { // down
+                                 nextR++;
+                                 while (nextR < puzzles[currentPuzzleIndex].gridSize.rows) {
+                                     if (cellElements[nextR][c]) {
+                                         cellElements[nextR][c].focus();
+                                         foundNext = true;
+                                         break;
+                                     }
+                                     nextR++;
+                                 }
+                             }
+                        }
+                    }
+                }
+            }
+        }
+
+        /**
+         * Handles keydown events for navigation (arrows, backspace).
+         * @param {Event} event The keydown event.
+         */
+        function handleKeyDown(event) {
+            let input = event.target;
+            let r = parseInt(input.dataset.row);
+            let c = parseInt(input.dataset.col);
+            let nextR = r, nextC = c;
+
+            const gridSize = puzzles[currentPuzzleIndex].gridSize;
+
+            switch (event.key) {
+                case 'ArrowUp':
+                    nextR--;
+                    break;
+                case 'ArrowDown':
+                    nextR++;
+                    break;
+                case 'ArrowLeft':
+                    nextC--;
+                    break;
+                case 'ArrowRight':
+                    nextC++;
+                    break;
+                case 'Backspace':
+                    if (input.value === '') { // If current cell is empty, move back and clear previous
+                        event.preventDefault(); // Prevent default backspace behavior
+                        // Prioritize moving back in the same direction as active word
+                        const currentCellState = currentGridState[r][c];
+                        if (currentCellState && currentCellState.words.length > 0) {
+                            const activeWordDirection = currentCellState.words[0].direction; // Assuming primary active word
+
+                            if (activeWordDirection === "across") {
+                                nextC--;
+                            } else { // down
+                                nextR--;
+                            }
+                        } else { // Fallback if no active word or logic is more complex
+                            nextC--; // Default to moving left
+                        }
+
+                        if (nextR >= 0 && nextR < gridSize.rows && nextC >= 0 && nextC < gridSize.cols && cellElements[nextR][nextC]) {
+                            cellElements[nextR][nextC].value = '';
+                            if (currentGridState[nextR] && currentGridState[nextR][nextC]) {
+                                currentGridState[nextR][nextC].letter = '';
+                            }
+                            cellElements[nextR][nextC].focus();
+                        }
+                    }
+                    break;
+                default:
+                    // Only allow single letters
+                    if (!/^[a-zA-Z]$/.test(event.key) && event.key.length === 1) {
+                        event.preventDefault();
+                    }
+                    return; // Do not prevent default for other keys
+            }
+
+            // Move focus to the next cell if it's within bounds and not empty
+            if (nextR >= 0 && nextR < gridSize.rows && nextC >= 0 && nextC < gridSize.cols && cellElements[nextR][nextC]) {
+                event.preventDefault(); // Prevent default arrow key behavior (scrolling)
+                cellElements[nextR][nextC].focus();
+            }
+        }
+
+        /**
+         * Highlights the word associated with the focused cell.
+         * @param {Event} event The focus event.
+         */
+        function handleCellFocus(event) {
+            const input = event.target;
+            const r = parseInt(input.dataset.row);
+            const c = parseInt(input.dataset.col);
+
+            const associatedWords = currentGridState[r][c] ? currentGridState[r][c].words : [];
+
+            // Highlight clue(s) first
+            document.querySelectorAll('.clue-list li').forEach(li => li.classList.remove('highlighted'));
+            associatedWords.forEach(wordMeta => {
+                const wordObj = puzzles[currentPuzzleIndex].words[wordMeta.wordIndex];
+                const clueLi = document.querySelector(`.clue-list li[data-word-index="${wordMeta.wordIndex}"]`);
+                if (clueLi) { // Ensure the clue element exists
+                    clueLi.classList.add('highlighted');
+                }
+            });
+
+            // Highlight grid cells
+            highlightWordInGrid(associatedWords);
+        }
+
+        /**
+         * Clears highlights when a cell loses focus.
+         */
+        function handleCellBlur() {
+            clearGridHighlights();
+            document.querySelectorAll('.clue-list li').forEach(li => li.classList.remove('highlighted'));
+        }
+
+        /**
+         * Handles clicking on a clue to highlight its corresponding word in the grid.
+         * @param {Event} event The click event.
+         */
+        function handleClueClick(event) {
+            const li = event.currentTarget;
+            const wordIndex = parseInt(li.dataset.wordIndex);
+            const wordObj = puzzles[currentPuzzleIndex].words[wordIndex];
+
+            // Clear previous clue highlights and apply new one
+            document.querySelectorAll('.clue-list li').forEach(item => item.classList.remove('highlighted'));
+            li.classList.add('highlighted');
+
+            // Highlight the word in the grid and focus the first cell
+            highlightWordInGrid([{ wordIndex: wordIndex, direction: wordObj.direction }]);
+            if (cellElements[wordObj.start.row] && cellElements[wordObj.start.row][wordObj.start.col]) {
+                cellElements[wordObj.start.row][wordObj.start.col].focus();
+            }
+        }
+
+        /**
+         * Clears all highlighted classes from grid cells.
+         */
+        function clearGridHighlights() {
+            document.querySelectorAll('.grid-cell').forEach(cell => {
+                cell.classList.remove('highlighted', 'correct', 'incorrect');
+            });
+        }
+
+        /**
+         * Highlights cells belonging to the given word(s).
+         * @param {Array<Object>} wordsMeta An array of objects {wordIndex, direction} for words to highlight.
+         */
+        function highlightWordInGrid(wordsMeta) {
+            clearGridHighlights(); // Clear previous highlights
+
+            wordsMeta.forEach(wordMeta => {
+                const wordObj = puzzles[currentPuzzleIndex].words[wordMeta.wordIndex];
+                let r = wordObj.start.row;
+                let c = wordObj.start.col;
+
+                for (let i = 0; i < wordObj.word.length; i++) {
+                    // Ensure bounds check for highlighting too
+                    if (r >= 0 && r < puzzles[currentPuzzleIndex].gridSize.rows && c >= 0 && c < puzzles[currentPuzzleIndex].gridSize.cols) {
+                        const cell = document.querySelector(`.grid-cell[data-row="${r}"][data-col="${c}"]`);
+                        if (cell) {
+                            cell.classList.add('highlighted');
+                        }
+                    }
+                    if (wordObj.direction === "across") {
+                        c++;
+                    } else {
+                        r++;
+                    }
+                }
+            });
+        }
+
+
+        /**
+         * Checks the user's answers against the correct solution.
+         */
+        function checkAnswers() {
+            let correctCount = 0;
+            let totalCells = 0;
+
+            document.querySelectorAll('.grid-cell').forEach(cell => {
+                cell.classList.remove('correct', 'incorrect'); // Clear previous checks
+
+                const r = parseInt(cell.dataset.row);
+                const c = parseInt(cell.dataset.col);
+
+                // Ensure currentGridState[r][c] exists before accessing its properties
+                if (currentGridState[r] && currentGridState[r][c] !== null) { // If it's an active crossword cell
+                    totalCells++;
+                    const inputValue = cellElements[r][c].value.toUpperCase();
+                    const correctValue = currentGridState[r][c].correctLetter;
+
+                    if (inputValue === correctValue) {
+                        cell.classList.add('correct');
+                        correctCount++;
+                    } else if (inputValue !== '') {
+                        cell.classList.add('incorrect');
+                    }
+                }
+            });
+
+            if (totalCells === 0) { // Handle case where no active cells are found
+                showMessageBox("No active cells to check. Is the puzzle loaded correctly?");
+            } else if (correctCount === totalCells) {
+                showMessageBox("Congratulations! All answers are correct!");
+            } else {
+                showMessageBox(`You got ${correctCount} out of ${totalCells} letters correct. Keep trying!`);
+            }
+        }
+
+        /**
+         * Clears all user input from the grid.
+         */
+        function clearBoard() {
+            document.querySelectorAll('.grid-cell input').forEach(input => {
+                input.value = '';
+                const r = parseInt(input.dataset.row);
+                const c = parseInt(input.dataset.col);
+                if (currentGridState[r] && currentGridState[r][c]) { // Ensure the cell exists
+                    currentGridState[r][c].letter = '';
+                }
+                input.parentElement.classList.remove('correct', 'incorrect'); // Clear check highlights
+            });
+            showMessageBox("Board cleared!");
+        }
+
+        /**
+         * Starts a new puzzle, cycling through the available puzzles.
+         */
+        function startNewPuzzle() {
+            currentPuzzleIndex = (currentPuzzleIndex + 1) % puzzles.length;
+            initializeGame();
+            showMessageBox(`Starting new puzzle: "${puzzles[currentPuzzleIndex].name}"`);
+            // Ensure focus is on the first available input cell
+            for (let r = 0; r < puzzles[currentPuzzleIndex].gridSize.rows; r++) {
+                for (let c = 0; c < puzzles[currentPuzzleIndex].gridSize.cols; c++) {
+                    if (cellElements[r][c]) {
+                        cellElements[r][c].focus();
+                        return; // Focus on the first and exit
+                    }
+                }
+            }
+        }
+
+        // Add event listeners for control buttons
+        checkButton.addEventListener('click', checkAnswers);
+        clearButton.addEventListener('click', clearBoard);
+        newGameButton.addEventListener('click', startNewPuzzle);
+
+        // Initialize the first puzzle when the page loads
+        window.onload = initializeGame;
+    </script>
+</body>
+</html>

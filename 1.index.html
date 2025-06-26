@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mini Games</title>
+    <!-- Basic styling for the page and buttons using internal CSS -->
+    <style>
+        body {
+            font-family: 'Inter', Arial, sans-serif; /* Using Inter font as per instructions, fallback to Arial */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh; /* Ensures the body takes at least the full viewport height */
+            margin: 0;
+            background-color: #f0f2f5; /* Light grey background */
+            color: #333; /* Dark grey text color */
+            padding: 20px; /* Add some padding around the content */
+            box-sizing: border-box; /* Include padding in element's total width and height */
+        }
+        h1 {
+            color: #2c3e50; /* Dark blue-grey heading color */
+            margin-bottom: 40px; /* Space below the heading */
+            text-align: center;
+            font-size: 2.5em; /* Larger heading for prominence */
+        }
+        .game-container {
+            display: grid;
+            /* Responsive grid: columns will automatically adjust based on available space */
+            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+            gap: 25px; /* Space between grid items */
+            padding: 20px;
+            max-width: 1000px; /* Max width for the game grid */
+            width: 100%; /* Ensures it takes full width up to max-width */
+            background-color: #ffffff; /* White background for the container */
+            border-radius: 12px; /* Rounded corners for the container */
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
+        }
+        .game-button {
+            background-color: #3498db; /* Blue button background */
+            color: white; /* White text on buttons */
+            border: none; /* No border */
+            padding: 18px 25px; /* Ample padding inside buttons */
+            text-align: center;
+            text-decoration: none;
+            display: block; /* Make buttons block level to fill grid cells */
+            font-size: 1.2em; /* Readable font size for button text */
+            cursor: pointer; /* Pointer cursor on hover */
+            border-radius: 10px; /* More rounded corners for buttons */
+            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease; /* Smooth transitions for hover effects */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Initial shadow for buttons */
+            font-weight: bold; /* Make text bolder */
+            letter-spacing: 0.5px; /* Slightly increased letter spacing */
+        }
+        .game-button:hover {
+            background-color: #2980b9; /* Darker blue on hover */
+            transform: translateY(-3px); /* Lift button slightly on hover */
+            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Enhanced shadow on hover */
+        }
+        .game-button:active {
+            background-color: #206ba4; /* Even darker blue when clicked */
+            transform: translateY(0); /* Return to original position */
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Reduced shadow when active */
+        }
+
+        /* Responsive adjustments */
+        @media (max-width: 768px) {
+            h1 {
+                font-size: 2em;
+                margin-bottom: 30px;
+            }
+            .game-container {
+                grid-template-columns: 1fr; /* Stack buttons on smaller screens */
+                padding: 15px;
+                gap: 15px;
+            }
+            .game-button {
+                font-size: 1.1em;
+                padding: 15px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <h1>Welcome to Mini Games!</h1>
+
+    <div class="game-container">
+        <!-- Each button represents a game.
+             The 'onclick' event opens the specified HTML file in a new tab.
+             REMEMBER to replace 'gameX.html' with your actual game filenames
+             and '[Your Game Name Here]' with the real name of your game. -->
+
+        <!-- Game 1 -->
+        <button class="game-button" onclick="window.open('g2.html', '_blank')">Game 1: Tic-Tac-Toe</button>
+
+        <!-- Game 2 -->
+        <button class="game-button" onclick="window.open('g1.html', '_blank')">Game 2: Memory Match</button>
+
+        <!-- Game 3 -->
+        <button class="game-button" onclick="window.open('g6.html', '_blank')">Game 3: Reversi</button>
+
+        <!-- Game 4 -->
+        <button class="game-button" onclick="window.open('g4.html', '_blank')">Game 4: Sliding Block Puzzle</button>
+
+        <!-- Game 5 -->
+        <button class="game-button" onclick="window.open('g9.html', '_blank')">Game 5: Flappy Bird Clone</button>
+
+        <!-- Game 6 -->
+        <button class="game-button" onclick="window.open('g15.html', '_blank')">Game 6: Whack-A-Mole</button>
+
+        <!-- Game 7 -->
+        <button class="game-button" onclick="window.open('g3.html', '_blank')">Game 7: Crossword Puzzle</button>
+
+        <!-- Game 8 -->
+        <button class="game-button" onclick="window.open('g7.html', '_blank')">Game 8: Blackjack</button>
+
+        <!-- Game 9 -->
+        <button class="game-button" onclick="window.open('g10.html', '_blank')">Game 9: Choose Your Adventure</button>
+
+        <!-- Game 10 -->
+        <button class="game-button" onclick="window.open('g8.html', '_blank')">Game 10: Uno!</button>
+
+        <!-- Game 11 -->
+        <button class="game-button" onclick="window.open('g5.html', '_blank')">Game 11: Connect Four</button>
+
+        <!-- Game 12 -->
+        <button class="game-button" onclick="window.open('g14.html', '_blank')">Game 12: Hangman</button>
+
+        <!-- Game 13 -->
+        <button class="game-button" onclick="window.open('g11.html', '_blank')">Game 13: Clicker Game</button>
+
+        <!-- Game 14 -->
+        <button class="game-button" onclick="window.open('g12.html', '_blank')">Game 14: Color Guesser</button>
+
+        <!-- Game 15 -->
+        <button class="game-button" onclick="window.open('g13.html', '_blank')">Game 15: Cookie Clicker</button>
+
+    </div>
+</body>
+</html>

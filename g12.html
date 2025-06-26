@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Color Guesser</title>
+    <style>
+        /* Basic body styling for centering the game and setting a background */
+        body {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            background-color: #e0f2f7; /* Light blue background */
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Modern font */
+            color: #333; /* Default text color */
+        }
+
+        /* Container for the entire game interface */
+        .game-container {
+            background-color: white;
+            padding: 30px;
+            border-radius: 15px; /* Rounded corners for the container */
+            box-shadow: 0 8px 16px rgba(0,0,0,0.1); /* Soft shadow for depth */
+            text-align: center;
+            max-width: 90%; /* Responsive width */
+            width: 500px; /* Max width for desktop */
+            position: relative; /* For overlay if needed */
+        }
+
+        /* Styling for the game title */
+        h1 {
+            color: #333;
+            margin-bottom: 10px; /* Reduced margin to make space for level info */
+        }
+
+        /* Illustration for the game (e.g., a palette or rainbow) */
+        .illustration {
+            font-size: 3.5em; /* Size of the emoji illustration */
+            margin-bottom: 15px; /* Space below the illustration */
+            display: block; /* Ensures it takes its own line */
+        }
+
+        /* Game info bar (score, level) */
+        .game-info {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            padding: 0 10px 15px;
+            font-size: 1.1em;
+            font-weight: bold;
+            color: #555;
+        }
+
+        /* The box that displays the color to be guessed */
+        #color-box {
+            width: 150px;
+            height: 150px;
+            background-color: #ccc; /* Default grey before game starts */
+            margin: 20px auto; /* Center the box horizontally */
+            border-radius: 10px;
+            border: 3px solid #555; /* Slightly thicker border */
+            box-shadow: inset 0 0 10px rgba(0,0,0,0.1); /* Inner shadow for depth */
+        }
+
+        /* Instruction text for the user */
+        .instruction-text {
+            color: #666;
+            font-size: 1.1em;
+            margin-bottom: 25px; /* Space below the instruction */
+        }
+
+        /* Container for the option buttons */
+        #options {
+            display: flex;
+            flex-wrap: wrap; /* Allows buttons to wrap to next line on smaller screens */
+            justify-content: center;
+            gap: 10px; /* Space between buttons */
+            margin-bottom: 20px;
+        }
+
+        /* Styling for the color option buttons */
+        .option-button {
+            background-color: #007bff; /* Blue button color */
+            color: white;
+            padding: 12px 25px;
+            border: none;
+            border-radius: 8px; /* Rounded button corners */
+            cursor: pointer;
+            font-size: 1.1em;
+            transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.15); /* Soft shadow for buttons */
+            /* Flexbox properties for perfect text centering */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-width: 120px; /* Ensure buttons have a minimum width */
+        }
+
+        /* Hover state for buttons */
+        .option-button:hover {
+            background-color: #0056b3; /* Darker blue on hover */
+            transform: translateY(-2px); /* Slight lift effect */
+            box-shadow: 0 6px 12px rgba(0,0,0,0.2); /* Enhanced shadow on hover */
+        }
+
+        /* Active state for buttons (when clicked) */
+        .option-button:active {
+            transform: translateY(0); /* Return to original position */
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1); /* Reduced shadow on click */
+        }
+
+        /* Styling for the message display (correct/wrong) */
+        #message {
+            margin-top: 20px;
+            font-size: 1.3em; /* Slightly larger for emphasis */
+            font-weight: bold;
+            min-height: 1.5em; /* Reserve space to prevent layout shift */
+        }
+
+        /* Restart button styling */
+        #restartButton {
+            background-color: #f44336; /* Red color for restart */
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1em;
+            margin-top: 20px; /* Space above the button */
+            transition: background-color 0.2s ease, transform 0.1s ease;
+            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1);
+            display: none; /* Hidden by default, shown on game over */
+            /* Flexbox for centering text */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        #restartButton:hover {
+            background-color: #da190b;
+            transform: translateY(-2px);
+        }
+
+        /* Game Over Overlay */
+        .overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.7);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            color: white;
+            font-size: 2em;
+            z-index: 10;
+            border-radius: 15px; /* Match container border-radius */
+            display: none; /* Hidden by default */
+        }
+
+        .overlay.active {
+            display: flex; /* Show when active */
+        }
+
+        .overlay h2 {
+            margin-bottom: 15px;
+            color: #FFC107; /* Amber color for "Game Over" */
+        }
+
+        .overlay p {
+            font-size: 0.8em;
+            margin-bottom: 25px;
+        }
+    </style>
+</head>
+<body>
+    <div class="game-container">
+        <div class="overlay" id="gameOverOverlay">
+            <h2>Game Over!</h2>
+            <p id="finalScore"></p>
+            <button id="overlayRestartButton" class="option-button">Play Again</button>
+        </div>
+
+        <span class="illustration">&#127752;</span> <!-- Rainbow emoji illustration -->
+        <h1>Guess the Color!</h1>
+
+        <div class="game-info">
+            <span id="scoreDisplay">Score: 0</span>
+            <span id="levelDisplay">Level: 1 - Basic Colors</span>
+        </div>
+
+        <div id="color-box"></div>
+        <p class="instruction-text">Which color is displayed above?</p>
+        <div id="options">
+            <!-- Buttons generated by JS -->
+        </div>
+        <p id="message"></p>
+        <button id="restartButton">Restart Game</button>
+    </div>
+
+    <script>
+        // DOM elements
+        const colorBox = document.getElementById('color-box');
+        const optionsDiv = document.getElementById('options');
+        const messageDiv = document.getElementById('message');
+        const scoreDisplay = document.getElementById('scoreDisplay');
+        const levelDisplay = document.getElementById('levelDisplay');
+        const restartButton = document.getElementById('restartButton');
+        const gameOverOverlay = document.getElementById('gameOverOverlay');
+        const finalScoreDisplay = document.getElementById('finalScore');
+        const overlayRestartButton = document.getElementById('overlayRestartButton');
+
+        // Game state variables
+        let gameState = {
+            score: 0,
+            level: 1,
+            correctInCurrentLevel: 0,
+            lives: 3, // Number of lives
+            gameOver: false,
+            maxLevels: 0 // Will be set after levelConfigs is defined
+        };
+
+        let correctColorName = '';
+        let currentHexColor = '';
+
+        // Extensive list of color names and their hex codes
+        const allColors = {
+            'Red': '#FF0000', 'Green': '#008000', 'Blue': '#0000FF',
+            'Yellow': '#FFFF00', 'Orange': '#FFA500', 'Purple': '#800080',
+            'Pink': '#FFC0CB', 'Cyan': '#00FFFF', 'Magenta': '#FF00FF',
+            'Brown': '#A52A2A', 'Gray': '#808080', 'Lime': '#00FF00',
+            'Teal': '#008080', 'Indigo': '#4B0082', 'Maroon': '#800000',
+            'Navy': '#000080', 'Olive': '#808000', 'Silver': '#C0C0C0',
+            'Gold': '#FFD700', 'Turquoise': '#40E0D0', 'Crimson': '#DC143C',
+            'Khaki': '#F0E68C', 'Lavender': '#E6E6FA', 'Salmon': '#FA8072',
+            'SkyBlue': '#87CEEB', 'SpringGreen': '#00FF7F', 'Tomato': '#FF6347',
+            'Violet': '#EE82EE', 'Wheat': '#F5DEB3', 'Charcoal': '#36454F',
+            'Coral': '#FF7F50', 'Fuchsia': '#FF00FF', 'Aqua': '#00FFFF',
+            'Beige': '#F5F5DC', 'Chocolate': '#D2691E', 'FireBrick': '#B22222',
+            'ForestGreen': '#228B22', 'HotPink': '#FF69B4', 'Ivory': '#FFFFF0',
+            'Khaki': '#F0E68C', 'LavenderBlush': '#FFF0F5', 'LemonChiffon': '#FFFACD',
+            'LightCoral': '#F08080', 'LightGreen': '#90EE90', 'LightSalmon': '#FFA07A',
+            'LightSkyBlue': '#87CEFA', 'LightSteelBlue': '#B0C4DE', 'MediumOrchid': '#BA55D3',
+            'MidnightBlue': '#191970', 'MintCream': '#F5FFFA', 'MistyRose': '#FFE4E1',
+            'Moccasin': '#FFE4B5', 'NavajoWhite': '#FFDEAD', 'OldLace': '#FDF5E6',
+            'PapayaWhip': '#FFEFD5', 'PeachPuff': '#FFDAB9', 'Peru': '#CD853F',
+            'PowderBlue': '#B0E0E6', 'RosyBrown': '#BC8F8F', 'RoyalBlue': '#4169E1',
+            'SaddleBrown': '#8B4513', 'SeaGreen': '#2E8B57', 'Sienna': '#A0522D',
+            'SlateBlue': '#6A5ACD', 'Snow': '#FFFAFA', 'SteelBlue': '#4682B4',
+            'Tan': '#D2B48C', 'Thistle': '#D8BFD8', 'Tomato': '#FF6347',
+            'VioletRed': '#C71585', 'WhiteSmoke': '#F5F5F5', 'YellowGreen': '#9ACD32'
+        };
+
+        // Level configurations
+        const levelConfigs = [
+            {
+                level: 1,
+                title: "Basic Colors",
+                correctNeeded: 3, // Correct answers to advance to next level
+                optionsCount: 4, // Number of buttons to display
+                colorPoolNames: ['Red', 'Green', 'Blue', 'Yellow', 'Orange', 'Purple', 'Pink', 'Brown', 'Gray', 'Lime', 'Teal']
+            },
+            {
+                level: 2,
+                title: "Intermediate Hues",
+                correctNeeded: 4,
+                optionsCount: 4,
+                colorPoolNames: ['Red', 'Green', 'Blue', 'Yellow', 'Orange', 'Purple', 'Pink', 'Cyan', 'Magenta', 'Teal', 'Lime', 'Indigo', 'Maroon', 'Olive', 'Silver', 'Gold', 'Turquoise', 'Crimson', 'Khaki', 'Lavender']
+            },
+            {
+                level: 3,
+                title: "Advanced Shades",
+                correctNeeded: 5,
+                optionsCount: 6, // Increased options for higher difficulty
+                colorPoolNames: Object.keys(allColors) // All available colors
+            }
+            // Add more levels here if desired
+        ];
+
+        // Set maxLevels based on the configuration
+        gameState.maxLevels = levelConfigs.length;
+
+        /**
+         * Gets a random color name from the current level's color pool, excluding any specified names.
+         * @param {string[]} exclude - An array of color names to exclude from the random selection.
+         * @returns {string} A random color name.
+         */
+        function getRandomColorName(currentLevelConfig, exclude = []) {
+            const pool = currentLevelConfig.colorPoolNames;
+            const availableNames = pool.filter(name => !exclude.includes(name));
+            if (availableNames.length === 0) {
+                // Fallback: if no unique colors left in the pool, use a random from all colors
+                return Object.keys(allColors)[Math.floor(Math.random() * Object.keys(allColors).length)];
+            }
+            return availableNames[Math.floor(Math.random() * availableNames.length)];
+        }
+
+        /**
+         * Updates the game UI elements (score, level display).
+         */
+        function updateUI() {
+            scoreDisplay.textContent = `Score: ${gameState.score}`;
+            const currentLevelConfig = levelConfigs[gameState.level - 1];
+            levelDisplay.textContent = `Level: ${gameState.level} - ${currentLevelConfig.title}`;
+        }
+
+        /**
+         * Starts or restarts the game, resetting all game state.
+         */
+        function startGame() {
+            gameState.score = 0;
+            gameState.level = 1;
+            gameState.correctInCurrentLevel = 0;
+            gameState.lives = 3; // Reset lives for new game
+            gameState.gameOver = false;
+            gameOverOverlay.classList.remove('active'); // Hide game over screen
+            restartButton.style.display = 'none'; // Hide restart button initially
+            messageDiv.textContent = ''; // Clear any previous messages
+            updateUI(); // Update UI with initial state
+            generateGame(); // Start the first round
+        }
+
+        /**
+         * Generates a new round of the game:
+         * 1. Clears previous messages and options.
+         * 2. Selects a new random correct color based on current level's pool.
+         * 3. Displays the color in the `color-box`.
+         * 4. Creates unique options (including the correct one) and shuffles them.
+         * 5. Appends option buttons to the DOM.
+         */
+        function generateGame() {
+            if (gameState.gameOver) return; // Do not generate new game if game is over
+
+            messageDiv.textContent = ''; // Clear previous message
+            optionsDiv.innerHTML = '';    // Clear previous buttons
+
+            const currentLevelConfig = levelConfigs[gameState.level - 1];
+
+            // Select the correct color for this round
+            correctColorName = getRandomColorName(currentLevelConfig);
+            currentHexColor = allColors[correctColorName];
+            colorBox.style.backgroundColor = currentHexColor; // Set the background of the color box
+
+            const optionsCount = currentLevelConfig.optionsCount;
+            let optionNames = [correctColorName]; // Start with the correct color
+
+            // Add unique wrong options until `optionsCount` is reached
+            while (optionNames.length < optionsCount) {
+                const randomName = getRandomColorName(currentLevelConfig, optionNames); // Get a random color not already in options
+                if (!optionNames.includes(randomName)) {
+                    optionNames.push(randomName);
+                }
+            }
+
+            // Shuffle the options to randomize their order
+            optionNames.sort(() => Math.random() - 0.5);
+
+            // Create and append a button for each option
+            optionNames.forEach(name => {
+                const button = document.createElement('button');
+                button.className = 'option-button';
+                button.textContent = name;
+                // Add event listener to check the answer when button is clicked
+                button.addEventListener('click', () => checkAnswer(name));
+                optionsDiv.appendChild(button);
+            });
+
+            updateUI(); // Update UI to reflect any changes in state before the next guess
+        }
+
+        /**
+         * Checks if the selected color is correct and updates the message and game state.
+         * Handles score, lives, level progression, and game over.
+         * @param {string} selectedColor - The color name selected by the user.
+         */
+        function checkAnswer(selectedColor) {
+            if (gameState.gameOver) return; // Prevent interaction if game is over
+
+            if (selectedColor === correctColorName) {
+                messageDiv.textContent = 'Correct! Well done!';
+                messageDiv.style.color = 'green';
+                gameState.score += 10; // Add score for correct answer
+                gameState.correctInCurrentLevel++; // Increment correct answers for current level
+
+                const currentLevelConfig = levelConfigs[gameState.level - 1];
+                if (gameState.correctInCurrentLevel >= currentLevelConfig.correctNeeded) {
+                    // Level Up!
+                    if (gameState.level < gameState.maxLevels) {
+                        gameState.level++;
+                        gameState.correctInCurrentLevel = 0; // Reset for next level
+                        messageDiv.textContent += ` Level Up! Entering ${levelConfigs[gameState.level - 1].title}!`;
+                        messageDiv.style.color = 'blue'; // Change color for level up message
+                    } else {
+                        // All levels completed
+                        messageDiv.textContent = `Congratulations! You've completed all levels! Final Score: ${gameState.score}`;
+                        messageDiv.style.color = 'purple';
+                        endGame(); // End the game
+                        return; // Exit to prevent generating new game
+                    }
+                }
+            } else {
+                messageDiv.textContent = `Wrong! It was ${correctColorName}.`;
+                messageDiv.style.color = 'red';
+                gameState.lives--; // Lose a life for wrong answer
+
+                if (gameState.lives <= 0) {
+                    endGame(); // Call endgame if no lives left
+                    return; // Exit to prevent generating new game
+                } else {
+                    messageDiv.textContent += ` Lives left: ${gameState.lives}.`;
+                }
+            }
+            updateUI(); // Update score and level display
+            setTimeout(generateGame, 1500); // Start a new game round after a short delay
+        }
+
+        /**
+         * Ends the game, displays game over message and restart button.
+         */
+        function endGame() {
+            gameState.gameOver = true;
+            optionsDiv.innerHTML = ''; // Clear options
+            messageDiv.textContent = 'Game Over!';
+            messageDiv.style.color = 'red';
+            restartButton.style.display = 'block'; // Show restart button
+            finalScoreDisplay.textContent = `Your Final Score: ${gameState.score}`;
+            gameOverOverlay.classList.add('active'); // Show game over overlay
+        }
+
+        // Event listeners
+        restartButton.addEventListener('click', startGame);
+        overlayRestartButton.addEventListener('click', startGame);
+
+        // Initial game start when the window loads
+        window.onload = startGame;
+    </script>
+</body>
+</html>

@@ -1,0 +1,678 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Connect Four</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f0f4f8; /* Light blue-gray background */
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            margin: 0;
+            padding: 1rem;
+            box-sizing: border-box;
+            overflow-y: auto; /* Allow vertical scrolling if needed */
+        }
+
+        .game-container {
+            background-color: #ffffff;
+            border-radius: 1.5rem;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
+            padding: 2rem;
+            text-align: center;
+            width: 100%;
+            max-width: 700px; /* Max width for the entire game container */
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 1.5rem;
+            box-sizing: border-box;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            font-weight: bold;
+            color: #2d3748;
+            margin-bottom: 0.5rem;
+        }
+
+        .player-turn-indicator {
+            font-size: 1.25rem;
+            font-weight: bold;
+            margin-bottom: 1rem;
+            height: 1.5rem; /* Reserve space to prevent layout shift */
+        }
+
+        .player-turn-indicator span {
+            padding: 0.3rem 0.8rem;
+            border-radius: 0.5rem;
+            color: white;
+            transition: background-color 0.3s ease;
+        }
+
+        .player-turn-indicator .red-player { background-color: #ef4444; } /* Red-500 */
+        .player-turn-indicator .yellow-player { background-color: #f59e0b; } /* Yellow-600 */
+        /* New theme colors */
+        .player-turn-indicator .emerald-player { background-color: #10b981; }
+        .player-turn-indicator .lime-player { background-color: #84cc16; }
+        .player-turn-indicator .sky-blue-player { background-color: #0ea5e9; }
+        .player-turn-indicator .light-blue-player { background-color: #38bdf8; }
+
+
+        .board-container {
+            display: grid; /* Changed from inline-grid to grid for better control */
+            background-color: #3b82f6; /* Default Blue board background, overridden by JS */
+            border-radius: 1rem;
+            padding: 10px;
+            box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.3);
+            position: relative;
+            /* Added sizing to ensure it fits within container */
+            width: fit-content; /* Adjust to content size */
+            margin: 0 auto; /* Center the board */
+        }
+
+        .board-slot {
+            /* Width and height will be set dynamically based on board size to fit container */
+            background-color: #1a202c; /* Dark background for holes, overridden by JS */
+            border-radius: 50%;
+            margin: 5px; /* Spacing between holes */
+            box-shadow: inset 0 0 5px rgba(0, 0, 0, 0.5);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            cursor: pointer;
+            position: relative;
+            overflow: hidden; /* Crucial for containing dropping checkers */
+            aspect-ratio: 1 / 1; /* Keep slots perfectly circular */
+        }
+
+        /* Checker styles */
+        .checker {
+            width: calc(100% - 10px); /* Slightly smaller than slot to show border */
+            height: calc(100% - 10px);
+            border-radius: 50%;
+            position: absolute;
+            bottom: 0; /* Final resting position at the bottom of the slot */
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            /* Transition will be applied dynamically for the drop animation */
+            /* transform-origin: center; /* Optional: for rotation effect during drop */
+        }
+
+        /* Responsive Adjustments for slot size */
+        /* These will be overridden by JS calculation if using dynamic pixel sizes,
+           but good as fallbacks or for scaling `rem` units */
+        @media (min-width: 769px) { /* Larger screens */
+            .board-slot {
+                width: 70px;
+                height: 70px;
+                margin: 5px;
+            }
+        }
+        @media (max-width: 768px) { /* Tablets */
+            .board-slot {
+                width: 60px;
+                height: 60px;
+                margin: 4px;
+            }
+        }
+        @media (max-width: 480px) { /* Mobile */
+            .board-slot {
+                width: 45px;
+                height: 45px;
+                margin: 3px;
+            }
+        }
+        @media (max-width: 320px) { /* Smallest phones */
+            .board-slot {
+                width: 38px;
+                height: 38px;
+                margin: 2px;
+            }
+        }
+
+        .controls-top {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1rem;
+            justify-content: center;
+            align-items: center;
+            margin-bottom: 1rem;
+            width: 100%;
+        }
+
+        .controls-top label, .controls-top select {
+            padding: 0.5rem 0.8rem;
+            border-radius: 0.5rem;
+            border: 1px solid #cbd5e0;
+            background-color: #f7fafc;
+            font-size: 0.9rem;
+            font-weight: bold;
+            cursor: pointer;
+        }
+        .controls-top button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            border: none;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background-color: #3b82f6; /* Blue-500 */
+            color: white;
+        }
+        .controls-top button:hover {
+            background-color: #2563eb; /* Blue-600 */
+            transform: translateY(-2px);
+        }
+
+        .controls-bottom {
+            margin-top: 1.5rem;
+        }
+
+        .controls-bottom button {
+            padding: 0.75rem 1.5rem;
+            border-radius: 0.75rem;
+            border: none;
+            font-size: 1rem;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.2s ease-in-out;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            background-color: #10b981; /* Emerald-500 */
+            color: white;
+        }
+        .controls-bottom button:hover {
+            background-color: #059669; /* Emerald-600 */
+            transform: translateY(-2px);
+        }
+
+        /* Message Box */
+        .message-box {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background-color: #4a5568;
+            color: white;
+            padding: 1.5rem 2.5rem;
+            border-radius: 1rem;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+            z-index: 1000;
+            display: none; /* Hidden by default */
+            flex-direction: column;
+            align-items: center;
+            gap: 1rem;
+            font-size: 1.25rem;
+            font-weight: bold;
+            opacity: 0; /* Start invisible */
+            transition: opacity 0.3s ease-in-out; /* Smooth fade effect */
+        }
+
+        .message-box.show {
+            opacity: 1; /* Fade in */
+        }
+    </style>
+</head>
+<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
+    <div class="game-container">
+        <h1 class="text-3xl font-bold text-gray-800">Connect Four</h1>
+
+        <div class="controls-top">
+            <label for="board-size-select" class="font-semibold text-gray-700">Board Size:</label>
+            <select id="board-size-select" class="bg-white">
+                <option value="6x7">6x7 (Standard)</option>
+                <option value="7x8">7x8 (Medium)</option>
+                <option value="8x9">8x9 (Large)</option>
+            </select>
+
+            <label for="theme-select" class="font-semibold text-gray-700">Theme:</label>
+            <select id="theme-select" class="bg-white">
+                <option value="classic">Classic (Red/Yellow)</option>
+                <option value="forest">Forest (Green/Brown)</option>
+                <option value="ocean">Ocean (Blue/Light Blue)</option>
+            </select>
+
+            <label for="game-mode-select" class="font-semibold text-gray-700">Mode:</label>
+            <select id="game-mode-select" class="bg-white">
+                <option value="player-vs-player">Player vs Player</option>
+                <option value="player-vs-ai">Player vs AI</option>
+            </select>
+
+            <button id="start-new-game-button">Start New Game</button>
+        </div>
+
+        <div id="player-turn-indicator" class="player-turn-indicator">
+            <span id="current-player-text">Player 1's Turn (Red)</span>
+        </div>
+
+        <div id="board-container" class="board-container">
+            </div>
+
+        </div>
+
+    <div id="message-box" class="message-box">
+        <p id="message-text"></p>
+    </div>
+
+    <script>
+        const EMPTY = 0;
+        const PLAYER_1 = 1; // Player 1 (Human)
+        const PLAYER_2 = 2; // Player 2 (AI or Human)
+
+        const boardContainer = document.getElementById('board-container');
+        const playerTurnIndicator = document.getElementById('player-turn-indicator');
+        const currentPlayerText = document.getElementById('current-player-text');
+        const startNewGameButton = document.getElementById('start-new-game-button');
+        const boardSizeSelect = document.getElementById('board-size-select');
+        const themeSelect = document.getElementById('theme-select');
+        const gameModeSelect = document.getElementById('game-mode-select'); // New game mode selector
+
+        const messageBox = document.getElementById('message-box');
+        const messageText = document.getElementById('message-text');
+
+        // Define themes for colors and text
+        const THEMES = {
+            'classic': {
+                player1Color: '#ef4444', // Red-500
+                player2Color: '#f59e0b', // Yellow-600
+                boardBg: '#3b82f6',     // Blue-500
+                slotBg: '#1a202c',      // Gray-900 (dark)
+                player1TextClass: 'red-player',
+                player2TextClass: 'yellow-player',
+                player1Name: 'Red',
+                player2Name: 'Yellow'
+            },
+            'forest': {
+                player1Color: '#10b981', // Emerald-500
+                player2Color: '#84cc16', // Lime-500
+                boardBg: '#4d7c0f',     // Lime-800
+                slotBg: '#222222',      // Darker gray
+                player1TextClass: 'emerald-player',
+                player2TextClass: 'lime-player',
+                player1Name: 'Emerald',
+                player2Name: 'Lime'
+            },
+            'ocean': {
+                player1Color: '#0ea5e9', // Sky-500
+                player2Color: '#38bdf8', // Sky-400
+                boardBg: '#0f766e',     // Teal-800
+                slotBg: '#1a5653',      // Darker Teal
+                player1TextClass: 'sky-blue-player',
+                player2TextClass: 'light-blue-player',
+                player1Name: 'Sky Blue',
+                player2Name: 'Light Blue'
+            }
+        };
+
+        let board = []; // 2D array representing the game board
+        let currentPlayer = PLAYER_1;
+        let gameOver = false;
+        let messageTimeoutId;
+        let currentRows;
+        let currentCols;
+        let currentTheme;
+        let gameMode = 'player-vs-player'; // Default game mode
+
+        /**
+         * Shows a message box that disappears automatically after a delay.
+         * @param {string} message The message to display.
+         * @param {number} duration The duration in milliseconds to display the message (default 2000).
+         */
+        function showMessageBox(message, duration = 2000) {
+            messageText.textContent = message;
+            messageBox.style.display = 'flex';
+            messageBox.offsetWidth; // Trigger reflow
+            messageBox.classList.add('show');
+
+            if (messageTimeoutId) {
+                clearTimeout(messageTimeoutId);
+            }
+
+            messageTimeoutId = setTimeout(() => {
+                messageBox.classList.remove('show');
+                setTimeout(() => {
+                    messageBox.style.display = 'none';
+                }, 300); // Match CSS transition duration for opacity
+            }, duration);
+        }
+
+        /**
+         * Initializes a new game, resetting the board and game state based on selected options.
+         */
+        function newGame() {
+            // Get selected board size
+            const size = boardSizeSelect.value.split('x');
+            currentRows = parseInt(size[0]);
+            currentCols = parseInt(size[1]);
+            currentTheme = themeSelect.value;
+            gameMode = gameModeSelect.value; // Get selected game mode
+
+            // Reset board array with new dimensions
+            board = [];
+            for (let r = 0; r < currentRows; r++) {
+                board.push(Array(currentCols).fill(EMPTY));
+            }
+            currentPlayer = PLAYER_1;
+            gameOver = false;
+            renderBoard();
+            updatePlayerTurnIndicator();
+            showMessageBox(`Game Started! Player 1 (${THEMES[currentTheme].player1Name}) goes first.`);
+
+            // If AI is Player 2 and it's their turn (not possible on first move, but for consistency)
+            if (gameMode === 'player-vs-ai' && currentPlayer === PLAYER_2) {
+                setTimeout(aiMove, 1000); // Give a small delay for AI to move
+            }
+        }
+
+        /**
+         * Updates the display to show whose turn it is, applying current theme colors.
+         */
+        function updatePlayerTurnIndicator() {
+            const playerInfo = currentPlayer === PLAYER_1 ?
+                { number: 1, colorClass: THEMES[currentTheme].player1TextClass, name: THEMES[currentTheme].player1Name } :
+                { number: 2, colorClass: THEMES[currentTheme].player2TextClass, name: THEMES[currentTheme].player2Name };
+
+            let turnText = `Player ${playerInfo.number}'s Turn (${playerInfo.name})`;
+            if (gameMode === 'player-vs-ai' && currentPlayer === PLAYER_2) {
+                turnText = `AI's Turn (${playerInfo.name})`;
+            }
+            currentPlayerText.textContent = turnText;
+
+            playerTurnIndicator.className = 'player-turn-indicator'; // Reset
+            playerTurnIndicator.classList.add(playerInfo.colorClass);
+        }
+
+        /**
+         * Renders the game board and all checkers, applying current theme and responsive sizing.
+         */
+        function renderBoard() {
+            boardContainer.innerHTML = '';
+            boardContainer.style.gridTemplateColumns = `repeat(${currentCols}, 1fr)`;
+            boardContainer.style.backgroundColor = THEMES[currentTheme].boardBg;
+
+            // Determine if clicking is allowed (not AI's turn in PvAI mode)
+            const allowClicks = !(gameMode === 'player-vs-ai' && currentPlayer === PLAYER_2);
+
+            for (let r = 0; r < currentRows; r++) {
+                for (let c = 0; c < currentCols; c++) {
+                    const slot = document.createElement('div');
+                    slot.classList.add('board-slot');
+                    slot.dataset.col = c;
+                    slot.dataset.row = r;
+                    slot.style.backgroundColor = THEMES[currentTheme].slotBg;
+
+                    if (allowClicks) {
+                        slot.addEventListener('click', () => handleColumnClick(c));
+                    } else {
+                        slot.style.cursor = 'not-allowed'; // Indicate no clicks allowed
+                    }
+
+                    if (board[r][c] !== EMPTY) {
+                        const checker = document.createElement('div');
+                        checker.classList.add('checker');
+                        checker.style.backgroundColor = board[r][c] === PLAYER_1 ? THEMES[currentTheme].player1Color : THEMES[currentTheme].player2Color;
+                        slot.appendChild(checker);
+                    }
+                    boardContainer.appendChild(slot);
+                }
+            }
+        }
+
+        /**
+         * Handles a click on a column to drop a checker.
+         * @param {number} col The column index where the checker is to be dropped.
+         */
+        function handleColumnClick(col) {
+            if (gameOver) {
+                showMessageBox('Game is over! Start a New Game.');
+                return;
+            }
+            // Prevent human player from clicking if it's AI's turn
+            if (gameMode === 'player-vs-ai' && currentPlayer === PLAYER_2) {
+                return;
+            }
+
+            dropChecker(col, currentPlayer);
+        }
+
+        /**
+         * Drops a checker into a specified column for a given player.
+         * This function centralizes the logic for both human and AI moves.
+         * @param {number} col The column index.
+         * @param {number} player The player making the move (PLAYER_1 or PLAYER_2).
+         */
+        function dropChecker(col, player) {
+            let rowToDrop = -1;
+            for (let r = currentRows - 1; r >= 0; r--) {
+                if (board[r][col] === EMPTY) {
+                    rowToDrop = r;
+                    break;
+                }
+            }
+
+            if (rowToDrop === -1) {
+                if (player === PLAYER_1) { // Only show message for human player
+                    showMessageBox('Column is full! Choose another.');
+                }
+                return; // Column is full
+            }
+
+            board[rowToDrop][col] = player; // Logical update
+
+            // Visual checker drop animation
+            const targetSlot = boardContainer.children[rowToDrop * currentCols + col];
+            const checker = document.createElement('div');
+            checker.classList.add('checker');
+            checker.style.backgroundColor = player === PLAYER_1 ? THEMES[currentTheme].player1Color : THEMES[currentTheme].player2Color;
+
+            checker.style.bottom = '100%';
+            checker.style.transition = 'bottom 0.5s cubic-bezier(0.68, -0.55, 0.265, 1.55)';
+            targetSlot.appendChild(checker);
+
+            requestAnimationFrame(() => {
+                checker.style.bottom = '0%';
+            });
+
+            setTimeout(() => {
+                if (checkWinCondition(rowToDrop, col, player)) {
+                    const winnerName = player === PLAYER_1 ? THEMES[currentTheme].player1Name : (gameMode === 'player-vs-ai' ? 'AI' : THEMES[currentTheme].player2Name);
+                    showMessageBox(`${winnerName} wins!`, 3000);
+                    gameOver = true;
+                } else if (checkDrawCondition()) {
+                    showMessageBox('It\'s a Draw!', 3000);
+                    gameOver = true;
+                } else {
+                    currentPlayer = currentPlayer === PLAYER_1 ? PLAYER_2 : PLAYER_1;
+                    updatePlayerTurnIndicator();
+
+                    // If it's AI's turn in PvAI mode, trigger AI move
+                    if (gameMode === 'player-vs-ai' && currentPlayer === PLAYER_2 && !gameOver) {
+                        renderBoard(); // Re-render to update cursor/clicks for AI turn
+                        setTimeout(aiMove, 1000); // Delay AI move for better user experience
+                    } else {
+                        renderBoard(); // Re-render to enable clicks for human player
+                    }
+                }
+            }, 500); // Match CSS transition duration
+        }
+
+        /**
+         * AI logic for making a move (Player 2).
+         * Prioritizes winning, blocking, then center, then random.
+         */
+        function aiMove() {
+            if (gameOver) return;
+
+            let bestMove = -1;
+
+            // 1. Check for immediate winning move for AI (Player 2)
+            for (let c = 0; c < currentCols; c++) {
+                let r = getAvailableRow(c);
+                if (r !== -1) {
+                    board[r][c] = PLAYER_2;
+                    if (checkWinCondition(r, c, PLAYER_2)) {
+                        bestMove = c;
+                        board[r][c] = EMPTY; // Undo move
+                        break;
+                    }
+                    board[r][c] = EMPTY; // Undo move
+                }
+            }
+
+            // 2. Check for immediate blocking move for Player 1
+            if (bestMove === -1) {
+                for (let c = 0; c < currentCols; c++) {
+                    let r = getAvailableRow(c);
+                    if (r !== -1) {
+                        board[r][c] = PLAYER_1; // Temporarily simulate opponent's move
+                        if (checkWinCondition(r, c, PLAYER_1)) {
+                            bestMove = c;
+                            board[r][c] = EMPTY; // Undo simulation
+                            break;
+                        }
+                        board[r][c] = EMPTY; // Undo simulation
+                    }
+                }
+            }
+
+            // 3. Prefer center columns if no immediate win/block
+            if (bestMove === -1) {
+                const centerCols = Array.from({ length: currentCols }, (_, i) => i)
+                                       .sort((a, b) => Math.abs(a - (currentCols - 1) / 2) - Math.abs(b - (currentCols - 1) / 2));
+                for (let c of centerCols) {
+                    if (getAvailableRow(c) !== -1) {
+                        bestMove = c;
+                        break;
+                    }
+                }
+            }
+
+            // 4. Fallback to a random valid move
+            if (bestMove === -1) {
+                const availableCols = [];
+                for (let c = 0; c < currentCols; c++) {
+                    if (getAvailableRow(c) !== -1) {
+                        availableCols.push(c);
+                    }
+                }
+                if (availableCols.length > 0) {
+                    bestMove = availableCols[Math.floor(Math.random() * availableCols.length)];
+                }
+            }
+
+            if (bestMove !== -1) {
+                dropChecker(bestMove, PLAYER_2);
+            } else {
+                // If AI can't find a move (should only happen if board is full, handled by checkDrawCondition)
+                console.warn("AI could not find a move. Board might be full or an unexpected state.");
+            }
+        }
+
+        /**
+         * Helper function to find the lowest available row in a given column.
+         * @param {number} col The column index.
+         * @returns {number} The row index, or -1 if the column is full.
+         */
+        function getAvailableRow(col) {
+            for (let r = currentRows - 1; r >= 0; r--) {
+                if (board[r][col] === EMPTY) {
+                    return r;
+                }
+            }
+            return -1;
+        }
+
+        /**
+         * Checks if the current player has won after a move at (row, col).
+         * Uses currentRows and currentCols for dynamic board size checking.
+         * @param {number} row The row of the last dropped checker.
+         * @param {number} col The column of the last dropped checker.
+         * @param {number} player The player who just moved.
+         * @returns {boolean} True if the player has connected four, false otherwise.
+         */
+        function checkWinCondition(row, col, player) {
+            // Check horizontal
+            for (let c = 0; c <= currentCols - 4; c++) {
+                if (board[row][c] === player &&
+                    board[row][c + 1] === player &&
+                    board[row][c + 2] === player &&
+                    board[row][c + 3] === player) {
+                    return true;
+                }
+            }
+
+            // Check vertical
+            for (let r = 0; r <= currentRows - 4; r++) {
+                if (board[r][col] === player &&
+                    board[r + 1][col] === player &&
+                    board[r + 2][col] === player &&
+                    board[r + 3][col] === player) {
+                    return true;
+                }
+            }
+
+            // Check diagonal (top-left to bottom-right)
+            for (let r = 0; r <= currentRows - 4; r++) {
+                for (let c = 0; c <= currentCols - 4; c++) {
+                    if (board[r][c] === player &&
+                        board[r + 1][c + 1] === player &&
+                        board[r + 2][c + 2] === player &&
+                        board[r + 3][c + 3] === player) {
+                        return true;
+                    }
+                }
+            }
+
+            // Check diagonal (bottom-left to top-right)
+            for (let r = 3; r < currentRows; r++) {
+                for (let c = 0; c <= currentCols - 4; c++) {
+                    if (board[r][c] === player &&
+                        board[r - 1][c + 1] === player &&
+                        board[r - 2][c + 2] === player &&
+                        board[r - 3][c + 3] === player) {
+                        return true;
+                    }
+                }
+            }
+
+            return false;
+        }
+
+        /**
+         * Checks if the board is full, indicating a draw.
+         * Uses currentRows and currentCols for dynamic board size checking.
+         * @returns {boolean} True if the board is full, false otherwise.
+         */
+        function checkDrawCondition() {
+            for (let r = 0; r < currentRows; r++) {
+                for (let c = 0; c < currentCols; c++) {
+                    if (board[r][c] === EMPTY) {
+                        return false; // Found an empty slot, not a draw yet
+                    }
+                }
+            }
+            return true; // Board is full
+        }
+
+        // Event Listeners
+        startNewGameButton.addEventListener('click', newGame);
+        // Add event listeners for mode, board size, and theme changes to start a new game
+        gameModeSelect.addEventListener('change', newGame);
+        boardSizeSelect.addEventListener('change', newGame);
+        themeSelect.addEventListener('change', newGame);
+
+
+        // Initialize the first game on page load
+        window.onload = newGame;
+    </script>
+</body>
+</html>
