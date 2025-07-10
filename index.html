@@ -4,138 +4,250 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mini Games</title>
-    <!-- Basic styling for the page and buttons using internal CSS -->
+    <!-- Tailwind CSS CDN for modern styling -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome for icons (e.g., search icon) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+    <!-- Google Fonts - Inter for a clean, modern look -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
     <style>
+        /* Custom styles not easily achievable with Tailwind or for overrides */
         body {
-            font-family: 'Inter', Arial, sans-serif; /* Using Inter font as per instructions, fallback to Arial */
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            min-height: 100vh; /* Ensures the body takes at least the full viewport height */
-            margin: 0;
-            background-color: #f0f2f5; /* Light grey background */
-            color: #333; /* Dark grey text color */
-            padding: 20px; /* Add some padding around the content */
-            box-sizing: border-box; /* Include padding in element's total width and height */
-        }
-        h1 {
-            color: #2c3e50; /* Dark blue-grey heading color */
-            margin-bottom: 40px; /* Space below the heading */
-            text-align: center;
-            font-size: 2.5em; /* Larger heading for prominence */
-        }
-        .game-container {
-            display: grid;
-            /* Responsive grid: columns will automatically adjust based on available space */
-            grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
-            gap: 25px; /* Space between grid items */
-            padding: 20px;
-            max-width: 1000px; /* Max width for the game grid */
-            width: 100%; /* Ensures it takes full width up to max-width */
-            background-color: #ffffff; /* White background for the container */
-            border-radius: 12px; /* Rounded corners for the container */
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1); /* Soft shadow for depth */
-        }
-        .game-button {
-            background-color: #3498db; /* Blue button background */
-            color: white; /* White text on buttons */
-            border: none; /* No border */
-            padding: 18px 25px; /* Ample padding inside buttons */
-            text-align: center;
-            text-decoration: none;
-            display: block; /* Make buttons block level to fill grid cells */
-            font-size: 1.2em; /* Readable font size for button text */
-            cursor: pointer; /* Pointer cursor on hover */
-            border-radius: 10px; /* More rounded corners for buttons */
-            transition: background-color 0.3s ease, transform 0.2s ease, box-shadow 0.3s ease; /* Smooth transitions for hover effects */
-            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15); /* Initial shadow for buttons */
-            font-weight: bold; /* Make text bolder */
-            letter-spacing: 0.5px; /* Slightly increased letter spacing */
-        }
-        .game-button:hover {
-            background-color: #2980b9; /* Darker blue on hover */
-            transform: translateY(-3px); /* Lift button slightly on hover */
-            box-shadow: 0 6px 12px rgba(0, 0, 0, 0.2); /* Enhanced shadow on hover */
-        }
-        .game-button:active {
-            background-color: #206ba4; /* Even darker blue when clicked */
-            transform: translateY(0); /* Return to original position */
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1); /* Reduced shadow when active */
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #a8c0ff, #3f2b96); /* Dynamic gradient background */
+            background-size: 400% 400%;
+            animation: gradientAnimation 15s ease infinite; /* Smooth gradient animation */
+            overflow-x: hidden; /* Prevent horizontal scrollbar from animations */
         }
 
-        /* Responsive adjustments */
-        @media (max-width: 768px) {
-            h1 {
-                font-size: 2em;
-                margin-bottom: 30px;
+        /* Keyframe animation for the background gradient */
+        @keyframes gradientAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+
+        /* Hide scrollbar for a cleaner look, but allow scrolling */
+        body::-webkit-scrollbar {
+            display: none; /* For Chrome, Safari, Opera */
+        }
+        body {
+            -ms-overflow-style: none;  /* For IE and Edge */
+            scrollbar-width: none;  /* For Firefox */
+        }
+
+        /* Entry animation for elements */
+        .fade-in-up {
+            opacity: 0;
+            transform: translateY(20px);
+            animation: fadeInUp 0.8s ease-out forwards;
+        }
+
+        @keyframes fadeInUp {
+            to {
+                opacity: 1;
+                transform: translateY(0);
             }
-            .game-container {
-                grid-template-columns: 1fr; /* Stack buttons on smaller screens */
-                padding: 15px;
-                gap: 15px;
-            }
-            .game-button {
-                font-size: 1.1em;
-                padding: 15px 20px;
-            }
+        }
+
+        /* Specific animation delays for staggered effect */
+        .h1-animated { animation-delay: 0.2s; }
+        .search-animated { animation-delay: 0.5s; }
+        .game-container-animated { animation-delay: 0.8s; }
+
+        .game-button {
+            /* Common button styles - background will be set by JS */
+            color: white;
+            font-weight: 600;
+            padding: 1rem 1.5rem; /* py-4 px-6 */
+            border-radius: 0.75rem; /* rounded-xl */
+            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
+            transition: transform 0.2s ease, box-shadow 0.3s ease, scale 0.1s ease; /* Transition for non-background properties */
+            font-size: 1.125rem; /* text-lg */
+            letter-spacing: 0.025em; /* tracking-wide */
+            outline: none; /* focus:outline-none */
+            cursor: pointer;
+            border: none; /* Ensure no default button border */
+            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); /* Subtle text shadow for better readability */
+        }
+        .game-button:hover {
+            transform: translateY(-8px); /* Lift button slightly more on hover */
+            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* hover:shadow-lg */
+        }
+        .game-button:active {
+            transform: translateY(0) scale(0.98); /* Slight press effect */
+            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.06); /* Reduced shadow when active */
+        }
+        .game-button:focus {
+            box-shadow: 0 0 0 4px rgba(66, 153, 225, 0.6); /* Consistent blue ring on focus */
+        }
+
+        /* Custom glow effect for focus */
+        .search-input-glow:focus {
+            box-shadow: 0 0 0 5px rgba(66, 153, 225, 0.6); /* Blue glow */
         }
     </style>
 </head>
-<body>
-    <h1>Welcome to Mini Games!</h1>
+<body class="flex flex-col items-center justify-center min-h-screen p-5 box-border text-gray-800">
+    <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-10 text-center leading-tight tracking-wide
+               fade-in-up h1-animated drop-shadow-lg">
+        Welcome to Mini Games!
+    </h1>
 
-    <div class="game-container">
-        <!-- Each button represents a game.
-             The 'onclick' event opens the specified HTML file in a new tab.
-             REMEMBER to replace 'gameX.html' with your actual game filenames
-             and '[Your Game Name Here]' with the real name of your game. -->
-
-        <!-- Game 1 -->
-        <button class="game-button" onclick="window.open('g2.html', '_blank')">Game 1: Tic-Tac-Toe</button>
-
-        <!-- Game 2 -->
-        <button class="game-button" onclick="window.open('g1.html', '_blank')">Game 2: Memory Match</button>
-
-        <!-- Game 3 -->
-        <button class="game-button" onclick="window.open('g6.html', '_blank')">Game 3: Reversi</button>
-
-        <!-- Game 4 -->
-        <button class="game-button" onclick="window.open('g4.html', '_blank')">Game 4: Sliding Block Puzzle</button>
-
-        <!-- Game 5 -->
-        <button class="game-button" onclick="window.open('g9.html', '_blank')">Game 5: Flappy Bird Clone</button>
-
-        <!-- Game 6 -->
-        <button class="game-button" onclick="window.open('g15.html', '_blank')">Game 6: Whack-A-Mole</button>
-
-        <!-- Game 7 -->
-        <button class="game-button" onclick="window.open('g3.html', '_blank')">Game 7: Crossword Puzzle</button>
-
-        <!-- Game 8 -->
-        <button class="game-button" onclick="window.open('g7.html', '_blank')">Game 8: Blackjack</button>
-
-        <!-- Game 9 -->
-        <button class="game-button" onclick="window.open('g10.html', '_blank')">Game 9: Choose Your Adventure</button>
-
-        <!-- Game 10 -->
-        <button class="game-button" onclick="window.open('g8.html', '_blank')">Game 10: Uno!</button>
-
-        <!-- Game 11 -->
-        <button class="game-button" onclick="window.open('g5.html', '_blank')">Game 11: Connect Four</button>
-
-        <!-- Game 12 -->
-        <button class="game-button" onclick="window.open('g14.html', '_blank')">Game 12: Hangman</button>
-
-        <!-- Game 13 -->
-        <button class="game-button" onclick="window.open('g11.html', '_blank')">Game 13: Clicker Game</button>
-
-        <!-- Game 14 -->
-        <button class="game-button" onclick="window.open('g12.html', '_blank')">Game 14: Color Guesser</button>
-
-        <!-- Game 15 -->
-        <button class="game-button" onclick="window.open('g13.html', '_blank')">Game 15: Cookie Clicker</button>
-
+    <!-- Search Bar Section -->
+    <div class="relative w-full max-w-xl mb-8 fade-in-up search-animated">
+        <input type="text" id="gameSearch" placeholder="Search for a game..."
+               class="w-full pl-12 pr-4 py-3 rounded-full shadow-xl focus:outline-none focus:ring-4 focus:ring-blue-300
+                      transition-all duration-300 ease-in-out text-lg bg-white border border-gray-100
+                      search-input-glow">
+        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl"></i>
     </div>
+
+    <div class="game-container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6 bg-white
+                rounded-2xl shadow-2xl max-w-5xl w-full fade-in-up game-container-animated">
+        <!-- Each button represents a game.
+             The 'onclick' event opens the specified HTML file in a new tab. -->
+
+        <button class="game-button" onclick="window.open('g2.html', '_blank')">
+            Tic-Tac-Toe
+        </button>
+
+        <button class="game-button" onclick="window.open('g1.html', '_blank')">
+            Memory Match
+        </button>
+
+        <button class="game-button" onclick="window.open('g6.html', '_blank')">
+            Reversi
+        </button>
+
+        <button class="game-button" onclick="window.open('g4.html', '_blank')">
+            Sliding Block Puzzle
+        </button>
+
+        <button class="game-button" onclick="window.open('g9.html', '_blank')">
+            Flappy Bird Clone
+        </button>
+
+        <button class="game-button" onclick="window.open('g15.html', '_blank')">
+            Whack-A-Mole
+        </button>
+
+        <button class="game-button" onclick="window.open('g3.html', '_blank')">
+            Crossword Puzzle
+        </button>
+
+        <button class="game-button" onclick="window.open('g7.html', '_blank')">
+            Blackjack
+        </button>
+
+        <button class="game-button" onclick="window.open('g10.html', '_blank')">
+            Choose Your Adventure
+        </button>
+
+        <button class="game-button" onclick="window.open('g8.html', '_blank')">
+            Uno!
+        </button>
+
+        <button class="game-button" onclick="window.open('g5.html', '_blank')">
+            Connect Four
+        </button>
+
+        <button class="game-button" onclick="window.open('g14.html', '_blank')">
+            Hangman
+        </button>
+
+        <button class="game-button" onclick="window.open('g11.html', '_blank')">
+            Clicker Game
+        </button>
+
+        <button class="game-button" onclick="window.open('g12.html', '_blank')">
+            Color Guesser
+        </button>
+
+        <button class="game-button" onclick="window.open('g13.html', '_blank')">
+            Cookie Clicker
+        </button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const searchInput = document.getElementById('gameSearch');
+            const gameButtons = document.querySelectorAll('.game-button');
+
+            // Function to generate a random hex color that is generally dark
+            function getRandomDarkColor() {
+                // Generate RGB values between 0 and 150 to ensure darker colors
+                const r = Math.floor(Math.random() * 151);
+                const g = Math.floor(Math.random() * 151);
+                const b = Math.floor(Math.random() * 151);
+                return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+            }
+
+            // Function to slightly darken a hex color for hover effect
+            function darkenColor(hex, percent) {
+                let f = parseInt(hex.slice(1), 16),
+                    t = percent < 0 ? 0 : 255,
+                    p = percent < 0 ? percent * -1 : percent,
+                    R = f >> 16,
+                    G = (f >> 8) & 0x00ff,
+                    B = f & 0x0000ff;
+                return "#" + (
+                    0x1000000 +
+                    (Math.round((t - R) * p) + R) * 0x10000 +
+                    (Math.round((t - G) * p) + G) * 0x100 +
+                    (Math.round((t - B) * p) + B)
+                ).toString(16).slice(1);
+            }
+
+            // Apply random gradients to each button
+            gameButtons.forEach(button => {
+                const color1 = getRandomDarkColor();
+                const color2 = getRandomDarkColor();
+                button.style.background = `linear-gradient(to bottom right, ${color1}, ${color2})`;
+
+                // Add hover and active background transitions
+                button.addEventListener('mouseenter', () => {
+                    const hoverColor1 = darkenColor(color1, 0.1); // Darken by 10%
+                    const hoverColor2 = darkenColor(color2, 0.1); // Darken by 10%
+                    button.style.background = `linear-gradient(to bottom right, ${hoverColor1}, ${hoverColor2})`;
+                });
+
+                button.addEventListener('mouseleave', () => {
+                    button.style.background = `linear-gradient(to bottom right, ${color1}, ${color2})`; // Revert to original
+                });
+
+                button.addEventListener('mousedown', () => {
+                    const activeColor1 = darkenColor(color1, 0.2); // Darken by 20%
+                    const activeColor2 = darkenColor(color2, 0.2); // Darken by 20%
+                    button.style.background = `linear-gradient(to bottom right, ${activeColor1}, ${activeColor2})`;
+                });
+
+                button.addEventListener('mouseup', () => {
+                    // Revert to hover state if still hovering, else to original
+                    if (button.matches(':hover')) {
+                        const hoverColor1 = darkenColor(color1, 0.1);
+                        const hoverColor2 = darkenColor(color2, 0.1);
+                        button.style.background = `linear-gradient(to bottom right, ${hoverColor1}, ${hoverColor2})`;
+                    } else {
+                        button.style.background = `linear-gradient(to bottom right, ${color1}, ${color2})`;
+                    }
+                });
+            });
+
+            // Function to filter games based on search input
+            searchInput.addEventListener('input', (event) => {
+                const searchTerm = event.target.value.toLowerCase(); // Get search term and convert to lowercase
+
+                gameButtons.forEach(button => {
+                    const gameName = button.textContent.toLowerCase(); // Get game name and convert to lowercase
+                    if (gameName.includes(searchTerm)) {
+                        button.style.display = 'block'; // Show the button if it matches
+                    } else {
+                        button.style.display = 'none'; // Hide the button if it doesn't match
+                    }
+                });
+            });
+        });
+    </script>
 </body>
 </html>
