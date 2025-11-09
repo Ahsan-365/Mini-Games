@@ -1,253 +1,271 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="scroll-smooth">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mini Games</title>
-    <!-- Tailwind CSS CDN for modern styling -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Font Awesome for icons (e.g., search icon) -->
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
-    <!-- Google Fonts - Inter for a clean, modern look -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;700;800&display=swap" rel="stylesheet">
-    <style>
-        /* Custom styles not easily achievable with Tailwind or for overrides */
-        body {
-            font-family: 'Inter', sans-serif;
-            background: linear-gradient(135deg, #a8c0ff, #3f2b96); /* Dynamic gradient background */
-            background-size: 400% 400%;
-            animation: gradientAnimation 15s ease infinite; /* Smooth gradient animation */
-            overflow-x: hidden; /* Prevent horizontal scrollbar from animations */
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>MINI GAMES | Infinite Arcade</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&family=Press+Start+2P&family=Exo+2:wght@400;700;900&family=VT323&display=swap" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          fontFamily: { sans: ['Inter', 'sans-serif'], arcade: ['"Press Start 2P"', 'cursive'], tech: ['"Exo 2"', 'sans-serif'], retro: ['"VT323"', 'monospace'] },
+          colors: { 'arcade-black': '#050814', 'neon-pink': '#ff0099', 'neon-blue': '#00eaff', 'neon-purp': '#bd00ff', 'matrix-green': '#00ff41' },
+          boxShadow: { 'neon-blue': '0 0 20px rgba(0, 234, 255, 0.4)', 'neon-pink': '0 0 20px rgba(255, 0, 153, 0.4)' },
+          animation: { 'barrel-roll': 'roll 2s ease-in-out 1', 'glitch': 'glitch-anim 0.2s infinite', 'float': 'floating 3s ease-in-out infinite' },
+          keyframes: {
+            roll: { '0%': { transform: 'rotate(0deg)' }, '100%': { transform: 'rotate(360deg)' } },
+            'glitch-anim': { '0%': { transform: 'translate(0)' }, '20%': { transform: 'translate(-5px, 5px)' }, '40%': { transform: 'translate(-5px, -5px)' }, '60%': { transform: 'translate(5px, 5px)' }, '80%': { transform: 'translate(5px, -5px)' }, '100%': { transform: 'translate(0)' } },
+            floating: { '0%, 100%': { transform: 'translateY(0px)' }, '50%': { transform: 'translateY(-10px)' } }
+          }
         }
+      }
+    }
+  </script>
+  <style>
+    body { background-color: #050814; color: #e2e8f0; cursor: none; overflow-x: hidden; transition: filter 0.3s; }
+    #bg-canvas { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; }
+    .cursor-main { width: 8px; height: 8px; background-color: #00eaff; position: fixed; z-index: 9999; pointer-events: none; transform: translate(-50%, -50%) rotate(45deg); mix-blend-mode: difference; transition: width 0.2s, height 0.2s; }
+    .cursor-follower { width: 40px; height: 40px; border: 2px solid #ff0099; position: fixed; z-index: 9998; pointer-events: none; transform: translate(-50%, -50%); transition: all 0.1s ease-out; border-radius: 4px; }
+    body:has(.interactive:hover) .cursor-follower { transform: translate(-50%, -50%) scale(1.5) rotate(45deg); border-color: #00eaff; background: rgba(0,234,255,0.1); }
+    
+    .glass { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
+    .cartridge { transform-style: preserve-3d; perspective: 1000px; }
+    .cartridge-content { transform-style: preserve-3d; transition: transform 0.2s ease-out; }
+    .pop-out { transform: translateZ(30px); }
+    .glitch-active { animation: glitch-anim 0.2s infinite; filter: hue-rotate(90deg) contrast(1.5); }
+    .zero-gravity .gravity-affected { animation: floating 5s ease-in-out infinite; animation-delay: calc(var(--i) * -0.5s) !important; }
+    
+    /* CRT Effect */
+    .crt-mode::before { content: " "; display: block; position: fixed; top: 0; left: 0; bottom: 0; right: 0; background: linear-gradient(rgba(18, 16, 16, 0) 50%, rgba(0, 0, 0, 0.25) 50%), linear-gradient(90deg, rgba(255, 0, 0, 0.06), rgba(0, 255, 0, 0.02), rgba(0, 0, 255, 0.06)); z-index: 9997; background-size: 100% 2px, 3px 100%; pointer-events: none; }
+    .crt-mode { animation: flicker 0.15s infinite; text-shadow: 0 0.5px 2px rgba(0, 234, 255, 0.5); }
+    @keyframes flicker { 0% { opacity: 0.98; } 100% { opacity: 1; } }
 
-        /* Keyframe animation for the background gradient */
-        @keyframes gradientAnimation {
-            0% { background-position: 0% 50%; }
-            50% { background-position: 100% 50%; }
-            100% { background-position: 0% 50%; }
-        }
-
-        /* Hide scrollbar for a cleaner look, but allow scrolling */
-        body::-webkit-scrollbar {
-            display: none; /* For Chrome, Safari, Opera */
-        }
-        body {
-            -ms-overflow-style: none;  /* For IE and Edge */
-            scrollbar-width: none;  /* For Firefox */
-        }
-
-        /* Entry animation for elements */
-        .fade-in-up {
-            opacity: 0;
-            transform: translateY(20px);
-            animation: fadeInUp 0.8s ease-out forwards;
-        }
-
-        @keyframes fadeInUp {
-            to {
-                opacity: 1;
-                transform: translateY(0);
-            }
-        }
-
-        /* Specific animation delays for staggered effect */
-        .h1-animated { animation-delay: 0.2s; }
-        .search-animated { animation-delay: 0.5s; }
-        .game-container-animated { animation-delay: 0.8s; }
-
-        .game-button {
-            /* Common button styles - background will be set by JS */
-            color: white;
-            font-weight: 600;
-            padding: 1rem 1.5rem; /* py-4 px-6 */
-            border-radius: 0.75rem; /* rounded-xl */
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06); /* shadow-md */
-            transition: transform 0.2s ease, box-shadow 0.3s ease, scale 0.1s ease; /* Transition for non-background properties */
-            font-size: 1.125rem; /* text-lg */
-            letter-spacing: 0.025em; /* tracking-wide */
-            outline: none; /* focus:outline-none */
-            cursor: pointer;
-            border: none; /* Ensure no default button border */
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.5); /* Subtle text shadow for better readability */
-        }
-        .game-button:hover {
-            transform: translateY(-8px); /* Lift button slightly more on hover */
-            box-shadow: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05); /* hover:shadow-lg */
-        }
-        .game-button:active {
-            transform: translateY(0) scale(0.98); /* Slight press effect */
-            box-shadow: 0 2px 4px -1px rgba(0, 0, 0, 0.1), 0 1px 2px -1px rgba(0, 0, 0, 0.06); /* Reduced shadow when active */
-        }
-        .game-button:focus {
-            box-shadow: 0 0 0 4px rgba(66, 153, 225, 0.6); /* Consistent blue ring on focus */
-        }
-
-        /* Custom glow effect for focus */
-        .search-input-glow:focus {
-            box-shadow: 0 0 0 5px rgba(66, 153, 225, 0.6); /* Blue glow */
-        }
-    </style>
+    .scanner-line { position: absolute; height: 100%; width: 2px; background: #00eaff; opacity: 0.5; filter: blur(4px); animation: scan 3s ease-in-out infinite; }
+    @keyframes scan { 0%, 100% { left: 0%; opacity: 0; } 50% { left: 100%; } }
+    
+    ::-webkit-scrollbar { width: 5px; } ::-webkit-scrollbar-track { background: #050814; } ::-webkit-scrollbar-thumb { background: #bd00ff; }
+  </style>
 </head>
-<body class="flex flex-col items-center justify-center min-h-screen p-5 box-border text-gray-800">
-    <h1 class="text-4xl md:text-5xl font-extrabold text-white mb-10 text-center leading-tight tracking-wide
-               fade-in-up h1-animated drop-shadow-lg">
-        Welcome to Mini Games!
-    </h1>
+<body class="min-h-screen flex flex-col antialiased">
+  <div class="cursor-main"></div><div class="cursor-follower"></div>
+  <canvas id="bg-canvas"></canvas>
 
-    <!-- Search Bar Section -->
-    <div class="relative w-full max-w-xl mb-8 fade-in-up search-animated">
-        <input type="text" id="gameSearch" placeholder="Search for a game..."
-               class="w-full pl-12 pr-4 py-3 rounded-full shadow-xl focus:outline-none focus:ring-4 focus:ring-blue-300
-                      transition-all duration-300 ease-in-out text-lg bg-white border border-gray-100
-                      search-input-glow">
-        <i class="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-xl"></i>
+  <!-- Main Content Area -->
+  <main id="nexus-core" class="flex-grow flex flex-col items-center justify-center p-6 relative transition-all duration-500">
+    
+    <!-- Header -->
+    <header class="text-center mb-12 relative interactive gravity-affected" style="--i:1">
+      <h1 class="font-arcade text-4xl md:text-6xl text-transparent bg-clip-text bg-gradient-to-r from-neon-pink via-neon-purp to-neon-blue mb-6 animate-pulse cursor-default" onmouseenter="scrambleText(this)" data-original="MINI GAMES">MINI GAMES</h1>
+      <p class="font-tech text-neon-blue tracking-[0.5em] text-sm opacity-80 uppercase">Infinite Arcade // Select Cartridge</p>
+      <!-- Menu Toggles -->
+      <div class="absolute -right-16 top-0 flex flex-col space-y-4">
+          <button id="crtToggle" class="text-neon-blue hover:text-neon-pink transition-colors p-2 interactive" title="Toggle CRT Mode"><i class="fas fa-tv text-xl"></i></button>
+          <button id="menuToggle" class="text-neon-pink hover:text-neon-blue transition-colors p-2 interactive" title="Cheat Sheet"><i class="fas fa-gamepad text-xl"></i></button>
+      </div>
+    </header>
+
+    <!-- Search Console -->
+    <div class="w-full max-w-2xl mb-16 relative group gravity-affected" style="--i:2">
+      <div class="absolute -inset-1 bg-gradient-to-r from-neon-pink via-neon-purp to-neon-blue rounded-lg blur opacity-30 group-hover:opacity-70 transition duration-1000 group-hover:duration-200 animate-tilt"></div>
+      <div class="relative glass rounded-lg p-1 flex items-center overflow-hidden">
+        <div class="scanner-line"></div>
+        <div class="pl-6 pr-4 text-neon-pink"><i class="fas fa-search"></i></div>
+        <input type="text" id="gameSearch" onkeyup="handleSearch()" placeholder="Search games or enter cheat codes..." class="w-full bg-transparent border-none text-white placeholder-white/30 focus:ring-0 text-lg py-4 outline-none font-tech tracking-wider relative z-10 uppercase" />
+        <!-- Simulated Audio Visualizer -->
+        <div class="flex space-x-1 px-4 h-6 items-center opacity-50">
+            <div class="w-1 bg-neon-blue animate-float" style="height: 40%; animation-delay: -0.2s"></div>
+            <div class="w-1 bg-neon-purp animate-float" style="height: 80%; animation-delay: -0.4s"></div>
+            <div class="w-1 bg-neon-pink animate-float" style="height: 60%; animation-delay: -0.6s"></div>
+            <div class="w-1 bg-neon-blue animate-float" style="height: 90%; animation-delay: -0.8s"></div>
+        </div>
+      </div>
     </div>
 
-    <div class="game-container grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6 p-6 bg-white
-                rounded-2xl shadow-2xl max-w-5xl w-full fade-in-up game-container-animated">
-        <!-- Each button represents a game.
-             The 'onclick' event opens the specified HTML file in a new tab. -->
-
-        <button class="game-button" onclick="window.open('g2.html', '_blank')">
-            Tic-Tac-Toe
-        </button>
-
-        <button class="game-button" onclick="window.open('g1.html', '_blank')">
-            Memory Match
-        </button>
-
-        <button class="game-button" onclick="window.open('g6.html', '_blank')">
-            Reversi
-        </button>
-
-        <button class="game-button" onclick="window.open('g4.html', '_blank')">
-            Sliding Block Puzzle
-        </button>
-
-        <button class="game-button" onclick="window.open('g9.html', '_blank')">
-            Flappy Bird Clone
-        </button>
-
-        <button class="game-button" onclick="window.open('g15.html', '_blank')">
-            Whack-A-Mole
-        </button>
-
-        <button class="game-button" onclick="window.open('g3.html', '_blank')">
-            Crossword Puzzle
-        </button>
-
-        <button class="game-button" onclick="window.open('g7.html', '_blank')">
-            Blackjack
-        </button>
-
-        <button class="game-button" onclick="window.open('g10.html', '_blank')">
-            Choose Your Adventure
-        </button>
-
-        <button class="game-button" onclick="window.open('g8.html', '_blank')">
-            Uno!
-        </button>
-
-        <button class="game-button" onclick="window.open('g5.html', '_blank')">
-            Connect Four
-        </button>
-
-        <button class="game-button" onclick="window.open('g14.html', '_blank')">
-            Hangman
-        </button>
-
-        <button class="game-button" onclick="window.open('g11.html', '_blank')">
-            Clicker Game
-        </button>
-
-        <button class="game-button" onclick="window.open('g12.html', '_blank')">
-            Color Guesser
-        </button>
-
-        <button class="game-button" onclick="window.open('g13.html', '_blank')">
-            Cookie Clicker
-        </button>
+    <!-- Game Grid -->
+    <div id="game-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-8 w-full max-w-7xl px-4">
+      <!-- Game Cartridges generated by JS -->
     </div>
+    
+    <div id="noResults" class="hidden font-arcade text-neon-pink text-xl mt-12 animate-pulse">NO CARTRIDGE FOUND</div>
 
-    <script>
-        document.addEventListener('DOMContentLoaded', () => {
-            const searchInput = document.getElementById('gameSearch');
-            const gameButtons = document.querySelectorAll('.game-button');
+  </main>
 
-            // Function to generate a random hex color that is generally dark
-            function getRandomDarkColor() {
-                // Generate RGB values between 0 and 150 to ensure darker colors
-                const r = Math.floor(Math.random() * 151);
-                const g = Math.floor(Math.random() * 151);
-                const b = Math.floor(Math.random() * 151);
-                return `#${r.toString(16).padStart(2, '0')}${g.toString(16).padStart(2, '0')}${b.toString(16).padStart(2, '0')}`;
+  <!-- Feature Modal (Cheat Sheet) -->
+  <div id="cheatSheet" class="fixed inset-0 z-50 hidden items-center justify-center p-4 bg-black/80 backdrop-blur-md" onclick="this.classList.add('hidden')">
+      <div class="glass p-8 rounded-2xl max-w-md w-full border-2 border-neon-blue/50 shadow-neon-blue" onclick="event.stopPropagation()">
+          <h3 class="font-arcade text-neon-blue mb-6 text-center leading-relaxed">CHEAT CODES</h3>
+          <ul class="space-y-4 font-tech text-gray-300">
+              <li class="flex justify-between"><span class="text-neon-pink">"matrix"</span> <span>Digital rain protocol</span></li>
+              <li class="flex justify-between"><span class="text-neon-pink">"gravity"</span> <span>Disable containment field</span></li>
+              <li class="flex justify-between"><span class="text-neon-pink">"glitch"</span> <span>Corrupt visual data</span></li>
+              <li class="flex justify-between"><span class="text-neon-pink">"barrel roll"</span> <span>Evasive maneuvers</span></li>
+              <li class="flex justify-between"><span class="text-neon-pink">↑↑↓↓←→←→BA</span> <span>JACKPOT MODE</span></li>
+          </ul>
+          <div class="mt-8 text-center font-arcade text-xs text-gray-500">CLICK ANYWHERE TO CLOSE</div>
+      </div>
+  </div>
+
+  <script>
+    /* --- 1. DYNAMIC BACKGROUND ENGINE --- */
+    const canvas = document.getElementById('bg-canvas'), ctx = canvas.getContext('2d');
+    let particles = [], mouse = { x: -1000, y: -1000 }, bgMode = 'standard'; // 'standard' or 'matrix'
+    window.addEventListener('mousemove', e => { mouse.x = e.clientX; mouse.y = e.clientY; });
+
+    class Particle {
+        constructor(x,y, type='square') {
+            this.x=x; this.y=y; this.baseX=x; this.baseY=y;
+            this.size = type==='matrix' ? Math.floor(Math.random()*14)+10 : Math.random()*10+2;
+            this.density = (Math.random()*20)+5;
+            this.type = type;
+            this.color = type==='matrix' ? '#00ff41' : [`#ff0099`,`#00eaff`,`#bd00ff`][Math.floor(Math.random()*3)];
+            this.char = type==='matrix' ? '012345789ABCDEF'.charAt(Math.floor(Math.random()*15)) : null;
+            // Jackpot props
+            this.jackpot = type === 'confetti';
+            if(this.jackpot) {
+                this.vx = (Math.random()-0.5) * 15; this.vy = Math.random() * -15 - 5;
+                this.gravity = 0.4; this.life = 250; this.rotation = Math.random()*360; this.rotSpeed = (Math.random()-0.5)*10;
+                this.shape = ['square','circle','triangle'][Math.floor(Math.random()*3)];
             }
-
-            // Function to slightly darken a hex color for hover effect
-            function darkenColor(hex, percent) {
-                let f = parseInt(hex.slice(1), 16),
-                    t = percent < 0 ? 0 : 255,
-                    p = percent < 0 ? percent * -1 : percent,
-                    R = f >> 16,
-                    G = (f >> 8) & 0x00ff,
-                    B = f & 0x0000ff;
-                return "#" + (
-                    0x1000000 +
-                    (Math.round((t - R) * p) + R) * 0x10000 +
-                    (Math.round((t - G) * p) + G) * 0x100 +
-                    (Math.round((t - B) * p) + B)
-                ).toString(16).slice(1);
+        }
+        draw() {
+            ctx.fillStyle = this.color;
+            if(this.type === 'matrix') {
+                ctx.font = `${this.size}px monospace`; ctx.fillText(this.char, this.x, this.y);
+            } else if (this.jackpot) {
+                ctx.save(); ctx.translate(this.x, this.y); ctx.rotate(this.rotation * Math.PI/180);
+                if(this.shape==='square') ctx.fillRect(-this.size/2, -this.size/2, this.size, this.size);
+                else if(this.shape==='circle') { ctx.beginPath(); ctx.arc(0,0,this.size/2,0,Math.PI*2); ctx.fill(); }
+                else { ctx.beginPath(); ctx.moveTo(0,-this.size/2); ctx.lineTo(this.size/2,this.size/2); ctx.lineTo(-this.size/2,this.size/2); ctx.closePath(); ctx.fill(); }
+                ctx.restore();
+            } else {
+                 ctx.fillRect(this.x, this.y, this.size, this.size);
             }
+        }
+        update() {
+            if (this.type === 'matrix') {
+                this.y += this.density/5; if(this.y > canvas.height) this.y = 0;
+                if(Math.random()>0.98) this.char = '012345789ABCDEF'.charAt(Math.floor(Math.random()*15));
+            } else if (this.jackpot) {
+                this.x += this.vx; this.y += this.vy; this.vy += this.gravity; this.life -= 2; this.rotation += this.rotSpeed;
+            } else {
+                let dx = mouse.x - this.x, dy = mouse.y - this.y, dist = Math.sqrt(dx*dx+dy*dy);
+                let force = (150 - dist) / 150;
+                if (dist < 150) { this.x -= dx/dist * force * this.density; this.y -= dy/dist * force * this.density; }
+                else { if (this.x !== this.baseX) this.x -= (this.x - this.baseX)/15; if (this.y !== this.baseY) this.y -= (this.y - this.baseY)/15; }
+            }
+        }
+    }
+    function initBG() {
+        canvas.width=innerWidth; canvas.height=innerHeight; 
+        particles = particles.filter(p => p.jackpot); // Keep jackpot particles during resize/mode switch
+        const count = innerWidth*innerHeight/(bgMode==='matrix'?4000:8000);
+        for(let i=0; i<count; i++) particles.push(new Particle(Math.random()*canvas.width, Math.random()*canvas.height, bgMode==='matrix'?'matrix':'square'));
+    }
+    function animateBG() { 
+        if(bgMode==='matrix') { ctx.fillStyle='rgba(5,8,20,0.1)'; ctx.fillRect(0,0,canvas.width,canvas.height); } 
+        else ctx.clearRect(0,0,canvas.width,canvas.height);
+        particles.forEach((p,i) => { p.update(); p.draw(); if(p.jackpot && p.life<=0) particles.splice(i,1); }); 
+        requestAnimationFrame(animateBG); 
+    }
+    window.addEventListener('resize', initBG); initBG(); animateBG();
 
-            // Apply random gradients to each button
-            gameButtons.forEach(button => {
-                const color1 = getRandomDarkColor();
-                const color2 = getRandomDarkColor();
-                button.style.background = `linear-gradient(to bottom right, ${color1}, ${color2})`;
+    /* --- 2. CORE SYSTEMS --- */
+    const games = [
+        { name: "Tic-Tac-Toe", url: "g2.html", color: "from-neon-pink to-purple-600", icon: "fa-times" },
+        { name: "Memory Match", url: "g1.html", color: "from-neon-blue to-blue-600", icon: "fa-brain" },
+        { name: "Reversi", url: "g6.html", color: "from-gray-100 to-gray-800", icon: "fa-circle-dot" },
+        { name: "Sliding Puzzle", url: "g4.html", color: "from-neon-purp to-indigo-900", icon: "fa-border-all" },
+        { name: "Flappy Clone", url: "g9.html", color: "from-yellow-400 to-orange-600", icon: "fa-dove" },
+        { name: "Whack-A-Mole", url: "g15.html", color: "from-green-400 to-emerald-900", icon: "fa-gavel" },
+        { name: "Crossword", url: "g3.html", color: "from-gray-400 to-gray-700", icon: "fa-font" },
+        { name: "Blackjack", url: "g7.html", color: "from-red-600 to-red-900", icon: "fa-spade" },
+        { name: "Adventure", url: "g10.html", color: "from-amber-500 to-amber-800", icon: "fa-map" },
+        { name: "Uno!", url: "g8.html", color: "from-red-500 to-yellow-500", icon: "fa-ticket" },
+        { name: "Connect Four", url: "g5.html", color: "from-blue-500 to-blue-800", icon: "fa-circle" },
+        { name: "Hangman", url: "g14.html", color: "from-rose-500 to-rose-900", icon: "fa-skull" },
+        { name: "Clicker Game", url: "g11.html", color: "from-neon-pink to-red-500", icon: "fa-hand-pointer" },
+        { name: "Color Guesser", url: "g12.html", color: "from-fuchsia-500 to-purple-800", icon: "fa-palette" },
+        { name: "Cookie Clicker", url: "g13.html", color: "from-amber-700 to-yellow-900", icon: "fa-cookie-bite" }
+    ];
 
-                // Add hover and active background transitions
-                button.addEventListener('mouseenter', () => {
-                    const hoverColor1 = darkenColor(color1, 0.1); // Darken by 10%
-                    const hoverColor2 = darkenColor(color2, 0.1); // Darken by 10%
-                    button.style.background = `linear-gradient(to bottom right, ${hoverColor1}, ${hoverColor2})`;
-                });
-
-                button.addEventListener('mouseleave', () => {
-                    button.style.background = `linear-gradient(to bottom right, ${color1}, ${color2})`; // Revert to original
-                });
-
-                button.addEventListener('mousedown', () => {
-                    const activeColor1 = darkenColor(color1, 0.2); // Darken by 20%
-                    const activeColor2 = darkenColor(color2, 0.2); // Darken by 20%
-                    button.style.background = `linear-gradient(to bottom right, ${activeColor1}, ${activeColor2})`;
-                });
-
-                button.addEventListener('mouseup', () => {
-                    // Revert to hover state if still hovering, else to original
-                    if (button.matches(':hover')) {
-                        const hoverColor1 = darkenColor(color1, 0.1);
-                        const hoverColor2 = darkenColor(color2, 0.1);
-                        button.style.background = `linear-gradient(to bottom right, ${hoverColor1}, ${hoverColor2})`;
-                    } else {
-                        button.style.background = `linear-gradient(to bottom right, ${color1}, ${color2})`;
-                    }
-                });
-            });
-
-            // Function to filter games based on search input
-            searchInput.addEventListener('input', (event) => {
-                const searchTerm = event.target.value.toLowerCase(); // Get search term and convert to lowercase
-
-                gameButtons.forEach(button => {
-                    const gameName = button.textContent.toLowerCase(); // Get game name and convert to lowercase
-                    if (gameName.includes(searchTerm)) {
-                        button.style.display = 'block'; // Show the button if it matches
-                    } else {
-                        button.style.display = 'none'; // Hide the button if it doesn't match
-                    }
-                });
-            });
+    function renderGames() {
+        const grid = document.getElementById('game-grid');
+        games.forEach((g, i) => {
+            const el = document.createElement('div');
+            el.className = `cartridge interactive gravity-affected opacity-0 transition-all duration-700`;
+            el.style = `--i:${i+3}; transition-delay: ${i*50}ms`;
+            el.innerHTML = `
+                <div class="cartridge-content glass rounded-xl p-[2px] bg-gradient-to-br ${g.color} group cursor-pointer h-full" onclick="window.open('${g.url}', '_blank')">
+                    <div class="bg-[#0a0a14] h-full w-full rounded-[10px] p-6 flex flex-col items-center justify-center relative overflow-hidden">
+                        <div class="absolute inset-0 bg-gradient-to-br ${g.color} opacity-10 group-hover:opacity-30 transition-opacity duration-500"></div>
+                        <i class="fas ${g.icon} text-4xl mb-4 bg-clip-text text-transparent bg-gradient-to-br ${g.color} pop-out filter group-hover:brightness-150 transition-all"></i>
+                        <h3 class="font-tech font-bold text-white text-center uppercase tracking-wider pop-out z-10 group-hover:text-neon-blue transition-colors">${g.name}</h3>
+                        <div class="mt-4 text-[10px] font-arcade text-gray-500 group-hover:text-neon-pink transition-colors pop-out">INSERT COIN</div>
+                    </div>
+                </div>`;
+            grid.appendChild(el);
+            setTimeout(() => el.classList.remove('opacity-0'), 100);
         });
-    </script>
+        initHolo();
+    }
+
+    /* --- 3. INTERACTION ENGINES --- */
+    const cMain = document.querySelector('.cursor-main'), cFollow = document.querySelector('.cursor-follower');
+    window.addEventListener('mousemove', e => { cMain.style.left = e.clientX+'px'; cMain.style.top = e.clientY+'px'; cFollow.animate({left: e.clientX+'px', top: e.clientY+'px'}, {duration: 500, fill: 'forwards'}); });
+
+    function initHolo() {
+        document.querySelectorAll('.cartridge').forEach(c => {
+            c.addEventListener('mousemove', e => {
+                const r = c.getBoundingClientRect(), x = e.clientX - r.left, y = e.clientY - r.top;
+                c.querySelector('.cartridge-content').style.transform = `perspective(1000px) rotateX(${((y - r.height/2) / r.height) * -15}deg) rotateY(${((x - r.width/2) / r.width) * 15}deg) scale(1.05)`;
+            });
+            c.addEventListener('mouseleave', () => c.querySelector('.cartridge-content').style.transform = 'perspective(1000px) rotateX(0) rotateY(0) scale(1)');
+        });
+    }
+
+    // Search & Easter Eggs
+    function handleSearch() {
+        const q = document.getElementById('gameSearch').value.toLowerCase(), core = document.getElementById('nexus-core');
+        document.body.classList.remove('zero-gravity'); core.classList.remove('animate-barrel-roll', 'glitch-active');
+        if(q === 'gravity') document.body.classList.add('zero-gravity');
+        if(q === 'barrel roll') { core.classList.add('animate-barrel-roll'); setTimeout(() => core.classList.remove('animate-barrel-roll'), 2000); }
+        if(q === 'glitch') core.classList.add('glitch-active');
+        if(q === 'matrix') { bgMode = 'matrix'; initBG(); } else if (bgMode === 'matrix' && !q.includes('matrix')) { bgMode = 'standard'; initBG(); }
+
+        let found = false;
+        document.querySelectorAll('.cartridge').forEach((el, i) => {
+            const match = games[i].name.toLowerCase().includes(q); el.style.display = match ? 'block' : 'none'; if(match) found = true;
+        });
+        document.getElementById('noResults').style.display = found ? 'none' : 'block';
+    }
+
+    // Scramble Effect
+    function scrambleText(el) {
+        const original = el.getAttribute('data-original'), chars = "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789#@$";
+        let iter = 0;
+        const interval = setInterval(() => {
+            el.innerText = original.split("").map((l, i) => { if (i < iter) return original[i]; return chars[Math.floor(Math.random() * chars.length)]; }).join("");
+            if (iter >= original.length) clearInterval(interval); iter += 1 / 2;
+        }, 30);
+    }
+
+    // Konami Jackpot
+    let kCode=['ArrowUp','ArrowUp','ArrowDown','ArrowDown','ArrowLeft','ArrowRight','ArrowLeft','ArrowRight','b','a'], kIdx=0;
+    document.addEventListener('keydown',e=>{ if(e.key===kCode[kIdx]){ kIdx++; if(kIdx===kCode.length){ triggerJackpot(); kIdx=0; } } else kIdx=0; });
+    function triggerJackpot() {
+        document.querySelectorAll('.cartridge').forEach(c => {
+            const r = c.getBoundingClientRect();
+            for(let i=0; i<40; i++) particles.push(new Particle(r.left + r.width/2, r.top + r.height/2, 'confetti'));
+        });
+    }
+
+    // Init & Toggles
+    document.getElementById('menuToggle').onclick = () => document.getElementById('cheatSheet').classList.remove('hidden');
+    document.getElementById('crtToggle').onclick = () => document.body.classList.toggle('crt-mode');
+    renderGames();
+  </script>
 </body>
 </html>
