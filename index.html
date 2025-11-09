@@ -33,7 +33,7 @@
     
     .glass { background: rgba(15, 23, 42, 0.6); backdrop-filter: blur(12px); border: 1px solid rgba(255,255,255,0.1); }
     .cartridge { transform-style: preserve-3d; perspective: 1000px; }
-    .cartridge-content { transform-style: preserve-3d; transition: transform 0.2s ease-out; }
+    .cartridge-content { transform-style: preserve-3d; transition: transform 0.2s ease-out; display: block; }
     .pop-out { transform: translateZ(30px); }
     .glitch-active { animation: glitch-anim 0.2s infinite; filter: hue-rotate(90deg) contrast(1.5); }
     .zero-gravity .gravity-affected { animation: floating 5s ease-in-out infinite; animation-delay: calc(var(--i) * -0.5s) !important; }
@@ -197,15 +197,16 @@
             const el = document.createElement('div');
             el.className = `cartridge interactive gravity-affected opacity-0 transition-all duration-700`;
             el.style = `--i:${i+3}; transition-delay: ${i*50}ms`;
+            // CHANGED: now uses <a> tag for better reliability than window.open()
             el.innerHTML = `
-                <div class="cartridge-content glass rounded-xl p-[2px] bg-gradient-to-br ${g.color} group cursor-pointer h-full" onclick="window.open('${g.url}', '_blank')">
+                <a href="${g.url}" target="_blank" class="cartridge-content glass rounded-xl p-[2px] bg-gradient-to-br ${g.color} group cursor-pointer h-full block">
                     <div class="bg-[#0a0a14] h-full w-full rounded-[10px] p-6 flex flex-col items-center justify-center relative overflow-hidden">
                         <div class="absolute inset-0 bg-gradient-to-br ${g.color} opacity-10 group-hover:opacity-30 transition-opacity duration-500"></div>
                         <i class="fas ${g.icon} text-4xl mb-4 bg-clip-text text-transparent bg-gradient-to-br ${g.color} pop-out filter group-hover:brightness-150 transition-all"></i>
                         <h3 class="font-tech font-bold text-white text-center uppercase tracking-wider pop-out z-10 group-hover:text-neon-blue transition-colors">${g.name}</h3>
                         <div class="mt-4 text-[10px] font-arcade text-gray-500 group-hover:text-neon-pink transition-colors pop-out">INSERT COIN</div>
                     </div>
-                </div>`;
+                </a>`;
             grid.appendChild(el);
             setTimeout(() => el.classList.remove('opacity-0'), 100);
         });
