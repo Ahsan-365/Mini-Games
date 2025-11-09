@@ -194,19 +194,23 @@
     function renderGames() {
         const grid = document.getElementById('game-grid');
         games.forEach((g, i) => {
-            const el = document.createElement('div');
-            el.className = `cartridge interactive gravity-affected opacity-0 transition-all duration-700`;
+            // CHANGED: The outermost element is now the <a> tag itself.
+            // This is much more reliable for clicking than having it inside.
+            const el = document.createElement('a');
+            el.href = g.url;
+            el.target = "_blank";
+            el.className = `cartridge interactive gravity-affected opacity-0 transition-all duration-700 block`;
             el.style = `--i:${i+3}; transition-delay: ${i*50}ms`;
-            // CHANGED: now uses <a> tag for better reliability than window.open()
+            
             el.innerHTML = `
-                <a href="${g.url}" target="_blank" class="cartridge-content glass rounded-xl p-[2px] bg-gradient-to-br ${g.color} group cursor-pointer h-full block">
+                <div class="cartridge-content glass rounded-xl p-[2px] bg-gradient-to-br ${g.color} group cursor-pointer h-full">
                     <div class="bg-[#0a0a14] h-full w-full rounded-[10px] p-6 flex flex-col items-center justify-center relative overflow-hidden">
                         <div class="absolute inset-0 bg-gradient-to-br ${g.color} opacity-10 group-hover:opacity-30 transition-opacity duration-500"></div>
                         <i class="fas ${g.icon} text-4xl mb-4 bg-clip-text text-transparent bg-gradient-to-br ${g.color} pop-out filter group-hover:brightness-150 transition-all"></i>
                         <h3 class="font-tech font-bold text-white text-center uppercase tracking-wider pop-out z-10 group-hover:text-neon-blue transition-colors">${g.name}</h3>
                         <div class="mt-4 text-[10px] font-arcade text-gray-500 group-hover:text-neon-pink transition-colors pop-out">INSERT COIN</div>
                     </div>
-                </a>`;
+                </div>`;
             grid.appendChild(el);
             setTimeout(() => el.classList.remove('opacity-0'), 100);
         });
