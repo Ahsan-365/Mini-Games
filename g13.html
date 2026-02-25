@@ -1,199 +1,230 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Cookie Clicker Master</title> <!-- Updated Title -->
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="shared.css">
+    <script src="shared.js"></script>
     <style>
-        /* General Body Styling */
+        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
+
         body {
             display: flex;
             flex-direction: column;
             justify-content: center;
             align-items: center;
-            min-height: 100vh; /* Ensures body takes full viewport height */
+            min-height: 100vh;
             margin: 0;
-            background-color: #fcefe3; /* Light background for a warm cookie theme */
-            font-family: 'Arial Rounded MT Bold', 'Helvetica Rounded', sans-serif;
-            color: #5a3d2b; /* Dark brown for text, like chocolate */
-            user-select: none; /* Prevent text selection on click */
-            /* Removed overflow: hidden; to allow scrolling if content is too tall */
-            position: relative; /* For background illustration */
+            background: linear-gradient(135deg, #050814 0%, #0a0a16 100%);
+            font-family: 'Inter', sans-serif;
+            color: #fff;
+            user-select: none;
+            position: relative;
         }
 
-        /* Subtle background pattern to enhance bakery theme */
-        body::before {
-            content: '';
-            position: absolute;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background-image: radial-gradient(#ffe0b2 1px, transparent 1px), radial-gradient(#ffcc80 1px, transparent 1px);
-            background-size: 20px 20px;
-            background-position: 0 0, 10px 10px;
-            opacity: 0.2;
-            z-index: -1; /* Send it behind other content */
-        }
-
-        /* Main Game Area Container */
         #game-area {
             display: flex;
             flex-direction: column;
             align-items: center;
-            /* Changed justify-content to start so content flows from top */
             justify-content: flex-start;
-            padding: 30px; /* Increased padding */
-            border-radius: 20px; /* More rounded corners */
-            background-color: #fff;
-            box-shadow: 0 12px 24px rgba(0,0,0,0.2); /* Deeper shadow */
-            width: 90%; /* Use percentage for responsiveness */
-            max-width: 400px; /* Max width for desktop */
-            box-sizing: border-box; /* Include padding in width */
+            padding: 40px;
+            border-radius: 1.5rem;
+            background: rgba(15, 23, 42, 0.8);
+            border: 1px solid rgba(0, 234, 255, 0.2);
+            box-shadow: 0 0 30px rgba(0, 234, 255, 0.1);
+            backdrop-filter: blur(10px);
+            width: 90%;
+            max-width: 450px;
+            box-sizing: border-box;
             position: relative;
-            z-index: 1; /* Ensure it's above the background */
-            /* Added margin-top and margin-bottom to ensure some spacing from top/bottom of viewport */
+            z-index: 1;
             margin-top: 20px;
             margin-bottom: 20px;
         }
 
-        /* Cookie Button Styling */
+        h1 {
+            font-family: 'Press Start 2P', cursive;
+            background: linear-gradient(to right, #00eaff, #ff0055);
+            -webkit-background-clip: text;
+            background-clip: text;
+            color: transparent;
+            text-shadow: 0 0 10px rgba(0, 234, 255, 0.3);
+            text-align: center;
+            font-size: 1.5rem;
+            margin-bottom: 20px;
+            line-height: 1.4;
+        }
+
         #cookie {
-            width: 250px; /* Larger cookie */
+            width: 250px;
             height: 250px;
-            background-color: transparent; /* Make background transparent for SVG */
+            background-color: transparent;
             border-radius: 50%;
             display: flex;
             justify-content: center;
             align-items: center;
-            font-size: 1.5em; /* Text will be hidden later, but kept for reference */
-            font-weight: bold;
             cursor: pointer;
-            transition: transform 0.1s ease-out;
+            transition: transform 0.1s ease-out, filter 0.2s ease;
             position: relative;
-            overflow: hidden; /* For floating score */
+            z-index: 10;
         }
 
         #cookie:active {
-            transform: scale(0.95); /* Shrink effect on click */
+            transform: scale(0.9);
+            filter: brightness(1.2);
         }
 
-        /* SVG Cookie Illustration */
         #cookie svg {
             width: 100%;
             height: 100%;
-            display: block; /* Remove extra space below SVG */
-            filter: drop-shadow(0 10px 20px rgba(0,0,0,0.2)); /* Shadow for the SVG */
+            display: block;
+            filter: drop-shadow(0 0 20px rgba(0, 234, 255, 0.6));
         }
 
-        /* Score and CPS Display */
         #score {
-            margin-top: 25px; /* Adjusted margin */
-            font-size: 3em; /* Larger score */
-            font-weight: bold;
-            color: #d35400; /* Orange-brown for score */
-            text-shadow: 2px 2px 4px rgba(0,0,0,0.1);
-        }
-        #cps-display {
-            font-size: 1.3em; /* Larger CPS display */
-            color: #7f8c8d; /* Grey for CPS */
-            margin-top: 5px;
+            margin-top: 25px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 2rem;
+            color: #00eaff;
+            text-shadow: 0 0 15px rgba(0, 234, 255, 0.5);
+            text-align: center;
         }
 
-        /* Floating Score Animation */
+        #cps-display {
+            font-size: 1rem;
+            font-family: 'Press Start 2P', cursive;
+            color: #ff0055;
+            margin-top: 10px;
+            text-shadow: 0 0 10px rgba(255, 0, 85, 0.5);
+        }
+
         .floating-score {
             position: absolute;
-            color: #27ae60; /* Green for positive effect */
-            font-size: 1.8em; /* Larger floating score */
-            font-weight: bold;
+            color: #00ff41;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1.5rem;
+            text-shadow: 0 0 10px rgba(0, 255, 65, 0.8);
             animation: fadeOutUp 1s forwards;
-            pointer-events: none; /* Allows clicks to pass through */
+            pointer-events: none;
             z-index: 1000;
         }
 
         @keyframes fadeOutUp {
-            0% { opacity: 1; transform: translateY(0); }
-            100% { opacity: 0; transform: translateY(-50px); }
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1);
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateY(-80px) scale(1.5);
+            }
         }
 
-        /* Upgrades Container */
         .upgrades-container {
             display: flex;
             flex-direction: column;
-            gap: 15px; /* Increased gap */
-            margin-top: 30px; /* More space above upgrades */
+            gap: 15px;
+            margin-top: 30px;
             width: 100%;
-            max-width: 350px; /* Wider upgrade buttons */
+            max-width: 350px;
         }
 
-        /* Upgrade Button Styling */
+        .upgrades-container h2 {
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1.2rem;
+            color: #fff;
+            text-align: center;
+            margin-bottom: 10px;
+            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        }
+
         .upgrade-button {
-            padding: 12px 20px; /* More padding */
-            border: none;
-            border-radius: 10px; /* More rounded */
-            background-color: #8e44ad; /* Purple for upgrades */
-            color: white;
-            font-size: 1.2em; /* Larger text */
-            font-weight: bold;
+            padding: 15px 20px;
+            background: rgba(0, 234, 255, 0.05);
+            color: #00eaff;
+            border: 1px solid rgba(0, 234, 255, 0.4);
+            border-radius: 8px;
+            font-size: 1.1rem;
+            font-weight: 700;
             cursor: pointer;
-            transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
-            box-shadow: 0 5px 10px rgba(0,0,0,0.15); /* Soft shadow */
+            transition: all 0.2s ease;
+            box-shadow: 0 0 10px rgba(0, 234, 255, 0.1);
             display: flex;
             justify-content: space-between;
             align-items: center;
-        }
-        .upgrade-button:hover {
-            background-color: #9b59b6; /* Lighter purple on hover */
-            transform: translateY(-3px); /* More pronounced lift */
-            box-shadow: 0 8px 15px rgba(0,0,0,0.2);
-        }
-        .upgrade-button:active {
-            transform: translateY(0);
-            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-        }
-        .upgrade-button:disabled {
-            background-color: #ccc;
-            cursor: not-allowed;
-            transform: none;
-            box-shadow: none;
-            opacity: 0.6;
-        }
-        .upgrade-cost {
-            font-size: 0.9em;
-            opacity: 0.9;
-            font-weight: normal; /* Less bold for cost */
+            font-family: 'Inter', sans-serif;
         }
 
-        /* Reset Button Styling */
+        .upgrade-button:hover:not(:disabled) {
+            background: rgba(0, 234, 255, 0.2);
+            box-shadow: 0 0 20px rgba(0, 234, 255, 0.4);
+            transform: translateX(5px);
+        }
+
+        .upgrade-button:active:not(:disabled) {
+            transform: translateX(2px);
+            box-shadow: 0 0 5px rgba(0, 234, 255, 0.2);
+        }
+
+        .upgrade-button:disabled {
+            background: rgba(15, 23, 42, 0.8);
+            color: rgba(255, 255, 255, 0.3);
+            border-color: rgba(255, 255, 255, 0.1);
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        .upgrade-cost {
+            font-size: 0.9em;
+            color: #ff0055;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 0.7rem;
+            text-shadow: 0 0 5px rgba(255, 0, 85, 0.5);
+        }
+
+        .upgrade-button:disabled .upgrade-cost {
+            color: rgba(255, 255, 255, 0.3);
+            text-shadow: none;
+        }
+
         #resetButton {
-            margin-top: 25px; /* Space above the button */
-            padding: 10px 20px;
-            font-size: 1em;
-            background-color: #f44336; /* Red for reset */
-            color: white;
-            border: none;
+            margin-top: 30px;
+            padding: 12px 25px;
+            background: rgba(255, 0, 85, 0.1);
+            color: #ff0055;
+            border: 1px solid rgba(255, 0, 85, 0.5);
             border-radius: 8px;
             cursor: pointer;
-            transition: background-color 0.2s ease, transform 0.1s ease, box-shadow 0.2s ease;
-            box-shadow: 0 3px 6px rgba(0,0,0,0.1);
-            /* Flexbox for centering text */
+            transition: all 0.2s ease;
+            box-shadow: 0 0 10px rgba(255, 0, 85, 0.2);
             display: flex;
             justify-content: center;
             align-items: center;
-            width: 100%; /* Make it full width of game-area container */
-            max-width: 350px; /* Match upgrade buttons width */
+            width: 100%;
+            max-width: 350px;
+            font-family: 'Press Start 2P', cursive;
+            font-size: 1rem;
         }
+
         #resetButton:hover {
-            background-color: #da190b; /* Darker red on hover */
+            background: rgba(255, 0, 85, 0.3);
+            box-shadow: 0 0 20px rgba(255, 0, 85, 0.4);
             transform: translateY(-2px);
-            box-shadow: 0 5px 10px rgba(0,0,0,0.15);
         }
+
         #resetButton:active {
-            transform: translateY(0);
-            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            transform: translateY(2px);
+            box-shadow: 0 0 5px rgba(255, 0, 85, 0.2);
         }
     </style>
 </head>
+
 <body>
     <div id="game-area">
         <h1>Cookie Clicker Master</h1> <!-- Game Title -->
@@ -201,24 +232,25 @@
             <!-- SVG Cookie Illustration -->
             <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
                 <!-- Cookie base -->
-                <circle cx="100" cy="100" r="90" fill="#e0b080"/>
+                <circle cx="100" cy="100" r="90" fill="#e0b080" />
                 <!-- Inner shadow for depth -->
-                <circle cx="100" cy="100" r="90" fill="url(#shadowGradient)"/>
+                <circle cx="100" cy="100" r="90" fill="url(#shadowGradient)" />
                 <defs>
-                    <radialGradient id="shadowGradient" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse" gradientTransform="translate(100 100) rotate(90) scale(180)">
-                        <stop offset="0.5" stop-color="#000000" stop-opacity="0"/>
-                        <stop offset="1" stop-color="#000000" stop-opacity="0.2"/>
+                    <radialGradient id="shadowGradient" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse"
+                        gradientTransform="translate(100 100) rotate(90) scale(180)">
+                        <stop offset="0.5" stop-color="#000000" stop-opacity="0" />
+                        <stop offset="1" stop-color="#000000" stop-opacity="0.2" />
                     </radialGradient>
                 </defs>
 
                 <!-- Chocolate Chips -->
-                <circle cx="55" cy="45" r="15" fill="#4a2b1f"/>
-                <circle cx="130" cy="60" r="12" fill="#4a2b1f"/>
-                <circle cx="80" cy="120" r="18" fill="#4a2b1f"/>
-                <circle cx="150" cy="130" r="10" fill="#4a2b1f"/>
-                <circle cx="60" cy="160" r="14" fill="#4a2b1f"/>
-                <circle cx="110" cy="70" r="10" fill="#4a2b1f"/>
-                <circle cx="140" cy="90" r="16" fill="#4a2b1f"/>
+                <circle cx="55" cy="45" r="15" fill="#4a2b1f" />
+                <circle cx="130" cy="60" r="12" fill="#4a2b1f" />
+                <circle cx="80" cy="120" r="18" fill="#4a2b1f" />
+                <circle cx="150" cy="130" r="10" fill="#4a2b1f" />
+                <circle cx="60" cy="160" r="14" fill="#4a2b1f" />
+                <circle cx="110" cy="70" r="10" fill="#4a2b1f" />
+                <circle cx="140" cy="90" r="16" fill="#4a2b1f" />
             </svg>
         </div>
         <div id="score">0 Cookies</div>
@@ -324,6 +356,9 @@
          * Resets the game to its initial state.
          */
         function resetGame() {
+            if (cookies > 0) {
+                submitScore('g13.html', Math.floor(cookies));
+            }
             cookies = 0;
             autoClickers = 0;
             grandmas = 0;
@@ -343,8 +378,8 @@
          */
         function calculateCps() {
             cookiesPerSecond = (autoClickers * autoClickerCps) +
-                               (grandmas * grandmaCps) +
-                               (ovens * ovenCps);
+                (grandmas * grandmaCps) +
+                (ovens * ovenCps);
         }
 
         /**
@@ -413,7 +448,7 @@
             if (cookies >= autoClickerCost) {
                 cookies -= autoClickerCost;
                 autoClickers++;
-                autoClickerCost = Math.ceil(autoClickerCost * 1.15); // Increase cost
+                autoClickerCost = Math.ceil(autoClickerCost * 1.5); // Increase cost
                 updateAllDisplays(); // Update all displays after purchase
                 saveGame(); // Save game after purchase
             }
@@ -426,7 +461,7 @@
             if (cookies >= grandmaCost) {
                 cookies -= grandmaCost;
                 grandmas++;
-                grandmaCost = Math.ceil(grandmaCost * 1.15); // Increase cost
+                grandmaCost = Math.ceil(grandmaCost * 1.5); // Increase cost
                 updateAllDisplays(); // Update all displays after purchase
                 saveGame(); // Save game after purchase
             }
@@ -439,7 +474,7 @@
             if (cookies >= ovenCost) {
                 cookies -= ovenCost;
                 ovens++;
-                ovenCost = Math.ceil(ovenCost * 1.15); // Increase cost
+                ovenCost = Math.ceil(ovenCost * 1.5); // Increase cost
                 updateAllDisplays(); // Update all displays after purchase
                 saveGame(); // Save game after purchase
             }
@@ -466,4 +501,5 @@
         });
     </script>
 </body>
+
 </html>
