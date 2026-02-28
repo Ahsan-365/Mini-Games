@@ -1,0 +1,486 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Sweeper | Infinite Arcade</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #18181b;
+            --surface: rgba(39, 39, 42, .8);
+            --border: rgba(255, 255, 255, .1);
+            --accent: #f43f5e;
+            --cell-up: #27272a;
+            --cell-dn: #09090b;
+            --cell-hov: #3f3f46
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none
+        }
+
+        body {
+            background: var(--bg);
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: #a1a1aa;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: .9rem;
+            z-index: 99;
+            transition: .2s
+        }
+
+        .back-btn:hover {
+            color: #fff
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 600px;
+            z-index: 10;
+            margin-top: 20px
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: #f43f5e;
+            text-shadow: 0 0 20px rgba(244, 63, 94, .5);
+            text-align: center
+        }
+
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            padding: 16px 24px;
+            background: var(--surface);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+            backdrop-filter: blur(8px)
+        }
+
+        .stat {
+            display: flex;
+            align-items: center;
+            gap: 10px
+        }
+
+        .stat i {
+            font-size: 1.5rem;
+            color: #f43f5e;
+            text-shadow: 0 0 10px rgba(244, 63, 94, .5)
+        }
+
+        .stat-val {
+            font-family: 'Outfit';
+            font-size: 2rem;
+            font-weight: 900;
+            color: #fff;
+            background: #000;
+            padding: 4px 12px;
+            border-radius: 8px;
+            border: 1px solid var(--border);
+            min-width: 70px;
+            text-align: center
+        }
+
+        .board-wrap {
+            padding: 8px;
+            background: #09090b;
+            border-radius: 12px;
+            border: 2px solid #27272a;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, .8);
+            overflow: auto;
+            max-width: 100%
+        }
+
+        .grid {
+            display: grid;
+            gap: 2px;
+            background: #27272a
+        }
+
+        .cell {
+            width: 36px;
+            height: 36px;
+            background: var(--cell-up);
+            border-top: 2px solid rgba(255, 255, 255, .1);
+            border-left: 2px solid rgba(255, 255, 255, .1);
+            border-bottom: 2px solid rgba(0, 0, 0, .5);
+            border-right: 2px solid rgba(0, 0, 0, .5);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Outfit';
+            font-weight: 900;
+            font-size: 1.2rem;
+            cursor: pointer;
+            transition: background 0.1s
+        }
+
+        .cell:hover:not(.rev) {
+            background: var(--cell-hov)
+        }
+
+        .cell:active:not(.rev) {
+            background: var(--cell-dn);
+            border: 2px solid rgba(0, 0, 0, .5)
+        }
+
+        .cell.rev {
+            background: var(--cell-dn);
+            border: none;
+            box-shadow: inset 0 2px 5px rgba(0, 0, 0, .8)
+        }
+
+        .cell.mine {
+            background: #ef4444;
+            box-shadow: 0 0 15px #ef4444
+        }
+
+        .cell.flag {
+            color: #f43f5e;
+            text-shadow: 0 0 10px rgba(244, 63, 94, .8)
+        }
+
+        .cell.boom {
+            background: #b91c1c;
+            animation: pulse .5s infinite alternate
+        }
+
+        @keyframes pulse {
+            100% {
+                transform: scale(1.1);
+                border-radius: 4px;
+                z-index: 10
+            }
+        }
+
+        .c1 {
+            color: #3b82f6
+        }
+
+        .c2 {
+            color: #10b981
+        }
+
+        .c3 {
+            color: #ef4444
+        }
+
+        .c4 {
+            color: #8b5cf6
+        }
+
+        .c5 {
+            color: #f59e0b
+        }
+
+        .c6 {
+            color: #06b6d4
+        }
+
+        .c7 {
+            color: #111827
+        }
+
+        .c8 {
+            color: #4b5563
+        }
+
+        .diff-sel {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 10px
+        }
+
+        .btn-diff {
+            padding: 8px 16px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: #a1a1aa;
+            font-family: 'Outfit';
+            font-weight: 700;
+            cursor: pointer;
+            transition: .2s
+        }
+
+        .btn-diff.active {
+            background: rgba(244, 63, 94, .2);
+            border-color: #f43f5e;
+            color: #fff
+        }
+
+        .overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(9, 9, 11, .9);
+            backdrop-filter: blur(8px);
+            z-index: 50
+        }
+
+        .overlay.hidden {
+            display: none
+        }
+
+        .overlay h2 {
+            font-family: 'Outfit';
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+            color: #f43f5e;
+            text-shadow: 0 0 30px rgba(244, 63, 94, .5)
+        }
+
+        .btn-primary {
+            margin-top: 30px;
+            padding: 16px 40px;
+            border-radius: 12px;
+            border: none;
+            background: var(--accent);
+            color: #fff;
+            font-family: 'Outfit';
+            font-weight: 900;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: .2s;
+            box-shadow: 0 10px 20px rgba(244, 63, 94, .4);
+            text-transform: uppercase;
+            letter-spacing: 2px
+        }
+
+        .btn-primary:hover {
+            background: #e11d48;
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(244, 63, 94, .6)
+        }
+    </style>
+</head>
+
+<body>
+    <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Hub</a>
+
+    <div class="overlay" id="overlay">
+        <h2 id="ovTitle">Sector Cleared</h2>
+        <p id="ovDesc" style="color:#a1a1aa;font-size:1.5rem;font-family:'Outfit';font-weight:700"></p>
+        <button class="btn-primary" onclick="init()">Deploy Again</button>
+    </div>
+
+    <div class="container">
+        <h1>CYBER SWEEPER</h1>
+
+        <div class="diff-sel">
+            <button class="btn-diff active" id="btnB" onclick="setDiff('B')">Beginner</button>
+            <button class="btn-diff" id="btnI" onclick="setDiff('I')">Intermediate</button>
+            <button class="btn-diff" id="btnE" onclick="setDiff('E')">Expert</button>
+        </div>
+
+        <div class="hud">
+            <div class="stat"><i class="fas fa-bomb"></i>
+                <div class="stat-val" id="minesL">10</div>
+            </div>
+            <div class="stat"><i class="fas fa-stopwatch"></i>
+                <div class="stat-val" id="time">000</div>
+            </div>
+        </div>
+
+        <div class="board-wrap">
+            <div class="grid" id="board"></div>
+        </div>
+    </div>
+
+    <script>
+        let R = 9, C = 9, M = 10;
+        let grid = [], flags = 0, timer = 0, intId = null, running = false, firstClick = true;
+        const bEl = document.getElementById('board');
+
+        function setDiff(lvl) {
+            document.querySelector('.btn-diff.active').classList.remove('active');
+            document.getElementById(`btn${lvl}`).classList.add('active');
+            if (lvl === 'B') { R = 9; C = 9; M = 10; }
+            else if (lvl === 'I') { R = 16; C = 16; M = 40; }
+            else if (lvl === 'E') { R = 16; C = 30; M = 99; }
+            init();
+        }
+
+        function init() {
+            clearInterval(intId); timer = 0; flags = 0; running = true; firstClick = true;
+            document.getElementById('time').textContent = '000';
+            document.getElementById('minesL').textContent = M;
+            document.getElementById('overlay').classList.add('hidden');
+
+            bEl.style.gridTemplateColumns = `repeat(${C}, 1fr)`;
+            bEl.innerHTML = '';
+            grid = Array(R).fill().map(() => Array(C).fill().map(() => ({ m: false, rev: false, f: false, val: 0, el: null })));
+
+            for (let r = 0; r < R; r++) {
+                for (let c = 0; c < C; c++) {
+                    let el = document.createElement('div');
+                    el.className = 'cell';
+                    el.onmousedown = (e) => {
+                        if (!running) return;
+                        if (e.button === 2) toggleFlag(r, c);
+                        else reveal(r, c);
+                    };
+                    el.oncontextmenu = e => e.preventDefault();
+
+                    // Long press for mobile flag
+                    let to;
+                    el.ontouchstart = (e) => { if (!running) return; e.preventDefault(); to = setTimeout(() => toggleFlag(r, c), 500); };
+                    el.ontouchend = (e) => { if (!running) return; e.preventDefault(); clearTimeout(to); if (!grid[r][c].f) reveal(r, c); };
+
+                    bEl.appendChild(el);
+                    grid[r][c].el = el;
+                }
+            }
+        }
+
+        function plantMines(fr, fc) {
+            let planted = 0;
+            while (planted < M) {
+                let r = Math.floor(Math.random() * R), c = Math.floor(Math.random() * C);
+                // Don't plant on first click or already planted
+                if (!grid[r][c].m && !(Math.abs(r - fr) <= 1 && Math.abs(c - fc) <= 1)) {
+                    grid[r][c].m = true;
+                    planted++;
+                }
+            }
+            // Calc numbers
+            for (let r = 0; r < R; r++) {
+                for (let c = 0; c < C; c++) {
+                    if (!grid[r][c].m) {
+                        let cnt = 0;
+                        for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+                            let nr = r + dr, nc = c + dc;
+                            if (nr >= 0 && nr < R && nc >= 0 && nc < C && grid[nr][nc].m) cnt++;
+                        }
+                        grid[r][c].val = cnt;
+                    }
+                }
+            }
+        }
+
+        function toggleFlag(r, c) {
+            let cell = grid[r][c];
+            if (cell.rev) return;
+            cell.f = !cell.f;
+            cell.el.className = cell.f ? 'cell flag' : 'cell';
+            cell.el.innerHTML = cell.f ? '<i class="fas fa-flag"></i>' : '';
+            flags += cell.f ? 1 : -1;
+            document.getElementById('minesL').textContent = M - flags;
+        }
+
+        function reveal(r, c) {
+            let cell = grid[r][c];
+            if (cell.rev || cell.f) return;
+
+            if (firstClick) {
+                plantMines(r, c);
+                firstClick = false;
+                intId = setInterval(() => { timer++; document.getElementById('time').textContent = timer.toString().padStart(3, '0'); }, 1000);
+            }
+
+            cell.rev = true;
+            cell.el.classList.add('rev');
+
+            if (cell.m) {
+                // Boom
+                running = false; clearInterval(intId);
+                cell.el.classList.add('boom');
+                cell.el.innerHTML = '<i class="fas fa-bomb"></i>';
+                revealAll();
+                endUI(false);
+                return;
+            }
+
+            if (cell.val > 0) {
+                cell.el.textContent = cell.val;
+                cell.el.classList.add('c' + cell.val);
+            } else {
+                // Flood fill
+                for (let dr = -1; dr <= 1; dr++) for (let dc = -1; dc <= 1; dc++) {
+                    let nr = r + dr, nc = c + dc;
+                    if (nr >= 0 && nr < R && nc >= 0 && nc < C) reveal(nr, nc);
+                }
+            }
+
+            checkWin();
+        }
+
+        function revealAll() {
+            for (let r = 0; r < R; r++) {
+                for (let c = 0; c < C; c++) {
+                    let cell = grid[r][c];
+                    if (cell.m && !cell.f && !cell.rev) {
+                        cell.el.classList.add('rev', 'mine');
+                        cell.el.innerHTML = '<i class="fas fa-bomb" style="color:#fff"></i>';
+                    } else if (!cell.m && cell.f) {
+                        cell.el.innerHTML = '<i class="fas fa-times" style="color:#ef4444"></i>'; // wrong flag
+                    }
+                }
+            }
+        }
+
+        function checkWin() {
+            let revCnt = 0;
+            for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) if (grid[r][c].rev) revCnt++;
+            if (revCnt === R * C - M) {
+                running = false; clearInterval(intId);
+                // flag remaining
+                for (let r = 0; r < R; r++) for (let c = 0; c < C; c++) if (grid[r][c].m) { grid[r][c].el.innerHTML = '<i class="fas fa-flag"></i>'; grid[r][c].el.classList.add('flag'); }
+                document.getElementById('minesL').textContent = 0;
+                endUI(true);
+            }
+        }
+
+        function endUI(won) {
+            setTimeout(() => {
+                document.getElementById('ovTitle').textContent = won ? 'Sector Cleared' : 'Entity Breached';
+                document.getElementById('ovTitle').style.color = won ? '#10b981' : '#f43f5e';
+                document.getElementById('ovTitle').style.textShadow = `0 0 30px ${won ? 'rgba(16,185,129,.5)' : 'rgba(244,63,94,.5)'}`;
+                document.getElementById('ovDesc').innerHTML = `Time: <span style="color:#fff">${timer}s</span>`;
+                document.getElementById('overlay').classList.remove('hidden');
+            }, 1000);
+        }
+
+        init();
+    </script>
+</body>
+
+</html>

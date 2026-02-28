@@ -1,464 +1,742 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Hangman Game</title>
-    <!-- Inter Font from Google Fonts -->
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap" rel="stylesheet">
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Word Puzzle Hub | Infinite Arcade</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        body {
-            font-family: 'Inter', sans-serif;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background-color: #f0f0f0; /* Light grey background */
-            margin: 0;
-            padding: 20px;
-            box-sizing: border-box;
-            flex-direction: column;
-        }
-        .game-container {
-            display: flex;
-            flex-direction: column;
-            gap: 20px;
-            background-color: #ffffff;
-            padding: 30px;
-            border-radius: 15px;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-            max-width: 90%;
-            width: 700px; /* Max width for larger screens */
-            align-items: center;
-            text-align: center;
-        }
-        canvas {
-            background-color: #e0f2f7; /* Light blue for canvas background */
-            border: 2px solid #334155; /* Darker border for canvas */
-            border-radius: 10px;
-            width: 100%; /* Make canvas responsive */
-            max-width: 300px; /* Max width for canvas */
-            height: auto; /* Maintain aspect ratio */
-        }
-        .word-display {
-            font-size: 2.5rem; /* Larger font for word */
-            font-weight: 700;
-            letter-spacing: 5px;
-            margin-bottom: 20px;
-            color: #1e293b; /* Dark text */
-            min-height: 40px; /* To prevent layout shift */
-        }
-        .incorrect-letters {
-            font-size: 1.25rem;
-            color: #ef4444; /* Red for incorrect letters */
-            margin-top: 10px;
-            min-height: 25px; /* To prevent layout shift */
-        }
-        .keyboard {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(40px, 1fr)); /* Responsive grid */
-            gap: 8px;
-            width: 100%;
-            max-width: 600px; /* Max width for keyboard */
-            margin-top: 20px;
-        }
-        .keyboard button {
-            background-color: #3b82f6; /* Blue button */
-            color: white;
-            padding: 12px 0;
-            border-radius: 8px;
-            font-size: 1.1rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: background-color 0.2s ease, transform 0.1s ease;
-            box-shadow: 0 4px #2563eb; /* Darker blue shadow */
-            border: none;
-            outline: none;
-        }
-        .keyboard button:hover:not(:disabled) {
-            background-color: #2563eb; /* Darker blue on hover */
-            transform: translateY(-2px);
-            box-shadow: 0 6px #1d4ed8;
-        }
-        .keyboard button:active:not(:disabled) {
-            background-color: #1d4ed8; /* Even darker blue on active */
-            transform: translateY(0);
-            box-shadow: 0 2px #1e40af;
-        }
-        .keyboard button:disabled {
-            background-color: #9ca3af; /* Grey for disabled */
-            color: #d1d5db;
-            cursor: not-allowed;
-            box-shadow: 0 4px #6b7280;
-        }
-        .message-box {
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-top: 20px;
-            min-height: 30px; /* To prevent layout shift */
-        }
-        .message-box.win {
-            color: #22c55e; /* Green for win */
-        }
-        .message-box.lose {
-            color: #dc2626; /* Red for lose */
-        }
-        .new-game-button {
-            background-color: #10b981; /* Green button */
-            color: white;
-            padding: 15px 30px;
-            border-radius: 10px;
-            font-size: 1.2rem;
-            font-weight: 700;
-            cursor: pointer;
-            transition: background-color 0.2s ease, transform 0.1s ease;
-            box-shadow: 0 4px #047857;
-            border: none;
-            outline: none;
-            margin-top: 20px;
-        }
-        .new-game-button:hover {
-            background-color: #047857;
-            transform: translateY(-2px);
-            box-shadow: 0 6px #065f46;
-        }
-        .new-game-button:active {
-            background-color: #065f46;
-            transform: translateY(0);
-            box-shadow: 0 2px #0f766e;
+        :root {
+            --bg: #0f172a;
+            --surface: rgba(30, 41, 59, .7);
+            --border: rgba(255, 255, 255, .08);
+            --accent: #10b981
         }
 
-        /* Responsive adjustments */
-        @media (max-width: 600px) {
-            .game-container {
-                padding: 20px;
-                gap: 15px;
-            }
-            .word-display {
-                font-size: 2rem;
-                letter-spacing: 3px;
-            }
-            .incorrect-letters {
-                font-size: 1rem;
-            }
-            .keyboard button {
-                font-size: 0.9rem;
-                padding: 10px 0;
-            }
-            .message-box {
-                font-size: 1.2rem;
-            }
-            .new-game-button {
-                padding: 12px 25px;
-                font-size: 1rem;
-            }
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            background: var(--bg);
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: #94a3b8;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: .9rem;
+            z-index: 99;
+            transition: .2s
+        }
+
+        .back-btn:hover {
+            color: #fff
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+            width: 100%;
+            max-width: 800px;
+            padding: 60px 20px
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.8rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #34d399, #059669);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            margin-top: -14px;
+            text-align: center
+        }
+
+        .game-cards {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            justify-content: center;
+            flex-wrap: wrap
+        }
+
+        .game-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+            min-width: 280px;
+            cursor: pointer;
+            transition: .3s;
+            position: relative;
+            overflow: hidden
+        }
+
+        .game-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, .03), transparent);
+            opacity: 0;
+            transition: .3s
+        }
+
+        .game-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent);
+            box-shadow: 0 12px 40px rgba(16, 185, 129, .15)
+        }
+
+        .game-card:hover::before {
+            opacity: 1
+        }
+
+        .icon-wrapper {
+            width: 70px;
+            height: 70px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin-bottom: 8px
+        }
+
+        #wordle-card .icon-wrapper {
+            background: linear-gradient(135deg, #34d399, #059669);
+            color: #fff;
+            box-shadow: 0 8px 24px rgba(52, 211, 153, .3)
+        }
+
+        #hangman-card .icon-wrapper {
+            background: linear-gradient(135deg, #f87171, #dc2626);
+            color: #fff;
+            box-shadow: 0 8px 24px rgba(248, 113, 113, .3)
+        }
+
+        .card-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 900
+        }
+
+        .card-desc {
+            color: #94a3b8;
+            text-align: center;
+            font-size: .9rem;
+            line-height: 1.5
+        }
+
+        /* Game Wrapper */
+        #gameWrapper {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            gap: 16px
+        }
+
+        .mode-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 500px;
+            margin-bottom: 8px
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 10px;
+            padding: 8px 16px;
+            color: #f8fafc;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: .9rem;
+            cursor: pointer;
+            transition: .2s
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, .1)
+        }
+
+        /* Wordle UI */
+        #wordleUI {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 500px
+        }
+
+        .grid {
+            display: grid;
+            grid-template-rows: repeat(6, 1fr);
+            gap: 6px;
+            margin-bottom: 10px
+        }
+
+        .row {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 6px
+        }
+
+        .tile {
+            width: 56px;
+            height: 56px;
+            border: 2px solid #334155;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            border-radius: 8px;
+            background: rgba(15, 23, 42, .6);
+            transition: transform 0.4s ease, background 0.4s ease
+        }
+
+        .tile[data-state="active"] {
+            border-color: #64748b;
+            transform: scale(1.05)
+        }
+
+        .tile[data-state="correct"] {
+            background: #10b981;
+            border-color: #10b981;
+            color: #fff
+        }
+
+        .tile[data-state="present"] {
+            background: #f59e0b;
+            border-color: #f59e0b;
+            color: #fff
+        }
+
+        .tile[data-state="absent"] {
+            background: #334155;
+            border-color: #334155;
+            color: #94a3b8
+        }
+
+        .keyboard {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            width: 100%
+        }
+
+        .kbd-row {
+            display: flex;
+            justify-content: center;
+            gap: 6px
+        }
+
+        .kbd-key {
+            background: #334155;
+            border: none;
+            border-radius: 6px;
+            min-width: 32px;
+            height: 48px;
+            font-family: 'Inter', sans-serif;
+            font-weight: 600;
+            font-size: 1.1rem;
+            color: #f8fafc;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            flex: 1;
+            max-width: 44px;
+            transition: 0.2s;
+            text-transform: uppercase
+        }
+
+        .kbd-key.large {
+            flex: 1.5;
+            max-width: 65px;
+            font-size: .85rem
+        }
+
+        .kbd-key:hover {
+            background: #475569
+        }
+
+        .kbd-key[data-state="correct"] {
+            background: #10b981
+        }
+
+        .kbd-key[data-state="present"] {
+            background: #f59e0b
+        }
+
+        .kbd-key[data-state="absent"] {
+            background: #1e293b;
+            color: #64748b
+        }
+
+        /* Hangman UI */
+        #hangmanUI {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 500px
+        }
+
+        .hm-canvas-wrap {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .3)
+        }
+
+        canvas {
+            display: block
+        }
+
+        .word-display {
+            display: flex;
+            gap: 12px;
+            margin: 10px 0
+        }
+
+        .letter-box {
+            width: 46px;
+            height: 56px;
+            border-bottom: 3px solid #64748b;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.2rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            color: #f8fafc;
+            padding-bottom: 4px
+        }
+
+        .hm-keyboard {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+            max-width: 400px
+        }
+
+        .hm-key {
+            width: 36px;
+            height: 42px;
+            background: #334155;
+            border: none;
+            border-radius: 8px;
+            font-family: 'Inter', sans-serif;
+            font-size: 1.1rem;
+            font-weight: 600;
+            color: #fff;
+            cursor: pointer;
+            transition: .2s;
+            text-transform: uppercase
+        }
+
+        .hm-key:hover:not(:disabled) {
+            background: #4ade80;
+            transform: translateY(-2px)
+        }
+
+        .hm-key:disabled {
+            opacity: 0.4;
+            cursor: not-allowed
+        }
+
+        .hm-key.used-wrong {
+            background: #ef4444;
+            opacity: 0.6
+        }
+
+        /* Result Toast */
+        .toast {
+            position: absolute;
+            top: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(15, 23, 42, .95);
+            border: 1px solid var(--accent);
+            color: #fff;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: 1.1rem;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+            opacity: 0;
+            pointer-events: none;
+            transition: 0.3s;
+            z-index: 100
+        }
+
+        .toast.show {
+            opacity: 1;
+            pointer-events: auto;
+            transform: translate(-50%, 20px)
+        }
+
+        .stats-bar {
+            display: flex;
+            gap: 16px
+        }
+
+        .stat {
+            text-align: center
+        }
+
+        .stat-label {
+            font-size: .65rem;
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            color: #64748b
+        }
+
+        .stat-val {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700
         }
     </style>
 </head>
+
 <body>
-    <div class="game-container">
-        <h1 class="text-3xl font-bold text-gray-800 mb-4">Hangman Game</h1>
+    <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Hub</a>
 
-        <div class="level-selection mb-4 flex items-center justify-center">
-            <label for="gameLevel" class="text-lg font-semibold text-gray-700">Select Level:</label>
-            <select id="gameLevel" class="ml-2 p-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500">
-                <option value="easy">Easy</option>
-                <option value="medium" selected>Medium</option>
-                <option value="hard">Hard</option>
-            </select>
+    <div class="toast" id="toast">Message</div>
+
+    <!-- Menu -->
+    <div class="container" id="menu">
+        <h1>🧩 Word Puzzle Hub</h1>
+        <p class="subtitle">Choose your linguistic challenge</p>
+
+        <div class="game-cards">
+            <div class="game-card" id="wordle-card">
+                <div class="icon-wrapper"><i class="fas fa-spell-check"></i></div>
+                <div class="card-title">Wordle</div>
+                <div class="card-desc">Guess the 5-letter hidden word in 6 tries. Color hints guide you to the answer.
+                </div>
+            </div>
+
+            <div class="game-card" id="hangman-card">
+                <div class="icon-wrapper"><i class="fas fa-skull"></i></div>
+                <div class="card-title">Hangman</div>
+                <div class="card-desc">Classic word guessing. Reveal letters one by one before the stickman meets his
+                    doom.</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game UI -->
+    <div class="container" id="gameWrapper" style="padding-top:40px">
+        <div class="mode-header">
+            <div>
+                <h2 style="font-family:'Outfit',sans-serif;font-size:1.5rem" id="gameModeTitle">Wordle</h2>
+                <div class="stats-bar">
+                    <div class="stat">
+                        <div class="stat-label">Wins</div>
+                        <div class="stat-val" id="winCount" style="color:var(--accent)">0</div>
+                    </div>
+                    <div class="stat">
+                        <div class="stat-label">Streak</div>
+                        <div class="stat-val" id="streakCount">0</div>
+                    </div>
+                </div>
+            </div>
+            <button class="btn-secondary" id="backMenuBtn">Change Game</button>
         </div>
 
-        <canvas id="hangmanCanvas" width="300" height="300"></canvas>
-
-        <div id="wordDisplay" class="word-display"></div>
-        <div id="incorrectLetters" class="incorrect-letters">Incorrect Guesses: </div>
-        <div id="messageBox" class="message-box">Press a letter to start guessing!</div>
-
-        <div id="keyboard" class="keyboard">
-            <!-- Buttons will be generated by JavaScript -->
+        <!-- Wordle DOM -->
+        <div id="wordleUI">
+            <div class="grid" id="grid"></div>
+            <div class="keyboard" id="keyboard"></div>
         </div>
 
-        <button id="newGameButton" class="new-game-button">New Game</button>
+        <!-- Hangman DOM -->
+        <div id="hangmanUI">
+            <div class="hm-canvas-wrap"><canvas id="hmCanvas" width="200" height="200"></canvas></div>
+            <div class="word-display" id="wordDisplay"></div>
+            <div class="hm-keyboard" id="hmKeyboard"></div>
+        </div>
+
     </div>
 
     <script>
-        const wordsByLevel = {
-            easy: [
-                "APPLE", "HOUSE", "DOG", "CAT", "SUN", "MOON", "FISH", "BIRD",
-                "BOOK", "TABLE", "CHAIR", "WATER", "FOOD", "HAPPY", "SAD",
-                "RUN", "JUMP", "SING", "PLAY", "READ"
-            ],
-            medium: [
-                "PROGRAMMING", "COMPUTER", "DEVELOPER", "ALGORITHM", "ENGINEER",
-                "APPLICATION", "DATABASE", "FRAMEWORK", "INTERFACE", "INTERNET",
-                "WEBSITE", "PYTHON", "HTML", "CSS", "REACT", "ANGULAR",
-                "VUEJS", "FIREBASE", "CLOUD", "SECURITY", "SERVER", "CLIENT",
-                "NETWORK", "PROTOCOL", "DEBUGGING", "SYNTAX", "FUNCTION", "VARIABLE", "CONSTANT"
-            ],
-            hard: [
-                "CRYPTOGRAPHY", "INFRASTRUCTURE", "ARCHITECT", "CONSTELLATION",
-                "PHILANTHROPY", "UBIQUITOUS", "ZEPHYR", "JUXTAPOSE", "KALEIDOSCOPE",
-                "ONOMATOPOEIA", "PHLEGMATIC", "SERENDIPITY", "PNEUMONIA", "RHYTHM",
-                "FUCHSIA", "EMERALD", "OBLIVION", "WHISPER", "QUARTZ", "MYSTERY"
-            ]
+        // Dictionary
+        const WORDS = ["apple", "bread", "chair", "dance", "eagle", "flame", "ghost", "heart", "image", "juice", "knife", "lemon", "magic", "night", "ocean", "plant", "quiet", "river", "snake", "train", "uncle", "voice", "water", "youth", "zebra", "world", "light", "house", "brain", "smile", "dream", "cloud", "stone", "space", "earth", "music", "piano", "storm", "flash", "clock"];
+        const HM_WORDS = ["JAVASCRIPT", "PROGRAMMING", "DEVELOPER", "INTERFACE", "ALGORITHM", "FUNCTION", "VARIABLE", "CONSTANT", "FRAMEWORK", "DATABASE", "FRONTEND", "BACKEND", "COMPONENT", "RESPONSIVE", "AESTHETIC", "TYPOGRAPHY"];
+
+        let currentMode = null;
+        let winsW = +localStorage.getItem('wins_wordle') || 0, streakW = +localStorage.getItem('streak_wordle') || 0;
+        let winsH = +localStorage.getItem('wins_hangman') || 0, streakH = +localStorage.getItem('streak_hangman') || 0;
+
+        // Shared Utils
+        function showToast(msg, btnText, callback) {
+            const t = document.getElementById('toast');
+            t.innerHTML = `${msg} <br><button id="toastBtn" style="margin-top:10px;padding:6px 16px;border-radius:6px;background:#fff;color:#000;border:none;font-weight:bold;cursor:pointer">${btnText || 'Next'}</button>`;
+            t.classList.add('show');
+            document.getElementById('toastBtn').onclick = () => { t.classList.remove('show'); if (callback) callback(); };
+        }
+        function hideToast() { document.getElementById('toast').classList.remove('show'); }
+
+        document.getElementById('backMenuBtn').onclick = () => {
+            document.getElementById('gameWrapper').style.display = 'none';
+            document.getElementById('menu').style.display = 'flex';
         };
 
-        const maxGuessesByLevel = {
-            easy: 8,
-            medium: 6,
-            hard: 4
+        // ── Wordle Logic ─────────────────────────────────────────────────────────────
+        document.getElementById('wordle-card').onclick = () => {
+            currentMode = 'wordle';
+            document.documentElement.style.setProperty('--accent', '#10b981');
+            document.getElementById('gameModeTitle').textContent = 'Wordle';
+            document.getElementById('winCount').textContent = winsW;
+            document.getElementById('streakCount').textContent = streakW;
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('gameWrapper').style.display = 'flex';
+            document.getElementById('wordleUI').style.display = 'flex';
+            document.getElementById('hangmanUI').style.display = 'none';
+            initWordle();
         };
 
-        let chosenWord = '';
-        let guessedLetters = [];
-        let incorrectGuesses = 0;
-        let currentMaxIncorrectGuesses = maxGuessesByLevel.medium; // Default to medium
+        let wSolution, wGuesses, wRow, wCol, wGameOver;
+        const KEYS = [['Q', 'W', 'E', 'R', 'T', 'Y', 'U', 'I', 'O', 'P'], ['A', 'S', 'D', 'F', 'G', 'H', 'J', 'K', 'L'], ['ENTER', 'Z', 'X', 'C', 'V', 'B', 'N', 'M', '⌫']];
 
-        const canvas = document.getElementById('hangmanCanvas');
-        const ctx = canvas.getContext('2d');
-        const wordDisplay = document.getElementById('wordDisplay');
-        const incorrectLettersDisplay = document.getElementById('incorrectLetters');
-        const keyboardDiv = document.getElementById('keyboard');
-        const messageBox = document.getElementById('messageBox');
-        const newGameButton = document.getElementById('newGameButton');
-        const gameLevelSelect = document.getElementById('gameLevel');
+        function initWordle() {
+            wSolution = WORDS[Math.floor(Math.random() * WORDS.length)].toUpperCase();
+            wGuesses = Array(6).fill('').map(() => Array(5).fill(''));
+            wRow = 0; wCol = 0; wGameOver = false;
 
-        // Function to draw the hangman parts with more detail
-        function drawHangman() {
-            ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear canvas
-            ctx.strokeStyle = '#334155'; // Darker color for gallows
-            ctx.lineWidth = 4;
-
-            // Define coordinates relative to canvas size for responsiveness
-            const scale = canvas.width / 300; // Original canvas width was 300
-            const p = (val) => val * scale; // Helper for scaling
-
-            // Ground
-            ctx.beginPath();
-            ctx.moveTo(p(10), p(290));
-            ctx.lineTo(p(290), p(290));
-            ctx.stroke();
-
-            // Pole
-            ctx.beginPath();
-            ctx.moveTo(p(70), p(290));
-            ctx.lineTo(p(70), p(30));
-            ctx.stroke();
-
-            // Top bar
-            ctx.beginPath();
-            ctx.moveTo(p(70), p(30));
-            ctx.lineTo(p(200), p(30));
-            ctx.stroke();
-
-            // Rope stand
-            ctx.beginPath();
-            ctx.moveTo(p(200), p(30));
-            ctx.lineTo(p(200), p(70));
-            ctx.stroke();
-
-            // Man parts based on incorrectGuesses
-            // Total stages for hangman illustration is currentMaxIncorrectGuesses
-            // We need to map incorrectGuesses to the steps of drawing.
-            const totalDrawingSteps = currentMaxIncorrectGuesses;
-            const currentDrawingStep = incorrectGuesses;
-
-            // Adjust drawing logic based on the number of available steps
-            if (currentDrawingStep >= 1) { // Head
-                ctx.beginPath();
-                ctx.arc(p(200), p(95), p(25), 0, Math.PI * 2, true);
-                ctx.stroke();
-            }
-            if (currentDrawingStep >= 2) { // Body
-                ctx.beginPath();
-                ctx.moveTo(p(200), p(120));
-                ctx.lineTo(p(200), p(190));
-                ctx.stroke();
-            }
-            if (currentDrawingStep >= 3) { // Left Arm
-                ctx.beginPath();
-                ctx.moveTo(p(200), p(130));
-                ctx.lineTo(p(160), p(170));
-                ctx.stroke();
-            }
-            if (currentDrawingStep >= 4) { // Right Arm
-                ctx.beginPath();
-                ctx.moveTo(p(200), p(130));
-                ctx.lineTo(p(240), p(170));
-                ctx.stroke();
-            }
-            if (currentDrawingStep >= 5) { // Left Leg
-                ctx.beginPath();
-                ctx.moveTo(p(200), p(190));
-                ctx.lineTo(p(170), p(240));
-                ctx.stroke();
-            }
-            if (currentDrawingStep >= 6) { // Right Leg
-                ctx.beginPath();
-                ctx.moveTo(p(200), p(190));
-                ctx.lineTo(p(230), p(240));
-                ctx.stroke();
+            const grid = document.getElementById('grid'); grid.innerHTML = '';
+            for (let r = 0; r < 6; r++) {
+                const row = document.createElement('div'); row.className = 'row';
+                for (let c = 0; c < 5; c++) {
+                    const tile = document.createElement('div'); tile.className = 'tile'; tile.id = `t-${r}-${c}`;
+                    row.appendChild(tile);
+                }
+                grid.appendChild(row);
             }
 
-            // Additional details for more 'illustration' feel on specific incorrect guess counts
-            if (incorrectGuesses > 0 && incorrectGuesses <= currentMaxIncorrectGuesses) {
-                // Draw eyes on the head when there's at least one incorrect guess
-                ctx.beginPath();
-                ctx.arc(p(190), p(90), p(3), 0, Math.PI * 2, true); // Left eye
-                ctx.arc(p(210), p(90), p(3), 0, Math.PI * 2, true); // Right eye
-                ctx.fill(); // Fill eyes
-            }
-
-            if (incorrectGuesses === currentMaxIncorrectGuesses) {
-                // Draw a sad mouth when game is lost
-                ctx.beginPath();
-                ctx.arc(p(200), p(105), p(10), 0, Math.PI, false); // Sad mouth
-                ctx.stroke();
-
-                // Draw crosses for eyes when game is lost
-                ctx.clearRect(p(185), p(85), p(10), p(10)); // Clear space for left eye cross
-                ctx.clearRect(p(205), p(85), p(10), p(10)); // Clear space for right eye cross
-                ctx.beginPath();
-                ctx.moveTo(p(185), p(85));
-                ctx.lineTo(p(195), p(95));
-                ctx.moveTo(p(195), p(85));
-                ctx.lineTo(p(185), p(95));
-                ctx.stroke();
-                ctx.beginPath();
-                ctx.moveTo(p(205), p(85));
-                ctx.lineTo(p(215), p(95));
-                ctx.moveTo(p(215), p(85));
-                ctx.lineTo(p(205), p(95));
-                ctx.stroke();
-            } else if (incorrectGuesses > 0) {
-                 // Draw a simple straight line for mouth when not lost but some guesses wrong
-                ctx.beginPath();
-                ctx.moveTo(p(190), p(105));
-                ctx.lineTo(p(210), p(105));
-                ctx.stroke();
-            }
+            const kbd = document.getElementById('keyboard'); kbd.innerHTML = '';
+            KEYS.forEach(rowInfo => {
+                const r = document.createElement('div'); r.className = 'kbd-row';
+                rowInfo.forEach(key => {
+                    const btn = document.createElement('button');
+                    btn.className = `kbd-key ${key.length > 1 ? 'large' : ''}`;
+                    btn.textContent = key;
+                    btn.onclick = () => handleWKey(key);
+                    btn.id = `k-${key}`;
+                    r.appendChild(btn);
+                });
+                kbd.appendChild(r);
+            });
+            hideToast();
         }
 
-
-        // Function to update the displayed word
-        function updateWordDisplay() {
-            let display = '';
-            let wordGuessed = true;
-            for (const char of chosenWord) {
-                if (guessedLetters.includes(char)) {
-                    display += char + ' ';
-                } else {
-                    display += '_ ';
-                    wordGuessed = false;
+        function handleWKey(k) {
+            if (wGameOver || currentMode !== 'wordle') return;
+            if (k === '⌫' || k === 'Backspace') {
+                if (wCol > 0) { wCol--; const t = document.getElementById(`t-${wRow}-${wCol}`); t.textContent = ''; t.dataset.state = ''; wGuesses[wRow][wCol] = ''; }
+            } else if (k === 'ENTER' || k === 'Enter') {
+                if (wCol === 5) submitWordle();
+            } else if (/^[A-Z]$/.test(k)) {
+                if (wCol < 5) {
+                    wGuesses[wRow][wCol] = k;
+                    const t = document.getElementById(`t-${wRow}-${wCol}`);
+                    t.textContent = k; t.dataset.state = 'active';
+                    setTimeout(() => t.dataset.state = '', 100);
+                    wCol++;
                 }
             }
-            wordDisplay.textContent = display.trim();
-            return wordGuessed;
         }
 
-        // Function to update incorrect letters
-        function updateIncorrectLettersDisplay() {
-            const incorrect = guessedLetters.filter(letter => !chosenWord.includes(letter)).join(', ');
-            incorrectLettersDisplay.textContent = `Incorrect Guesses: ${incorrect}`;
-        }
+        function submitWordle() {
+            const guess = wGuesses[wRow].join('');
+            let solArr = wSolution.split('');
+            let states = Array(5).fill('absent');
 
-        // Function to generate keyboard buttons
-        function createKeyboard() {
-            keyboardDiv.innerHTML = ''; // Clear previous keyboard
-            for (let i = 65; i <= 90; i++) { // ASCII for A-Z
-                const letter = String.fromCharCode(i);
-                const button = document.createElement('button');
-                button.textContent = letter;
-                button.id = `key-${letter}`;
-                button.addEventListener('click', () => handleGuess(letter));
-                keyboardDiv.appendChild(button);
+            // Exact matches
+            for (let i = 0; i < 5; i++) {
+                if (guess[i] === solArr[i]) { states[i] = 'correct'; solArr[i] = null; }
             }
-        }
-
-        // Handle a letter guess
-        function handleGuess(letter) {
-            if (guessedLetters.includes(letter) || incorrectGuesses >= currentMaxIncorrectGuesses) {
-                return; // Already guessed or game over
+            // Present
+            for (let i = 0; i < 5; i++) {
+                if (states[i] === 'correct') continue;
+                const idx = solArr.indexOf(guess[i]);
+                if (idx !== -1) { states[i] = 'present'; solArr[idx] = null; }
             }
 
-            guessedLetters.push(letter);
-            document.getElementById(`key-${letter}`).disabled = true;
+            // Animate
+            states.forEach((s, i) => {
+                setTimeout(() => {
+                    const t = document.getElementById(`t-${wRow}-${i}`);
+                    t.dataset.state = s; t.style.transform = 'scale(1.1)';
+                    setTimeout(() => t.style.transform = 'scale(1)', 150);
+                    updateKbd(guess[i], s);
+                }, i * 150);
+            });
 
-            if (chosenWord.includes(letter)) {
-                const wordGuessed = updateWordDisplay();
-                if (wordGuessed) {
-                    messageBox.textContent = 'Congratulations! You won!';
-                    messageBox.className = 'message-box win';
-                    disableAllButtons();
+            setTimeout(() => {
+                if (guess === wSolution) {
+                    wGameOver = true; winsW++; streakW++;
+                    localStorage.setItem('wins_wordle', winsW); localStorage.setItem('streak_wordle', streakW);
+                    document.getElementById('winCount').textContent = winsW; document.getElementById('streakCount').textContent = streakW;
+                    showToast('Magnificent!', 'Play Again', initWordle);
                 } else {
-                    messageBox.textContent = 'Good guess!';
-                    messageBox.className = 'message-box';
+                    wRow++; wCol = 0;
+                    if (wRow === 6) {
+                        wGameOver = true; streakW = 0; localStorage.setItem('streak_wordle', 0); document.getElementById('streakCount').textContent = 0;
+                        showToast(`The word was ${wSolution}`, 'Try Again', initWordle);
+                    }
+                }
+            }, 1000);
+        }
+
+        function updateKbd(l, s) {
+            const k = document.getElementById(`k-${l}`);
+            if (!k) return;
+            const curr = k.dataset.state;
+            if (curr === 'correct') return;
+            if (curr === 'present' && s === 'absent') return;
+            k.dataset.state = s;
+        }
+
+        // ── Hangman Logic ────────────────────────────────────────────────────────────
+        document.getElementById('hangman-card').onclick = () => {
+            currentMode = 'hangman';
+            document.documentElement.style.setProperty('--accent', '#f87171');
+            document.getElementById('gameModeTitle').textContent = 'Hangman';
+            document.getElementById('winCount').textContent = winsH;
+            document.getElementById('streakCount').textContent = streakH;
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('gameWrapper').style.display = 'flex';
+            document.getElementById('wordleUI').style.display = 'none';
+            document.getElementById('hangmanUI').style.display = 'flex';
+            initHangman();
+        };
+
+        let hSol, hGuessed, hWrong;
+        const MAX_ERRORS = 6;
+        const hmCtx = document.getElementById('hmCanvas').getContext('2d');
+
+        function initHangman() {
+            hSol = HM_WORDS[Math.floor(Math.random() * HM_WORDS.length)];
+            hGuessed = new Set(); hWrong = 0;
+
+            const wd = document.getElementById('wordDisplay'); wd.innerHTML = '';
+            for (let i = 0; i < hSol.length; i++) {
+                const box = document.createElement('div'); box.className = 'letter-box'; box.id = `hb-${i}`;
+                wd.appendChild(box);
+            }
+
+            const kbd = document.getElementById('hmKeyboard'); kbd.innerHTML = '';
+            for (let i = 0; i < 26; i++) {
+                const l = String.fromCharCode(65 + i);
+                const b = document.createElement('button'); b.className = 'hm-key'; b.textContent = l;
+                b.onclick = () => handleHKey(l, b);
+                kbd.appendChild(b);
+            }
+            drawHm(); hideToast();
+        }
+
+        function handleHKey(l, btn) {
+            if (hGuessed.has(l) || hWrong >= MAX_ERRORS) return;
+            hGuessed.add(l);
+
+            if (hSol.includes(l)) {
+                btn.disabled = true; btn.style.background = '#10b981';
+                let won = true;
+                for (let i = 0; i < hSol.length; i++) {
+                    if (hSol[i] === l) document.getElementById(`hb-${i}`).textContent = l;
+                    if (!hGuessed.has(hSol[i])) won = false;
+                }
+                if (won) {
+                    winsH++; streakH++; localStorage.setItem('wins_hangman', winsH); localStorage.setItem('streak_hangman', streakH);
+                    document.getElementById('winCount').textContent = winsH; document.getElementById('streakCount').textContent = streakH;
+                    showToast('You Saved Him!', 'Next Word', initHangman);
                 }
             } else {
-                incorrectGuesses++;
-                drawHangman();
-                updateIncorrectLettersDisplay();
-                messageBox.textContent = `Incorrect guess! ${currentMaxIncorrectGuesses - incorrectGuesses} attempts left.`;
-                messageBox.className = 'message-box';
-                if (incorrectGuesses >= currentMaxIncorrectGuesses) {
-                    messageBox.textContent = `Game Over! The word was "${chosenWord}".`;
-                    messageBox.className = 'message-box lose';
-                    disableAllButtons();
+                btn.disabled = true; btn.classList.add('used-wrong');
+                hWrong++; drawHm();
+                if (hWrong >= MAX_ERRORS) {
+                    streakH = 0; localStorage.setItem('streak_hangman', 0); document.getElementById('streakCount').textContent = 0;
+                    for (let i = 0; i < hSol.length; i++) document.getElementById(`hb-${i}`).textContent = hSol[i];
+                    showToast('Game Over', 'Try Again', initHangman);
                 }
             }
         }
 
-        // Disable all keyboard buttons
-        function disableAllButtons() {
-            const buttons = keyboardDiv.querySelectorAll('button');
-            buttons.forEach(button => button.disabled = true);
+        function drawHm() {
+            hmCtx.clearRect(0, 0, 200, 200);
+            hmCtx.strokeStyle = '#334155'; hmCtx.lineWidth = 4; hmCtx.lineCap = 'round';
+            // Base
+            hmCtx.beginPath(); hmCtx.moveTo(20, 180); ctxLine(hmCtx, 100, 180);
+            // Pole
+            ctxLine(hmCtx, 60, 180, 60, 20); ctxLine(hmCtx, 60, 20, 140, 20); ctxLine(hmCtx, 140, 20, 140, 40);
+            // Body parts
+            if (hWrong > 0) { hmCtx.beginPath(); hmCtx.arc(140, 60, 20, 0, Math.PI * 2); hmCtx.stroke(); } // head
+            if (hWrong > 1) ctxLine(hmCtx, 140, 80, 140, 130); // body
+            if (hWrong > 2) ctxLine(hmCtx, 140, 90, 110, 110); // L arm
+            if (hWrong > 3) ctxLine(hmCtx, 140, 90, 170, 110); // R arm
+            if (hWrong > 4) ctxLine(hmCtx, 140, 130, 120, 170); // L leg
+            if (hWrong > 5) { ctxLine(hmCtx, 140, 130, 160, 170); hmCtx.fillStyle = '#ef4444'; hmCtx.fillText('x x', 133, 58); } // R leg
         }
+        function ctxLine(c, x1, y1, x2, y2) { c.moveTo(x1, y1); c.lineTo(x2 || x1, y2 || y1); c.stroke(); }
 
-        // Initialize the game
-        function initializeGame() {
-            const selectedLevel = gameLevelSelect.value;
-            const wordsForLevel = wordsByLevel[selectedLevel];
-            currentMaxIncorrectGuesses = maxGuessesByLevel[selectedLevel];
-
-            chosenWord = wordsForLevel[Math.floor(Math.random() * wordsForLevel.length)];
-            guessedLetters = [];
-            incorrectGuesses = 0;
-
-            messageBox.textContent = 'Press a letter to start guessing!';
-            messageBox.className = 'message-box';
-            incorrectLettersDisplay.textContent = 'Incorrect Guesses:';
-
-            createKeyboard(); // Regenerate keyboard to enable all buttons
-            drawHangman(); // Reset hangman drawing
-            updateWordDisplay(); // Show initial underscores
-        }
-
-        // Event listener for New Game button
-        newGameButton.addEventListener('click', initializeGame);
-
-        // Event listener for Level selection change
-        gameLevelSelect.addEventListener('change', initializeGame);
-
-        // Initial game setup on window load
-        window.onload = function() {
-            initializeGame();
-            // Adjust canvas size to be responsive on initial load and resize
-            function resizeCanvas() {
-                const parentWidth = canvas.parentElement.clientWidth;
-                // Set a max width to prevent it from getting too large on very wide screens
-                const targetWidth = Math.min(parentWidth * 0.4, 300); // 40% of parent width, max 300px
-                canvas.width = targetWidth;
-                canvas.height = targetWidth; // Keep it square
-                drawHangman(); // Redraw content after resize
+        // Global keybind
+        document.addEventListener('keydown', e => {
+            if (currentMode === 'wordle') handleWKey(e.key.toUpperCase());
+            if (currentMode === 'hangman' && /^[a-zA-Z]$/.test(e.key)) {
+                const l = e.key.toUpperCase();
+                const btns = document.querySelectorAll('.hm-key');
+                let btn; btns.forEach(b => { if (b.textContent === l) btn = b; });
+                if (btn && !btn.disabled) handleHKey(l, btn);
             }
+        });
 
-            // Initial resize
-            resizeCanvas();
-            // Add event listener for window resize
-            window.addEventListener('resize', resizeCanvas);
-        };
     </script>
 </body>
+
 </html>

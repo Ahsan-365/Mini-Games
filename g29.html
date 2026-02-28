@@ -1,0 +1,647 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Bubbles | Infinite Arcade</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f0f11;
+            --surface: rgba(20, 20, 25, .8);
+            --border: rgba(255, 255, 255, .1);
+            --accent: #ec4899;
+            --c0: #ef4444;
+            --c1: #3b82f6;
+            --c2: #10b981;
+            --c3: #f59e0b;
+            --c4: #8b5cf6;
+            --c5: #06b6d4
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            background: var(--bg);
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            overflow: hidden;
+            background-image: radial-gradient(circle at top, rgba(236, 72, 153, 0.1), transparent 60%)
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: #94a3b8;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: .9rem;
+            z-index: 99;
+            transition: .2s
+        }
+
+        .back-btn:hover {
+            color: #fff
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            width: 100%;
+            max-width: 500px;
+            z-index: 10;
+            margin-top: 40px
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent);
+            text-shadow: 0 0 20px rgba(236, 72, 153, .5);
+            text-align: center;
+            margin: 0
+        }
+
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            align-items: center;
+            padding: 10px 20px;
+            background: var(--surface);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+            backdrop-filter: blur(10px)
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center
+        }
+
+        .stat-label {
+            font-size: .7rem;
+            text-transform: uppercase;
+            color: #fbcfe8;
+            letter-spacing: 1px;
+            font-weight: 700
+        }
+
+        .stat-val {
+            font-family: 'Outfit';
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #fff
+        }
+
+        .game-area {
+            width: 100%;
+            max-width: 400px;
+            aspect-ratio: 3/4;
+            background: #18181b;
+            border: 2px solid #831843;
+            border-radius: 16px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, .8), inset 0 0 20px rgba(0, 0, 0, .5);
+            position: relative;
+            overflow: hidden;
+            touch-action: none
+        }
+
+        canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+            z-index: 5
+        }
+
+        .overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(9, 9, 11, .9);
+            backdrop-filter: blur(10px);
+            z-index: 50
+        }
+
+        .overlay.hidden {
+            display: none
+        }
+
+        .overlay h2 {
+            font-family: 'Outfit';
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+            color: var(--accent);
+            text-shadow: 0 0 30px rgba(236, 72, 153, .6)
+        }
+
+        .btn-primary {
+            margin-top: 30px;
+            padding: 16px 40px;
+            border-radius: 12px;
+            border: none;
+            background: var(--accent);
+            color: #fff;
+            font-family: 'Outfit';
+            font-weight: 900;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: .2s;
+            box-shadow: 0 10px 20px rgba(236, 72, 153, .4);
+            text-transform: uppercase;
+            letter-spacing: 2px
+        }
+
+        .btn-primary:hover {
+            background: #f472b6;
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(236, 72, 153, .6)
+        }
+    </style>
+</head>
+
+<body>
+    <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Hub</a>
+
+    <div class="overlay" id="overlay">
+        <h2 id="ovTitle">Level 1 Complete</h2>
+        <p id="ovDesc" style="color:#94a3b8;font-size:1.5rem;font-family:'Outfit';font-weight:700"></p>
+        <button class="btn-primary" id="startBtn">Next Level</button>
+    </div>
+
+    <div class="container">
+        <h1>NEON BUBBLES</h1>
+
+        <div class="hud">
+            <div class="stat">
+                <div class="stat-label">Level</div>
+                <div class="stat-val" id="level">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Score</div>
+                <div class="stat-val" id="score">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Target</div>
+                <div class="stat-val" id="target">Clear All</div>
+            </div>
+        </div>
+
+        <div class="game-area" id="gameArea">
+            <canvas id="c"></canvas>
+        </div>
+    </div>
+
+    <script>
+        // Bubble Shooter Engine with robust grid locking and cluster popping
+        const cvs = document.getElementById('c'), ctx = cvs.getContext('2d');
+        let W, H;
+        const COLS = 11; // alternating 11 and 10 cols
+        let bRad = 0;
+        let rowHeight = 0;
+
+        let running = false, reqId;
+        let score = 0, level = 1, currentColors = 3;
+        let grid = []; // 2D array [row][col], contains color index or -1
+        let bubbles = []; // moving bubbles
+        let particles = [];
+        let popupTexts = [];
+
+        // Shooter properties
+        let shooter = { angle: -Math.PI / 2, currentC: 0, nextC: 0 };
+        let colorPalette = ['var(--c0)', 'var(--c1)', 'var(--c2)', 'var(--c3)', 'var(--c4)', 'var(--c5)'];
+
+        function resize() {
+            W = cvs.clientWidth; H = cvs.clientHeight;
+            cvs.width = W; cvs.height = H;
+            bRad = W / (COLS * 2);
+            rowHeight = bRad * Math.sqrt(3); // hex grid height
+            if (!running) draw();
+        }
+        window.onresize = resize;
+
+        function getAvailableColors() {
+            let avail = new Set();
+            for (let r = 0; r < grid.length; r++) {
+                for (let c = 0; c < grid[r].length; c++) {
+                    if (grid[r][c] !== -1) avail.add(grid[r][c]);
+                }
+            }
+            let arr = Array.from(avail);
+            if (arr.length === 0) {
+                // level clear!
+                return [0];
+            }
+            return arr;
+        }
+
+        function randColor() {
+            let avail = getAvailableColors();
+            return avail[Math.floor(Math.random() * avail.length)];
+        }
+
+        function initLevel() {
+            resize();
+            grid = [];
+            currentColors = Math.min(6, 2 + level);
+
+            let START_ROWS = Math.min(8, 3 + Math.floor(level / 2));
+
+            // Fill grid
+            for (let r = 0; r < START_ROWS; r++) {
+                let colsInRow = (r % 2 === 0) ? COLS : COLS - 1;
+                let row = [];
+                for (let c = 0; c < colsInRow; c++) {
+                    row.push(Math.floor(Math.random() * currentColors));
+                }
+                grid.push(row);
+            }
+
+            shooter.currentC = randColor();
+            shooter.nextC = randColor();
+            updateHUD();
+        }
+
+        function getGridPos(r, c) {
+            let x = (r % 2 === 0) ? (c * bRad * 2 + bRad) : (c * bRad * 2 + bRad * 2);
+            let y = r * rowHeight + bRad;
+            return { x, y };
+        }
+
+        function getGridCellForPixel(x, y) {
+            let bestR = 0, bestC = 0, bestDist = Infinity;
+            // We only check rows near the 'y' coordinate
+            let estR = Math.max(0, Math.floor((y - bRad) / rowHeight));
+
+            for (let r = Math.max(0, estR - 2); r <= estR + 2; r++) {
+                let colsInRow = (r % 2 === 0) ? COLS : COLS - 1;
+                for (let c = 0; c < colsInRow; c++) {
+                    let pos = getGridPos(r, c);
+                    let dx = x - pos.x, dy = y - pos.y;
+                    let d = dx * dx + dy * dy;
+                    if (d < bestDist) {
+                        bestDist = d; bestR = r; bestC = c;
+                    }
+                }
+            }
+            return { r: bestR, c: bestC, dist: Math.sqrt(bestDist) };
+        }
+
+        function findCluster(r, c, matchColor) {
+            let toSearch = [{ r, c }], cluster = [], visited = new Set();
+            visited.add(`${r},${c}`);
+
+            while (toSearch.length > 0) {
+                let curr = toSearch.pop();
+                cluster.push(curr);
+                let nbrs = getNeighbors(curr.r, curr.c);
+                for (let n of nbrs) {
+                    if (!visited.has(`${n.r},${n.c}`) && grid[n.r] && grid[n.r][n.c] === matchColor) {
+                        visited.add(`${n.r},${n.c}`);
+                        toSearch.push(n);
+                    }
+                }
+            }
+            return cluster;
+        }
+
+        function getNeighbors(r, c) {
+            let nbrs = [];
+            // Hex grid neighbors depending on row offset
+            let offsetsEvent = [[-1, -1], [-1, 0], [0, -1], [0, 1], [1, -1], [1, 0]];
+            let offsetsOdd = [[-1, 0], [-1, 1], [0, -1], [0, 1], [1, 0], [1, 1]];
+            let offsets = (r % 2 === 0) ? offsetsEvent : offsetsOdd;
+
+            for (let o of offsets) {
+                let nr = r + o[0], nc = c + o[1];
+                if (nr >= 0 && nc >= 0) {
+                    let colsInRow = (nr % 2 === 0) ? COLS : COLS - 1;
+                    if (nc < colsInRow) nbrs.push({ r: nr, c: nc });
+                }
+            }
+            return nbrs;
+        }
+
+        function findFloating() {
+            let attached = new Set();
+            let toSearch = [];
+            // Start DFS from top row
+            if (grid[0]) {
+                for (let c = 0; c < grid[0].length; c++) {
+                    if (grid[0][c] !== -1) {
+                        toSearch.push({ r: 0, c });
+                        attached.add(`0,${c}`);
+                    }
+                }
+            }
+
+            while (toSearch.length > 0) {
+                let curr = toSearch.pop();
+                let nbrs = getNeighbors(curr.r, curr.c);
+                for (let n of nbrs) {
+                    if (grid[n.r] && grid[n.r][n.c] !== -1 && !attached.has(`${n.r},${n.c}`)) {
+                        attached.add(`${n.r},${n.c}`);
+                        toSearch.push(n);
+                    }
+                }
+            }
+
+            let floating = [];
+            for (let r = 0; r < grid.length; r++) {
+                for (let c = 0; c < grid[r].length; c++) {
+                    if (grid[r][c] !== -1 && !attached.has(`${r},${c}`)) {
+                        floating.push({ r, c });
+                    }
+                }
+            }
+            return floating;
+        }
+
+        function burst(x, y, colorIdx) {
+            let color = getComputedStyle(document.body).getPropertyValue(colorPalette[colorIdx].match(/var\((.+)\)/)[1]);
+            for (let i = 0; i < 8; i++) {
+                particles.push({ x, y, vx: (Math.random() - 0.5) * 15, vy: (Math.random() - 0.5) * 15, life: 1, c: color, sz: Math.random() * 4 + 2 });
+            }
+        }
+
+        function lockBubble(b) {
+            // Find closest valid cell
+            // Extend grid if needed
+            let cell = getGridCellForPixel(b.x, b.y);
+            while (cell.r >= grid.length) {
+                let colsInRow = (grid.length % 2 === 0) ? COLS : COLS - 1;
+                grid.push(Array(colsInRow).fill(-1));
+            }
+
+            // Check if cell is occupied (rare edge case in high speed)
+            if (grid[cell.r] && grid[cell.r][cell.c] !== -1) {
+                // Just push to bottom row as fallback to prevent stacking overlay
+                let nr = grid.length, nc = 0;
+                let colsInRow = (nr % 2 === 0) ? COLS : COLS - 1;
+                grid.push(Array(colsInRow).fill(-1));
+                cell = { r: nr, c: nc };
+            }
+
+            grid[cell.r][cell.c] = b.cIdx;
+
+            // Check matches
+            let cluster = findCluster(cell.r, cell.c, b.cIdx);
+            if (cluster.length >= 3) {
+                let pts = 0;
+                cluster.forEach(n => {
+                    burst(getGridPos(n.r, n.c).x, getGridPos(n.r, n.c).y, grid[n.r][n.c]);
+                    grid[n.r][n.c] = -1;
+                    pts += 10;
+                });
+
+                let floating = findFloating();
+                floating.forEach(n => {
+                    burst(getGridPos(n.r, n.c).x, getGridPos(n.r, n.c).y, grid[n.r][n.c]);
+                    grid[n.r][n.c] = -1;
+                    pts += 20;
+                });
+                score += pts;
+                updateHUD();
+
+                // Show points popup
+                let pos = getGridPos(cell.r, cell.c);
+                popupTexts.push({ x: pos.x, y: pos.y, txt: `+${pts}`, life: 1 });
+
+                // Trim empty rows from bottom
+                while (grid.length > 0 && grid[grid.length - 1].every(v => v === -1)) {
+                    grid.pop();
+                }
+
+                if (grid.length === 0) {
+                    // Win level
+                    running = false;
+                    document.getElementById('ovTitle').textContent = `Level ${level} Cleared`;
+                    document.getElementById('ovTitle').style.color = '#10b981';
+                    document.getElementById('ovDesc').innerHTML = `Score: <span style="color:#fff">${score}</span>`;
+                    document.getElementById('startBtn').textContent = 'Next Level';
+                    document.getElementById('overlay').classList.remove('hidden');
+                } else {
+                    // Check if available colors changed
+                    shooter.currentC = randColor();
+                    shooter.nextC = randColor();
+                }
+            } else {
+                // Failed to pop
+                shooter.currentC = shooter.nextC;
+                shooter.nextC = randColor();
+
+                // Check lose condition
+                if (cell.r >= Math.floor(H / rowHeight) - 2) {
+                    running = false;
+                    document.getElementById('ovTitle').textContent = `Game Over`;
+                    document.getElementById('ovTitle').style.color = '#ef4444';
+                    document.getElementById('ovDesc').innerHTML = `Final Score: <span style="color:#fff">${score}</span>`;
+                    document.getElementById('startBtn').textContent = 'Retry';
+                    document.getElementById('overlay').classList.remove('hidden');
+                }
+            }
+        }
+
+        // Input mapping
+        let isMousePressed = false, mouseX = 0, mouseY = 0;
+        document.getElementById('gameArea').addEventListener('mousemove', e => {
+            let rect = cvs.getBoundingClientRect();
+            mouseX = e.clientX - rect.left; mouseY = e.clientY - rect.top;
+            updateAngle();
+        });
+        document.getElementById('gameArea').addEventListener('touchmove', e => {
+            let rect = cvs.getBoundingClientRect();
+            mouseX = e.touches[0].clientX - rect.left; mouseY = e.touches[0].clientY - rect.top;
+            updateAngle();
+        }, { passive: false });
+
+        function updateAngle() {
+            let dx = mouseX - W / 2, dy = mouseY - (H - bRad * 2);
+            shooter.angle = Math.atan2(dy, dx);
+            if (shooter.angle > -0.1) shooter.angle = -0.1;
+            if (shooter.angle < -Math.PI + 0.1) shooter.angle = -Math.PI + 0.1;
+        }
+
+        document.getElementById('gameArea').addEventListener('mousedown', fire);
+        document.getElementById('gameArea').addEventListener('touchstart', (e) => { e.preventDefault(); fire(); updateAngle(); }, { passive: false });
+
+        function fire() {
+            if (!running || bubbles.length > 0) return;
+            let speed = 25; // extremely fast modern feel
+            bubbles.push({
+                x: W / 2, y: H - bRad * 2,
+                r: bRad * 0.9,
+                vx: Math.cos(shooter.angle) * speed,
+                vy: Math.sin(shooter.angle) * speed,
+                cIdx: shooter.currentC
+            });
+        }
+
+        // Game Loop
+        function update() {
+            if (!running) return;
+
+            // Move shot bubble
+            for (let i = bubbles.length - 1; i >= 0; i--) {
+                let b = bubbles[i];
+                b.x += b.vx; b.y += b.vy;
+
+                // Wall bounce
+                if (b.x - b.r < 0) { b.vx *= -1; b.x = b.r; }
+                if (b.x + b.r > W) { b.vx *= -1; b.x = W - b.r; }
+
+                // Collision with top or grid bubbles
+                let collided = false;
+                if (b.y - b.r < 0) { collided = true; b.y = b.r; }
+                else {
+                    for (let r = 0; r < grid.length; r++) {
+                        for (let c = 0; c < grid[r].length; c++) {
+                            if (grid[r][c] !== -1) {
+                                let bp = getGridPos(r, c);
+                                let dx = b.x - bp.x, dy = b.y - bp.y;
+                                if (dx * dx + dy * dy < (bRad * 2) * 0.9 * (bRad * 2) * 0.9) collided = true;
+                            }
+                        }
+                    }
+                }
+
+                if (collided) {
+                    lockBubble(b);
+                    bubbles.splice(i, 1);
+                }
+            }
+        }
+
+        function drawBubble(x, y, r, cIdx, active = false) {
+            if (cIdx === -1) return;
+            let hex = getComputedStyle(document.body).getPropertyValue(colorPalette[cIdx].match(/var\((.+)\)/)[1]);
+            ctx.shadowBlur = active ? 20 : 10; ctx.shadowColor = hex; ctx.fillStyle = hex;
+            ctx.beginPath(); ctx.arc(x, y, r * 0.9, 0, Math.PI * 2); ctx.fill();
+
+            // Highlight
+            let xoff = x - r * 0.3, yoff = y - r * 0.3;
+            ctx.shadowBlur = 0; ctx.fillStyle = 'rgba(255,255,255,0.4)';
+            ctx.beginPath(); ctx.arc(xoff, yoff, r * 0.3, 0, Math.PI * 2); ctx.fill();
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, W, H);
+
+            // Draw Grid Bubbles
+            for (let r = 0; r < grid.length; r++) {
+                for (let c = 0; c < grid[r].length; c++) {
+                    if (grid[r][c] !== -1) {
+                        let pos = getGridPos(r, c);
+                        drawBubble(pos.x, pos.y, bRad, grid[r][c]);
+                    }
+                }
+            }
+
+            // Draw moving bubbles
+            bubbles.forEach(b => drawBubble(b.x, b.y, bRad, b.cIdx, true));
+
+            // Draw Shooter trajectory line
+            ctx.beginPath();
+            ctx.moveTo(W / 2, H - bRad * 2);
+            ctx.lineTo(W / 2 + Math.cos(shooter.angle) * 100, H - bRad * 2 + Math.sin(shooter.angle) * 100);
+            ctx.strokeStyle = 'rgba(255,255,255,0.3)'; ctx.lineWidth = 3; ctx.setLineDash([5, 5]); ctx.stroke();
+            ctx.setLineDash([]);
+
+            // Draw Shooter
+            ctx.beginPath(); ctx.arc(W / 2, H - bRad * 2, bRad * 2, Math.PI, 0);
+            ctx.fillStyle = 'rgba(0,0,0,0.8)'; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = varColor(shooter.currentC); ctx.stroke();
+
+            if (bubbles.length === 0) {
+                drawBubble(W / 2, H - bRad * 2, bRad, shooter.currentC, true);
+            }
+
+            // Next Bubble preview
+            drawBubble(W / 2 - bRad * 3, H - bRad, bRad * 0.6, shooter.nextC);
+
+            // Particles
+            particles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy; p.life -= 0.05;
+                if (p.life <= 0) return particles.splice(i, 1);
+                ctx.globalAlpha = Math.max(0, p.life); ctx.fillStyle = p.c; ctx.shadowBlur = 10; ctx.shadowColor = p.c;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.sz, 0, Math.PI * 2); ctx.fill();
+            });
+            ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+
+            // Popups
+            popupTexts.forEach((p, i) => {
+                p.y -= 1; p.life -= 0.02;
+                if (p.life <= 0) return popupTexts.splice(i, 1);
+                ctx.globalAlpha = Math.max(0, p.life);
+                ctx.fillStyle = '#fff'; ctx.font = 'bold 24px Outfit'; ctx.textAlign = 'center';
+                ctx.shadowBlur = 10; ctx.shadowColor = '#ec4899';
+                ctx.fillText(p.txt, p.x, p.y);
+            });
+            ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+        }
+
+        function varColor(idx) { return getComputedStyle(document.body).getPropertyValue(colorPalette[idx].match(/var\((.+)\)/)[1]); }
+
+        function updateHUD() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('level').textContent = level;
+        }
+
+        document.getElementById('startBtn').onclick = () => {
+            if (document.getElementById('startBtn').textContent === 'Retry') {
+                level = 1; score = 0;
+            } else {
+                level++;
+            }
+            document.getElementById('overlay').classList.add('hidden');
+            initLevel();
+            running = true;
+            cancelAnimationFrame(reqId);
+            loop();
+        };
+
+        function loop() {
+            update();
+            draw();
+            if (running || particles.length > 0 || popupTexts.length > 0) reqId = requestAnimationFrame(loop);
+        }
+
+        // Initial draw unstarted
+        window.onload = () => {
+            resize();
+            ctx.fillStyle = '#fff'; ctx.font = '24px Outfit'; ctx.textAlign = 'center';
+            ctx.fillText("Click 'Next Level' to begin", W / 2, H / 2);
+            document.getElementById('startBtn').textContent = 'Start Game';
+            document.getElementById('overlay').classList.remove('hidden');
+        };
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Zen Archery | Infinite Arcade</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #1A1A1D;
+            --surface: rgba(255, 255, 255, .05);
+            --border: rgba(255, 255, 255, .08);
+            --accent: #C3073F
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            background: var(--bg);
+            color: #E6E6EA;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            user-select: none;
+            overflow: hidden
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: #950740;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: .9rem;
+            z-index: 99;
+            transition: .2s
+        }
+
+        .back-btn:hover {
+            color: #C3073F;
+            text-shadow: 0 0 10px #C3073F
+        }
+
+        .container {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            height: 550px;
+            display: flex;
+            flex-direction: column;
+            align-items: center
+        }
+
+        .hud {
+            position: absolute;
+            top: 20px;
+            width: 100%;
+            display: flex;
+            justify-content: space-between;
+            padding: 0 40px;
+            z-index: 10;
+            pointer-events: none
+        }
+
+        .stat {
+            text-align: right
+        }
+
+        .stat-label {
+            font-size: .7rem;
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            color: #950740
+        }
+
+        .stat-val {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2rem;
+            font-weight: 900;
+            color: #C3073F
+        }
+
+        .wind-display {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            font-family: 'Outfit';
+            font-size: 1.5rem;
+            font-weight: 700
+        }
+
+        .wind-arrow {
+            transition: transform 0.3s
+        }
+
+        .canvas-wrap {
+            width: 100%;
+            height: 100%;
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid var(--border);
+            box-shadow: inset 0 0 50px rgba(0, 0, 0, .8);
+            position: relative;
+            background: linear-gradient(to bottom, #1A1A1D 0%, #2F1A2A 100%)
+        }
+
+        canvas {
+            display: block;
+            cursor: crosshair
+        }
+
+        .overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(26, 26, 29, .9);
+            backdrop-filter: blur(8px);
+            z-index: 50
+        }
+
+        .overlay.hidden {
+            display: none
+        }
+
+        .overlay h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3rem;
+            font-weight: 900;
+            color: #C3073F;
+            margin-bottom: 10px
+        }
+
+        .btn-primary {
+            padding: 14px 40px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(135deg, #950740, #C3073F);
+            color: #fff;
+            font-weight: 900;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-family: 'Outfit', sans-serif;
+            transition: .3s;
+            box-shadow: 0 10px 30px rgba(195, 7, 63, .4)
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(195, 7, 63, .6)
+        }
+
+        .pull-indicator {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 200px;
+            height: 12px;
+            background: rgba(255, 255, 255, .1);
+            border-radius: 6px;
+            overflow: hidden
+        }
+
+        .pull-bar {
+            height: 100%;
+            width: 0%;
+            background: linear-gradient(90deg, #F9CDAD, #C3073F);
+            transition: width 0.1s
+        }
+    </style>
+</head>
+
+<body>
+    <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Hub</a>
+
+    <div class="container">
+        <div class="hud">
+            <div class="stat" style="text-align:left">
+                <div class="stat-label">Score</div>
+                <div class="stat-val" id="score">0</div>
+            </div>
+            <div class="wind-display"><i class="fas fa-long-arrow-alt-right wind-arrow" id="windArrow"></i> <span
+                    id="windSpeed">0.0</span></div>
+            <div class="stat">
+                <div class="stat-label">Arrows</div>
+                <div class="stat-val" id="arrows">10</div>
+            </div>
+        </div>
+
+        <div class="canvas-wrap">
+            <canvas id="c" width="800" height="550"></canvas>
+
+            <div class="pull-indicator" style="display:none" id="pullWrap">
+                <div class="pull-bar" id="pullBar"></div>
+            </div>
+
+            <div class="overlay" id="overlay">
+                <h2 id="ovTitle">Zen Archery</h2>
+                <p id="ovDesc" style="color:#E6E6EA;margin-bottom:24px;text-align:center">Click & drag back to
+                    aim.<br>Release to fire. Watch the wind.</p>
+                <button class="btn-primary" id="startBtn">Begin</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const W = 800, H = 550;
+        const canvas = document.getElementById('c'), ctx = canvas.getContext('2d');
+
+        let score = 0, arrows = 10, windForce = 0, running = false;
+        let reqId, particles = [];
+
+        // Archer & Bow
+        let player = { x: 100, y: H - 150 };
+        let currentArrow = null; // flying arrow
+        let isDragging = false, startM = { x: 0, y: 0 }, currM = { x: 0, y: 0 };
+        let pullPower = 0; // 0 to 1
+
+        // Target
+        let target = { x: 700, y: H - 250, r: 40, ty: H - 250, timer: 0 };
+
+        function init() {
+            score = 0; arrows = 10; windForce = 0; currentArrow = null; isDragging = false;
+            document.getElementById('score').textContent = 0;
+            document.getElementById('arrows').textContent = 10;
+            changeWind();
+            running = true;
+            document.getElementById('overlay').classList.add('hidden');
+            cancelAnimationFrame(reqId);
+            loop();
+        }
+
+        document.getElementById('startBtn').onclick = init;
+
+        function changeWind() {
+            windForce = (Math.random() - 0.5) * 12; // -6 to 6
+            const wa = document.getElementById('windArrow');
+            const ws = document.getElementById('windSpeed');
+            ws.textContent = Math.abs(windForce).toFixed(1);
+            wa.style.transform = `rotate(${windForce > 0 ? 0 : 180}deg)`;
+            if (Math.abs(windForce) < 0.5) ws.textContent = '0.0'; // dead wind
+        }
+
+        function getAnglePos() {
+            const dx = startM.x - currM.x;
+            const dy = startM.y - currM.y;
+            let dist = Math.min(100, Math.hypot(dx, dy));
+            let ang = Math.atan2(dy, dx);
+            return { ang, power: dist / 100 };
+        }
+
+        canvas.addEventListener('mousedown', e => {
+            if (!running || arrows <= 0 || currentArrow) return;
+            const rect = canvas.getBoundingClientRect();
+            startM = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+            currM = { x: startM.x, y: startM.y };
+            isDragging = true;
+            document.getElementById('pullWrap').style.display = 'block';
+        });
+
+        canvas.addEventListener('mousemove', e => {
+            if (isDragging) {
+                const rect = canvas.getBoundingClientRect();
+                currM = { x: e.clientX - rect.left, y: e.clientY - rect.top };
+                pullPower = getAnglePos().power;
+                document.getElementById('pullBar').style.width = pullPower * 100 + '%';
+            }
+        });
+
+        canvas.addEventListener('mouseup', handleUp);
+
+        // Touch handling
+        canvas.addEventListener('touchstart', e => {
+            e.preventDefault();
+            if (!running || arrows <= 0 || currentArrow) return;
+            const rect = canvas.getBoundingClientRect();
+            startM = { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+            currM = { x: startM.x, y: startM.y };
+            isDragging = true;
+            document.getElementById('pullWrap').style.display = 'block';
+        }, { passive: false });
+
+        canvas.addEventListener('touchmove', e => {
+            e.preventDefault();
+            if (isDragging) {
+                const rect = canvas.getBoundingClientRect();
+                currM = { x: e.touches[0].clientX - rect.left, y: e.touches[0].clientY - rect.top };
+                pullPower = getAnglePos().power;
+                document.getElementById('pullBar').style.width = pullPower * 100 + '%';
+            }
+        }, { passive: false });
+
+        canvas.addEventListener('touchend', e => {
+            e.preventDefault();
+            handleUp();
+        }, { passive: false });
+
+        function handleUp() {
+            if (isDragging) {
+                isDragging = false;
+                document.getElementById('pullWrap').style.display = 'none';
+                const ap = getAnglePos();
+                if (ap.power > 0.1) {
+                    arrows--; document.getElementById('arrows').textContent = arrows;
+                    const speed = ap.power * 25;
+                    currentArrow = {
+                        x: player.x, y: player.y,
+                        vx: Math.cos(ap.ang) * speed, vy: Math.sin(ap.ang) * speed,
+                        angle: ap.ang, flying: true
+                    };
+                }
+            }
+        }
+
+        function drawCircle(x, y, r, c) { ctx.beginPath(); ctx.arc(x, y, r, 0, Math.PI * 2); ctx.fillStyle = c; ctx.fill(); }
+
+        function checkHit() {
+            if (!currentArrow) return;
+            const a = currentArrow;
+
+            // Tip of arrow
+            const tipX = a.x + Math.cos(a.angle) * 20;
+            const tipY = a.y + Math.sin(a.angle) * 20;
+
+            // Floor hit
+            if (tipY > H) {
+                a.flying = false; a.y = H - Math.sin(a.angle) * 20;
+                setTimeout(nextTurn, 1000);
+                burst(tipX, H, '#fff', 5);
+            }
+            // Wall/offscreen
+            else if (tipX > W + 50 || tipX < -50 || tipY < -500) {
+                a.flying = false; setTimeout(nextTurn, 500);
+            }
+            // Target hit (front face is roughly x=target.x-5)
+            else if (Math.abs(tipX - (target.x - 5)) < 10) {
+                // Check Y distance to center
+                const hitDist = Math.abs(tipY - target.y);
+                if (hitDist <= target.r) {
+                    // Hit!
+                    a.flying = false; a.x = target.x - 5 - Math.cos(a.angle) * 20; // stick in front
+
+                    let pts = 0;
+                    if (hitDist < target.r * 0.2) { pts = 100; burst(tipX, tipY, '#fbbf24', 30); } // Bullseye
+                    else if (hitDist < target.r * 0.5) { pts = 50; burst(tipX, tipY, '#ef4444', 15); }
+                    else if (hitDist < target.r * 0.8) { pts = 20; burst(tipX, tipY, '#3b82f6', 10); }
+                    else pts = 10;
+
+                    score += pts; document.getElementById('score').textContent = score;
+
+                    // Floating text
+                    const t = document.createElement('div');
+                    t.style = `position:absolute;left:${tipX}px;top:${tipY - 20}px;color:#C3073F;font-family:Outfit;font-weight:bold;font-size:1.5rem;text-shadow:0 0 10px #000;pointer-events:none;animation:float .8s ease-out forwards;z-index:90`;
+                    t.innerHTML = `+${pts}`; document.body.appendChild(t); setTimeout(() => t.remove(), 800);
+
+                    setTimeout(nextTurn, 1200);
+                }
+            }
+        }
+
+        function nextTurn() {
+            currentArrow = null;
+            changeWind();
+            target.ty = H - 150 - Math.random() * 250; // New target height
+
+            if (arrows <= 0) {
+                running = false;
+                document.getElementById('ovTitle').textContent = 'Match Complete';
+                document.getElementById('ovDesc').innerHTML = `Final Score: <span style="color:#C3073F;font-weight:bold;font-size:2rem">${score}</span>`;
+                document.getElementById('startBtn').textContent = 'Play Again';
+                document.getElementById('overlay').classList.remove('hidden');
+            }
+        }
+
+        function burst(x, y, color, count) {
+            for (let i = 0; i < count; i++) particles.push({ x, y, vx: (Math.random() - 0.5) * 8, vy: (Math.random() - 0.5) * 8, life: 1, color, r: Math.random() * 2 + 2 });
+        }
+
+        // Add animation keyframes via JS for the float
+        const style = document.createElement('style');
+        style.textContent = `@keyframes float { 0%{opacity:1;transform:translateY(0)} 100%{opacity:0;transform:translateY(-30px)} }`;
+        document.head.appendChild(style);
+
+        function loop() {
+            if (!running) return;
+
+            // Move target
+            target.y += (target.ty - target.y) * 0.05;
+
+            // Physics
+            if (currentArrow && currentArrow.flying) {
+                const a = currentArrow;
+                a.vy += 0.4; // Gravity
+                a.vx += (windForce * 0.015); // Wind
+                a.x += a.vx; a.y += a.vy;
+                a.angle = Math.atan2(a.vy, a.vx);
+                checkHit();
+            }
+
+            draw();
+            reqId = requestAnimationFrame(loop);
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, W, H);
+
+            // Background touches
+            ctx.fillStyle = 'rgba(255,255,255,0.02)';
+            for (let i = 0; i < 5; i++) { ctx.fillRect(0, H - 20 * i, W, 20); }
+
+            // Target
+            ctx.save(); ctx.translate(target.x, target.y);
+            // Stand
+            ctx.fillStyle = '#3E2723'; ctx.fillRect(-4, target.r, 8, H);
+            // Rings
+            ctx.scale(0.3, 1); // angled
+            drawCircle(0, 0, target.r, '#fff');
+            drawCircle(0, 0, target.r * 0.8, '#000');
+            drawCircle(0, 0, target.r * 0.5, '#3b82f6');
+            drawCircle(0, 0, target.r * 0.2, '#ef4444');
+            drawCircle(0, 0, target.r * 0.05, '#fbbf24');
+            ctx.restore();
+
+            // Trajectory dot guide (if dragging)
+            if (isDragging && getAnglePos().power > 0.1) {
+                const ap = getAnglePos();
+                let tx = player.x, ty = player.y;
+                let tvx = Math.cos(ap.ang) * ap.power * 25, tvy = Math.sin(ap.ang) * ap.power * 25;
+                ctx.fillStyle = 'rgba(255,255,255,0.2)';
+                for (let i = 0; i < 15; i++) {
+                    tvy += 0.4; tvx += (windForce * 0.015);
+                    tx += tvx; ty += tvy;
+                    if (i % 2 === 0) { ctx.beginPath(); ctx.arc(tx, ty, 2, 0, Math.PI * 2); ctx.fill(); }
+                }
+            }
+
+            // Archer
+            ctx.fillStyle = '#950740'; ctx.fillRect(player.x - 10, player.y, 20, 60); // body
+            ctx.beginPath(); ctx.arc(player.x, player.y - 10, 10, 0, Math.PI * 2); ctx.fill(); // head
+            // Bow base
+            ctx.strokeStyle = '#fff'; ctx.lineWidth = 3;
+            ctx.beginPath(); ctx.arc(player.x, player.y + 20, 30, -Math.PI / 2, Math.PI / 2); ctx.stroke();
+
+            // Arrow
+            let ax = player.x, ay = player.y + 20, aang = 0;
+            if (currentArrow) { ax = currentArrow.x; ay = currentArrow.y; aang = currentArrow.angle; }
+            else if (isDragging) { aang = getAnglePos().ang; ax -= Math.cos(aang) * getAnglePos().power * 15; ay -= Math.sin(aang) * getAnglePos().power * 15; }
+
+            if (arrows > 0 || currentArrow) {
+                ctx.save(); ctx.translate(ax, ay); ctx.rotate(aang);
+                ctx.strokeStyle = '#D79922'; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(-20, 0); ctx.lineTo(20, 0); ctx.stroke();
+                // Tip
+                ctx.fillStyle = '#E6E6EA'; ctx.beginPath(); ctx.moveTo(20, -3); ctx.lineTo(25, 0); ctx.lineTo(20, 3); ctx.fill();
+                // Fletching
+                ctx.fillStyle = '#ef4444'; ctx.fillRect(-20, -2, 5, 4);
+                ctx.restore();
+            }
+
+            // Particles
+            particles.forEach(p => {
+                ctx.globalAlpha = p.life; ctx.fillStyle = p.color;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+                p.x += p.vx; p.y += p.vy; p.life -= 0.03;
+            });
+            ctx.globalAlpha = 1;
+
+        }
+    </script>
+</body>
+
+</html>

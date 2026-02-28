@@ -1,0 +1,478 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neon Breakout | Infinite Arcade</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #020617;
+            --surface: rgba(15, 23, 42, .8);
+            --border: rgba(45, 212, 191, .2);
+            --accent: #2dd4bf;
+            --brick1: #ef4444;
+            --brick2: #f59e0b;
+            --brick3: #10b981;
+            --brick4: #3b82f6;
+            --brick5: #8b5cf6
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            background: var(--bg);
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+            background-image: radial-gradient(circle at top, rgba(45, 212, 191, 0.1), transparent 60%)
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: #94a3b8;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: .9rem;
+            z-index: 99;
+            transition: .2s
+        }
+
+        .back-btn:hover {
+            color: #fff;
+            text-shadow: 0 0 10px #fff
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 800px;
+            z-index: 10;
+            margin-top: 20px
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: var(--accent);
+            text-shadow: 0 0 20px rgba(45, 212, 191, .5);
+            text-align: center
+        }
+
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            align-items: center;
+            padding: 12px 24px;
+            background: var(--surface);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+            backdrop-filter: blur(10px)
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center
+        }
+
+        .stat-label {
+            font-size: .7rem;
+            text-transform: uppercase;
+            color: #5eead4;
+            letter-spacing: 1px;
+            font-weight: 700
+        }
+
+        .stat-val {
+            font-family: 'Outfit';
+            font-size: 2rem;
+            font-weight: 900;
+            color: #fff
+        }
+
+        .game-layer {
+            width: 100%;
+            aspect-ratio: 4/3;
+            background: #0f172a;
+            border: 2px solid #115e59;
+            border-radius: 16px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, .8), inset 0 0 40px rgba(0, 0, 0, .5);
+            position: relative;
+            overflow: hidden;
+            touch-action: none
+        }
+
+        canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+            z-index: 5
+        }
+
+        .overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(2, 6, 23, .9);
+            backdrop-filter: blur(10px);
+            z-index: 50
+        }
+
+        .overlay.hidden {
+            display: none
+        }
+
+        .overlay h2 {
+            font-family: 'Outfit';
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+            color: var(--accent);
+            text-shadow: 0 0 30px rgba(45, 212, 191, .6)
+        }
+
+        .btn-primary {
+            margin-top: 30px;
+            padding: 16px 40px;
+            border-radius: 12px;
+            border: none;
+            background: var(--accent);
+            color: #0f172a;
+            font-family: 'Outfit';
+            font-weight: 900;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: .2s;
+            box-shadow: 0 10px 20px rgba(45, 212, 191, .4);
+            text-transform: uppercase;
+            letter-spacing: 2px
+        }
+
+        .btn-primary:hover {
+            background: #5eead4;
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(45, 212, 191, .6)
+        }
+
+        /* Screen shake */
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translate(0, 0)
+            }
+
+            25% {
+                transform: translate(-5px, 5px)
+            }
+
+            50% {
+                transform: translate(5px, -5px)
+            }
+
+            75% {
+                transform: translate(-5px, -5px)
+            }
+        }
+
+        .shake {
+            animation: shake 0.2s
+        }
+    </style>
+</head>
+
+<body>
+    <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Hub</a>
+
+    <div class="overlay" id="overlay">
+        <h2 id="ovTitle">Neon Breakout</h2>
+        <p id="ovDesc" style="color:#94a3b8;font-size:1.5rem;font-family:'Outfit';font-weight:700"></p>
+        <button class="btn-primary" id="startBtn">System Start</button>
+    </div>
+
+    <div class="container">
+        <h1>NEON BREAKOUT</h1>
+
+        <div class="hud">
+            <div class="stat">
+                <div class="stat-label">Level</div>
+                <div class="stat-val" id="level">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Score</div>
+                <div class="stat-val" id="score">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Lives</div>
+                <div class="stat-val" id="lives">❤️❤️❤️</div>
+            </div>
+        </div>
+
+        <div class="game-layer" id="gameArea">
+            <canvas id="c"></canvas>
+        </div>
+    </div>
+
+    <script>
+        const cvs = document.getElementById('c'), ctx = cvs.getContext('2d');
+        let W, H;
+        function resize() {
+            W = cvs.clientWidth; H = cvs.clientHeight;
+            cvs.width = W; cvs.height = H;
+            paddle.w = W * 0.15; // responsive paddle
+            paddle.x = W / 2 - paddle.w / 2;
+            paddle.y = H - 30;
+            if (!running) draw();
+        }
+        window.onresize = resize;
+
+        let running = false, reqId, score = 0, lives = 3, level = 1;
+
+        let paddle = { x: 0, y: 0, w: 100, h: 12, c: '#2dd4bf' };
+        let ball = { x: 0, y: 0, r: 6, vx: 0, vy: 0, speed: 5, active: false, trail: [] };
+        let bricks = [];
+        let particles = [];
+
+        const BRICK_ROWS = 5, BRICK_COLS = 8, BRICK_PAD = 10, BRICK_OFF_TOP = 60;
+        const brickColors = ['var(--brick1)', 'var(--brick2)', 'var(--brick3)', 'var(--brick4)', 'var(--brick5)'];
+
+        // Mouse / Touch movement
+        document.getElementById('gameArea').addEventListener('mousemove', e => {
+            if (!running) return;
+            let rect = cvs.getBoundingClientRect();
+            paddle.x = e.clientX - rect.left - paddle.w / 2;
+        });
+        document.getElementById('gameArea').addEventListener('touchmove', e => {
+            if (!running) return;
+            e.preventDefault();
+            let rect = cvs.getBoundingClientRect();
+            let touch = e.touches[0];
+            paddle.x = touch.clientX - rect.left - paddle.w / 2;
+        }, { passive: false });
+
+        document.addEventListener('keydown', e => {
+            if (!running) return;
+            if (e.code === 'ArrowLeft') paddle.x -= 30;
+            if (e.code === 'ArrowRight') paddle.x += 30;
+            if (e.code === 'Space' && !ball.active) launchBall();
+        });
+
+        document.getElementById('gameArea').addEventListener('mousedown', () => { if (running && !ball.active) launchBall(); });
+        document.getElementById('gameArea').addEventListener('touchstart', (e) => { e.preventDefault(); if (running && !ball.active) launchBall(); }, { passive: false });
+
+        document.getElementById('startBtn').onclick = () => {
+            document.getElementById('overlay').classList.add('hidden');
+            score = 0; lives = 3; level = 1;
+            initLevel();
+            updateHUD();
+            running = true;
+            cancelAnimationFrame(reqId);
+            loop();
+        };
+
+        function initLevel() {
+            resize();
+            bricks = [];
+            let bw = (W - BRICK_PAD * (BRICK_COLS + 1)) / BRICK_COLS;
+            let bh = 20;
+
+            let activeRows = Math.min(BRICK_ROWS, 2 + level);
+
+            for (let r = 0; r < activeRows; r++) {
+                for (let c = 0; c < BRICK_COLS; c++) {
+                    let bx = BRICK_PAD + c * (bw + BRICK_PAD);
+                    let by = BRICK_OFF_TOP + r * (bh + BRICK_PAD);
+                    let color = getComputedStyle(document.body).getPropertyValue(brickColors[r % brickColors.length].match(/var\((.+)\)/)[1]);
+                    bricks.push({ x: bx, y: by, w: bw, h: bh, status: 1, c: color, pts: (activeRows - r) * 10 });
+                }
+            }
+            resetBall();
+        }
+
+        function resetBall() {
+            ball.active = false;
+            ball.speed = 5 + (level * 0.5);
+            ball.trail = [];
+        }
+
+        function launchBall() {
+            ball.y = paddle.y - ball.r - 1;
+            let angle = -Math.PI / 2 + (Math.random() - 0.5) * 0.5; // slight angle up
+            ball.vx = Math.cos(angle) * ball.speed;
+            ball.vy = Math.sin(angle) * ball.speed;
+            ball.active = true;
+        }
+
+        function burst(x, y, color) {
+            for (let i = 0; i < 15; i++) {
+                particles.push({ x, y, vx: (Math.random() - 0.5) * 10, vy: (Math.random() - 0.5) * 10, life: 1, c: color, sz: Math.random() * 4 + 2 });
+            }
+        }
+
+        function updateHUD() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('level').textContent = level;
+            document.getElementById('lives').textContent = '❤️'.repeat(lives) + '🖤'.repeat(3 - lives);
+        }
+
+        function shakeBoard() {
+            const b = document.getElementById('gameArea');
+            b.classList.remove('shake');
+            void b.offsetWidth; // trigger reflow
+            b.classList.add('shake');
+        }
+
+        function update() {
+            if (!running) return;
+            paddle.x = Math.max(0, Math.min(W - paddle.w, paddle.x));
+
+            if (!ball.active) {
+                ball.x = paddle.x + paddle.w / 2;
+                ball.y = paddle.y - ball.r;
+                return;
+            }
+
+            ball.x += ball.vx; ball.y += ball.vy;
+            ball.trail.push({ x: ball.x, y: ball.y });
+            if (ball.trail.length > 5) ball.trail.shift();
+
+            // Wall bounce
+            if (ball.x - ball.r < 0) { ball.vx *= -1; ball.x = ball.r; burst(0, ball.y, '#fff'); }
+            if (ball.x + ball.r > W) { ball.vx *= -1; ball.x = W - ball.r; burst(W, ball.y, '#fff'); }
+            if (ball.y - ball.r < 0) { ball.vy *= -1; ball.y = ball.r; burst(ball.x, 0, '#fff'); }
+
+            // Death
+            if (ball.y > H) {
+                lives--; updateHUD(); shakeBoard(); burst(ball.x, H, '#ef4444');
+                if (lives <= 0) {
+                    running = false;
+                    document.getElementById('ovTitle').textContent = 'Game Over';
+                    document.getElementById('ovDesc').innerHTML = `Final Score: <span style="color:#fff">${score}</span>`;
+                    document.getElementById('overlay').classList.remove('hidden');
+                } else resetBall();
+            }
+
+            // Paddle Hit
+            if (ball.vy > 0 && ball.x > paddle.x && ball.x < paddle.x + paddle.w && ball.y + ball.r > paddle.y && ball.y - ball.r < paddle.y + paddle.h) {
+                let hitDist = ball.x - (paddle.x + paddle.w / 2);
+                let ratio = hitDist / (paddle.w / 2); // -1 to 1
+                let maxAngle = Math.PI / 3; // 60 deg
+                let angle = ratio * maxAngle - Math.PI / 2;
+
+                ball.vx = Math.cos(angle) * ball.speed;
+                ball.vy = Math.sin(angle) * ball.speed;
+                ball.y = paddle.y - ball.r;
+                burst(ball.x, ball.y, paddle.c);
+            }
+
+            // Bricks
+            let activeBricks = 0;
+            for (let b of bricks) {
+                if (b.status === 1) {
+                    activeBricks++;
+                    // Circle-Rect collision
+                    let rx = Math.max(b.x, Math.min(ball.x, b.x + b.w));
+                    let ry = Math.max(b.y, Math.min(ball.y, b.y + b.h));
+                    let dx = ball.x - rx, dy = ball.y - ry;
+                    if ((dx * dx + dy * dy) < ball.r * ball.r) {
+                        b.status = 0;
+                        score += b.pts; updateHUD();
+                        burst(b.x + b.w / 2, b.y + b.h / 2, b.c);
+                        shakeBoard();
+
+                        // Which side hit?
+                        // simple approximation based on pos before intersection
+                        if (ball.x < b.x || ball.x > b.x + b.w) ball.vx *= -1;
+                        else ball.vy *= -1;
+                    }
+                }
+            }
+
+            if (activeBricks === 0 && running) {
+                level++;
+                ball.active = false;
+                setTimeout(() => { initLevel(); updateHUD(); }, 1000);
+            }
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, W, H);
+
+            // Ball Trail
+            if (ball.active) {
+                ctx.beginPath();
+                ball.trail.forEach((t, i) => { if (i === 0) ctx.moveTo(t.x, t.y); else ctx.lineTo(t.x, t.y); });
+                ctx.strokeStyle = 'rgba(255,255,255,0.4)'; ctx.lineWidth = ball.r; ctx.lineCap = 'round'; ctx.lineJoin = 'round'; ctx.stroke();
+            }
+
+            // Ball
+            ctx.shadowBlur = 10; ctx.shadowColor = '#fff'; ctx.fillStyle = '#fff';
+            ctx.beginPath(); ctx.arc(ball.x, ball.y, ball.r, 0, Math.PI * 2); ctx.fill();
+
+            // Paddle
+            ctx.shadowBlur = 15; ctx.shadowColor = paddle.c; ctx.fillStyle = paddle.c;
+            ctx.fillRect(paddle.x, paddle.y, paddle.w, paddle.h);
+            // highlight
+            ctx.fillStyle = '#fff'; ctx.shadowBlur = 0; ctx.fillRect(paddle.x + 2, paddle.y + 2, paddle.w - 4, paddle.h - 8);
+
+            // Bricks
+            bricks.forEach(b => {
+                if (b.status === 1) {
+                    ctx.shadowBlur = 10; ctx.shadowColor = b.c; ctx.fillStyle = b.c;
+                    ctx.fillRect(b.x, b.y, b.w, b.h);
+                    ctx.fillStyle = 'rgba(255,255,255,0.3)'; ctx.shadowBlur = 0;
+                    ctx.fillRect(b.x + 2, b.y + 2, b.w - 4, b.h / 2);
+                }
+            });
+
+            // Particles
+            particles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy; p.life -= 0.05;
+                if (p.life <= 0) return particles.splice(i, 1);
+                ctx.globalAlpha = Math.max(0, p.life); ctx.fillStyle = p.c; ctx.shadowBlur = 10; ctx.shadowColor = p.c;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.sz, 0, Math.PI * 2); ctx.fill();
+            });
+            ctx.globalAlpha = 1; ctx.shadowBlur = 0;
+        }
+
+        function loop() {
+            update();
+            draw();
+            if (running || particles.length > 0) reqId = requestAnimationFrame(loop);
+        }
+
+        resize();
+    </script>
+</body>
+
+</html>

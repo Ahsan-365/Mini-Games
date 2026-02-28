@@ -1,0 +1,832 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Space Arcade Hub | Infinite Arcade</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #050a14;
+            --surface: rgba(15, 23, 42, .7);
+            --border: rgba(255, 255, 255, .08);
+            --accent: #8b5cf6
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            background: var(--bg);
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: #94a3b8;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: .9rem;
+            z-index: 99;
+            transition: .2s
+        }
+
+        .back-btn:hover {
+            color: #fff
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+            width: 100%;
+            max-width: 800px;
+            padding: 60px 20px
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.8rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #c4b5fd, #7c3aed);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center
+        }
+
+        .subtitle {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            margin-top: -14px;
+            text-align: center
+        }
+
+        .game-cards {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            justify-content: center;
+            flex-wrap: wrap
+        }
+
+        .game-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+            min-width: 280px;
+            cursor: pointer;
+            transition: .3s;
+            position: relative;
+            overflow: hidden
+        }
+
+        .game-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, .03), transparent);
+            opacity: 0;
+            transition: .3s
+        }
+
+        .game-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent);
+            box-shadow: 0 12px 40px rgba(139, 92, 246, .15)
+        }
+
+        .game-card:hover::before {
+            opacity: 1
+        }
+
+        .icon-wrapper {
+            width: 70px;
+            height: 70px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin-bottom: 8px
+        }
+
+        #invaders-card .icon-wrapper {
+            background: linear-gradient(135deg, #e879f9, #9333ea);
+            color: #fff;
+            box-shadow: 0 8px 24px rgba(147, 51, 234, .3)
+        }
+
+        #asteroids-card .icon-wrapper {
+            background: linear-gradient(135deg, #94a3b8, #475569);
+            color: #fff;
+            box-shadow: 0 8px 24px rgba(71, 85, 105, .3)
+        }
+
+        .card-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 900
+        }
+
+        .card-desc {
+            color: #94a3b8;
+            text-align: center;
+            font-size: .9rem;
+            line-height: 1.5
+        }
+
+        .controls-hint {
+            display: flex;
+            gap: 8px;
+            margin-top: auto;
+            padding-top: 16px
+        }
+
+        .key {
+            background: rgba(255, 255, 255, .1);
+            border: 1px solid rgba(255, 255, 255, .2);
+            border-radius: 6px;
+            padding: 2px 8px;
+            font-size: .75rem;
+            font-family: monospace;
+            color: #cbd5e1
+        }
+
+        /* Game Wrapper */
+        #gameWrapper {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%
+        }
+
+        .mode-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            max-width: 600px;
+            margin-bottom: 16px
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 10px;
+            padding: 8px 16px;
+            color: #f8fafc;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: .9rem;
+            cursor: pointer;
+            transition: .2s
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, .1)
+        }
+
+        /* Common Canvas stuff */
+        canvas {
+            border-radius: 12px;
+            box-shadow: 0 0 40px rgba(0, 0, 0, .5);
+            background: #020617;
+            border: 1px solid rgba(139, 92, 246, .2);
+            display: block
+        }
+
+        .hud {
+            display: flex;
+            gap: 12px;
+            align-items: center
+        }
+
+        .stat {
+            background: rgba(15, 23, 42, .6);
+            border: 1px solid rgba(255, 255, 255, .08);
+            border-radius: 10px;
+            padding: 6px 14px;
+            text-align: center;
+            min-width: 80px
+        }
+
+        .stat-label {
+            font-size: .65rem;
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            color: #64748b
+        }
+
+        .stat-val {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #c4b5fd
+        }
+
+        .overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(2, 6, 23, .92);
+            backdrop-filter: blur(8px);
+            gap: 16px;
+            border-radius: 12px;
+            z-index: 10
+        }
+
+        .overlay.hidden {
+            display: none
+        }
+
+        .overlay h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900
+        }
+
+        .btn-primary {
+            padding: 12px 32px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(135deg, #a855f7, #7c3aed);
+            color: #fff;
+            font-weight: 900;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-family: 'Outfit', sans-serif;
+            transition: .2s;
+            box-shadow: 0 8px 20px rgba(124, 58, 237, .3)
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 24px rgba(124, 58, 237, .4)
+        }
+
+        .canvas-container {
+            position: relative
+        }
+
+        /* Shields visual */
+        .shields-bar {
+            display: flex;
+            gap: 4px;
+            margin-top: 4px;
+            justify-content: center
+        }
+
+        .shield-pip {
+            width: 16px;
+            height: 4px;
+            border-radius: 2px;
+            background: #334155
+        }
+
+        .shield-pip.active {
+            background: #22d3ee;
+            box-shadow: 0 0 8px #22d3ee
+        }
+
+        /* Mobile Controls */
+        .mobile-controls {
+            display: none;
+            width: 100%;
+            justify-content: space-between;
+            align-items: flex-end;
+            margin-top: 20px;
+            padding: 0 10px;
+            user-select: none;
+        }
+
+        .d-pad {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 5px;
+        }
+
+        .d-pad-row {
+            display: flex;
+            gap: 5px;
+        }
+
+        .action-btns {
+            display: flex;
+            gap: 10px;
+        }
+
+        .m-ctrl {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 50%;
+            width: 50px;
+            height: 50px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #fff;
+            font-size: 1.2rem;
+            text-decoration: none;
+            touch-action: none;
+        }
+
+        .m-ctrl.action-btn {
+            border-radius: 12px;
+            width: auto;
+            padding: 0 20px;
+            font-weight: bold;
+            font-family: 'Outfit';
+        }
+
+        .m-ctrl:active {
+            background: rgba(255, 255, 255, 0.3);
+        }
+
+        @media (max-width: 768px) {
+            .mobile-controls {
+                display: flex;
+            }
+
+            .hud {
+                flex-wrap: wrap;
+                justify-content: center;
+            }
+
+            canvas {
+                max-width: 100%;
+                height: auto;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Hub</a>
+
+    <!-- Menu -->
+    <div class="container" id="menu">
+        <h1>🚀 Space Arcade Hub</h1>
+        <p class="subtitle">Select your classic retro space shooter</p>
+
+        <div class="game-cards">
+            <div class="game-card" id="invaders-card">
+                <div class="icon-wrapper"><i class="fas fa-space-shuttle"></i></div>
+                <div class="card-title">Space Invaders</div>
+                <div class="card-desc">Defend Earth from descending waves of alien invaders. Use shields and dodge
+                    incoming fire.</div>
+                <div class="controls-hint">
+                    <span class="key">←/→</span> Move &nbsp;&nbsp; <span class="key">Space</span> Shoot
+                </div>
+            </div>
+
+            <div class="game-card" id="asteroids-card">
+                <div class="icon-wrapper"><i class="fas fa-meteor"></i></div>
+                <div class="card-title">Asteroids</div>
+                <div class="card-desc">Navigate an asteroid field in deep space. Shoot to break space rocks and survive.
+                </div>
+                <div class="controls-hint">
+                    <span class="key">←/→</span> Turn &nbsp;&nbsp; <span class="key">↑</span> Thrust &nbsp;&nbsp; <span
+                        class="key">Space</span> Shoot
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Game UI -->
+    <div class="container" id="gameWrapper" style="padding-top:40px">
+        <div class="mode-header">
+            <h2 style="font-family:'Outfit',sans-serif;font-size:1.5rem" id="gameModeTitle">Invaders</h2>
+            <div class="hud">
+                <div class="stat">
+                    <div class="stat-label">Score</div>
+                    <div class="stat-val" id="score">0</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Wave</div>
+                    <div class="stat-val" id="wave">1</div>
+                </div>
+                <div class="stat" id="livesStat" style="display:none">
+                    <div class="stat-label">Lives</div>
+                    <div class="stat-val" id="lives">3</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Shields</div>
+                    <div class="shields-bar" id="shieldsBar"></div>
+                </div>
+                <div class="stat">
+                    <div class="stat-label">Best</div>
+                    <div class="stat-val" id="best">0</div>
+                </div>
+            </div>
+            <button class="btn-secondary" id="backMenuBtn">Change Game</button>
+        </div>
+
+        <div class="canvas-container">
+            <canvas id="c" width="600" height="500"></canvas>
+            <div class="overlay" id="overlay">
+                <h2 id="overlayTitle">Space Invaders</h2>
+                <p id="overlayDesc" style="color:#94a3b8;margin-bottom:8px">Ready to defend?</p>
+                <button class="btn-primary" id="startBtn">▶ Start</button>
+            </div>
+
+            <div class="mobile-controls" id="mobCtrls">
+                <div class="d-pad">
+                    <div class="m-ctrl" id="btnUp"><i class="fas fa-chevron-up"></i></div>
+                    <div class="d-pad-row">
+                        <div class="m-ctrl" id="btnLeft"><i class="fas fa-chevron-left"></i></div>
+                        <div class="m-ctrl" id="btnDown"><i class="fas fa-chevron-down"></i></div>
+                        <div class="m-ctrl" id="btnRight"><i class="fas fa-chevron-right"></i></div>
+                    </div>
+                </div>
+                <div class="action-btns">
+                    <div class="m-ctrl action-btn" id="btnShield"
+                        style="background: rgba(34, 211, 238, 0.15); border-color: rgba(34, 211, 238, 0.4);">SHIELD
+                    </div>
+                    <div class="m-ctrl action-btn" id="btnSpace"
+                        style="background: rgba(139, 92, 246, 0.2); border-color: #8b5cf6;">FIRE</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const canvas = document.getElementById('c'), ctx = canvas.getContext('2d');
+        const W = 600, H = 500;
+
+        // Shared State
+        let currentMode = null; // 'invaders' | 'asteroids'
+        let reqId, running = false, waiting = true;
+        let score = 0, wave = 1, lives = 3, best = 0;
+        let keys = {};
+        let particles = [];
+
+        document.addEventListener('keydown', e => keys[e.code] = true);
+        document.addEventListener('keyup', e => { keys[e.code] = false; if (currentMode === 'invaders') shipInv.fired = false; if (currentMode === 'asteroids') shipAst.fired = false; });
+
+        // Mobile Controls Input Binding
+        function bindTouch(id, code) {
+            const el = document.getElementById(id);
+            if (!el) return;
+            el.addEventListener('touchstart', (e) => { e.preventDefault(); keys[code] = true; }, { passive: false });
+            el.addEventListener('touchend', (e) => {
+                e.preventDefault(); keys[code] = false;
+                if (currentMode === 'invaders' && code === 'Space') shipInv.fired = false;
+                if (currentMode === 'asteroids' && code === 'Space') shipAst.fired = false;
+            }, { passive: false });
+            el.addEventListener('touchcancel', (e) => { e.preventDefault(); keys[code] = false; }, { passive: false });
+        }
+
+        bindTouch('btnUp', 'ArrowUp');
+        bindTouch('btnDown', 'ArrowDown');
+        bindTouch('btnLeft', 'ArrowLeft');
+        bindTouch('btnRight', 'ArrowRight');
+        bindTouch('btnSpace', 'Space');
+        bindTouch('btnShield', 'KeyS');
+
+        // ── Menu Logic ─────────────────────────────────────────────────────────────
+        document.getElementById('invaders-card').addEventListener('click', () => swapMode('invaders'));
+        document.getElementById('asteroids-card').addEventListener('click', () => swapMode('asteroids'));
+        document.getElementById('backMenuBtn').addEventListener('click', () => {
+            running = false; cancelAnimationFrame(reqId);
+            document.getElementById('gameWrapper').style.display = 'none';
+            document.getElementById('menu').style.display = 'flex';
+        });
+
+        function swapMode(mode) {
+            currentMode = mode;
+            best = +localStorage.getItem(`best_${mode}`) || 0;
+            document.getElementById('best').textContent = best;
+
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('gameWrapper').style.display = 'flex';
+            document.getElementById('gameModeTitle').textContent = mode === 'invaders' ? 'Space Invaders' : 'Asteroids';
+            document.getElementById('overlayTitle').textContent = mode === 'invaders' ? 'Space Invaders' : 'Asteroids';
+            document.getElementById('overlayDesc').textContent = mode === 'invaders' ? 'Use arrows to move, Space to shoot.' : 'Arrows to turn/thrust, Space to shoot.';
+            document.getElementById('livesStat').style.display = mode === 'asteroids' ? 'block' : 'none'; // Asteroids uses lives explicitly
+
+            document.getElementById('overlay').classList.remove('hidden');
+            waiting = true;
+            drawClear();
+        }
+
+        function updateHUD() {
+            document.getElementById('score').textContent = score;
+            document.getElementById('wave').textContent = wave;
+            document.getElementById('lives').textContent = lives;
+            const s = Math.max(0, currentMode === 'invaders' ? shipInv.shield : shipAst.shield);
+            document.getElementById('shieldsBar').innerHTML = Array.from({ length: 3 }, (_, i) => `<div class="shield-pip ${i < Math.ceil(s / 33) ? 'active' : ''}"></div>`).join('');
+            if (score > best) { best = score; localStorage.setItem(`best_${currentMode}`, best); document.getElementById('best').textContent = best; }
+        }
+
+        function startGame() {
+            score = 0; wave = 1; lives = 3; particles = [];
+            running = true; waiting = false; document.getElementById('overlay').classList.add('hidden');
+            if (currentMode === 'invaders') initInvaders();
+            else initAsteroids();
+            updateHUD();
+            cancelAnimationFrame(reqId);
+            loop();
+        }
+        document.getElementById('startBtn').addEventListener('click', startGame);
+
+        function endGame(msg) {
+            running = false; waiting = true;
+            document.getElementById('overlayTitle').textContent = msg;
+            document.getElementById('overlayDesc').textContent = `Wave ${wave} • Score ${score}`;
+            document.getElementById('overlay').classList.remove('hidden');
+        }
+
+        // ── Particles ──────────────────────────────────────────────────────────────
+        function burst(x, y, color, count, speed = 3) {
+            for (let i = 0; i < count; i++) particles.push({ x, y, vx: (Math.random() - 0.5) * speed, vy: (Math.random() - 0.5) * speed, life: 1, bg: color, r: Math.random() * 2 + 1 });
+        }
+        function drawParticles() {
+            particles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy; p.life -= 0.03;
+                if (p.life <= 0) return particles.splice(i, 1);
+                ctx.globalAlpha = p.life; ctx.fillStyle = p.bg; ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+        }
+
+        function drawClear() {
+            ctx.fillStyle = '#020617'; ctx.fillRect(0, 0, W, H);
+        }
+        function loop() {
+            if (!running) return;
+            drawClear();
+            if (currentMode === 'invaders') { updateInvaders(); drawInvaders(); }
+            else { updateAsteroids(); drawAsteroids(); }
+            drawParticles();
+            reqId = requestAnimationFrame(loop);
+        }
+
+        // ============================================================================
+        // SPACE INVADERS
+        // ============================================================================
+        let shipInv, aliens, bulletsInv, alienDir, alienDown, boss;
+
+        function initInvaders() {
+            shipInv = { x: W / 2, y: H - 40, w: 36, h: 20, speed: 5, shield: 100, fired: false };
+            bulletsInv = []; boss = null;
+            initWaveInv();
+        }
+        function initWaveInv() {
+            aliens = []; alienDir = 1; alienDown = 0;
+            const rows = Math.min(3 + Math.floor(wave / 2), 6);
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < 10; c++) {
+                    const type = r === 0 ? 2 : r < 3 ? 1 : 0; // 0:basic, 1:mid, 2:hard
+                    aliens.push({ x: 50 + c * 45, y: 50 + r * 40, type, w: 24, h: 20, hp: type === 2 ? 2 : 1 });
+                }
+            }
+            shipInv.shield = Math.min(100, shipInv.shield + 33);
+            updateHUD();
+        }
+        function updateInvaders() {
+            // Ship move
+            if ((keys['ArrowLeft'] || keys['KeyA']) && shipInv.x > shipInv.w / 2) shipInv.x -= shipInv.speed;
+            if ((keys['ArrowRight'] || keys['KeyD']) && shipInv.x < W - shipInv.w / 2) shipInv.x += shipInv.speed;
+            // Shoot
+            if (keys['Space'] && !shipInv.fired) {
+                bulletsInv.push({ x: shipInv.x, y: shipInv.y - shipInv.h / 2, vy: -9, isAlien: false });
+                shipInv.fired = true;
+            }
+
+            // Boss spawn
+            if (!boss && wave >= 3 && Math.random() < 0.002) {
+                boss = { x: -40, y: 30, w: 50, h: 25, hp: 10 + wave * 2, vx: 2 };
+            }
+            if (boss) {
+                boss.x += boss.vx;
+                if (boss.x > W + 50) boss = null;
+            }
+
+            // Alien move
+            let dx = alienDir * (0.5 + wave * 0.1); let dy = 0;
+            let hitEdge = false;
+            aliens.forEach(a => { if (a.x < 30 || a.x > W - 30) hitEdge = true; });
+            if (hitEdge && alienDown <= 0) { alienDir *= -1; dy = 20; alienDown = 20; dx = 0; }
+            if (alienDown > 0) alienDown--;
+            aliens.forEach(a => {
+                a.x += dx; a.y += dy;
+                // Alien shoot
+                if (Math.random() < 0.001 + wave * 0.0005) bulletsInv.push({ x: a.x, y: a.y + 10, vy: 5 + wave * 0.5, isAlien: true });
+                // Game over if reach bottom
+                if (a.y > H - 60) endGame('Earth was invaded!');
+            });
+
+            // Bullets
+            bulletsInv.forEach((b, i) => {
+                b.y += b.vy;
+                if (b.y < -10 || b.y > H + 10) return bulletsInv.splice(i, 1);
+
+                if (b.isAlien) {
+                    // Hit ship
+                    if (Math.abs(b.x - shipInv.x) < shipInv.w / 2 && Math.abs(b.y - shipInv.y) < shipInv.h / 2) {
+                        bulletsInv.splice(i, 1); burst(shipInv.x, shipInv.y, '#22d3ee', 10);
+                        if (shipInv.shield > 0) { shipInv.shield -= 34; updateHUD(); }
+                        else endGame('Ship Destroyed!');
+                    }
+                } else {
+                    // Hit boss
+                    if (boss && Math.abs(b.x - boss.x) < boss.w / 2 && Math.abs(b.y - boss.y) < boss.h / 2) {
+                        bulletsInv.splice(i, 1); burst(b.x, b.y, '#ef4444', 5); boss.hp--;
+                        if (boss.hp <= 0) { score += 500; boss = null; burst(b.x, b.y, '#ef4444', 30, 6); updateHUD(); }
+                        return;
+                    }
+                    // Hit alien
+                    for (let j = 0; j < aliens.length; j++) {
+                        let a = aliens[j];
+                        if (Math.abs(b.x - a.x) < a.w / 2 && Math.abs(b.y - a.y) < a.h / 2) {
+                            a.hp--; bulletsInv.splice(i, 1); burst(a.x, a.y, a.type === 2 ? '#f43f5e' : a.type === 1 ? '#a855f7' : '#10b981', 8);
+                            if (a.hp <= 0) { score += (a.type + 1) * 10; aliens.splice(j, 1); updateHUD(); }
+                            break;
+                        }
+                    }
+                }
+            });
+
+            if (aliens.length === 0) { wave++; initWaveInv(); }
+        }
+        function drawInvaders() {
+            // Ship
+            ctx.fillStyle = '#22d3ee';
+            ctx.beginPath(); ctx.moveTo(shipInv.x, shipInv.y - shipInv.h / 2); ctx.lineTo(shipInv.x + shipInv.w / 2, shipInv.y + shipInv.h / 2); ctx.lineTo(shipInv.x - shipInv.w / 2, shipInv.y + shipInv.h / 2); ctx.fill();
+            if (shipInv.shield > 0) { ctx.strokeStyle = 'rgba(34,211,238,0.4)'; ctx.lineWidth = 3; ctx.beginPath(); ctx.arc(shipInv.x, shipInv.y, 24, 0, Math.PI * 2); ctx.stroke(); }
+
+            // Boss
+            if (boss) { ctx.fillStyle = '#ef4444'; ctx.fillRect(boss.x - boss.w / 2, boss.y - boss.h / 2, boss.w, boss.h); }
+
+            // Aliens
+            aliens.forEach(a => {
+                ctx.fillStyle = a.hp > 1 ? '#f43f5e' : a.type === 1 ? '#a855f7' : '#10b981';
+                ctx.fillRect(a.x - a.w / 2, a.y - a.h / 2, a.w, a.h);
+                if (a.type === 2 && a.hp === 2) { ctx.strokeStyle = '#fff'; ctx.strokeRect(a.x - a.w / 2, a.y - a.h / 2, a.w, a.h); }
+            });
+
+            // Bullets
+            bulletsInv.forEach(b => {
+                ctx.fillStyle = b.isAlien ? '#f43f5e' : '#22d3ee';
+                ctx.fillRect(b.x - 2, b.y - 8, 4, 16);
+            });
+        }
+
+        // ============================================================================
+        // ASTEROIDS
+        // ============================================================================
+        let shipAst, roids, bulletsAst;
+
+        function initAsteroids() {
+            shipAst = { x: W / 2, y: H / 2, a: -Math.PI / 2, vx: 0, vy: 0, shield: 100, fired: false, invincible: 60 };
+            bulletsAst = [];
+            initWaveAst();
+        }
+        function initWaveAst() {
+            roids = [];
+            const count = 3 + wave;
+            for (let i = 0; i < count; i++) {
+                let ax, ay;
+                do { ax = Math.random() * W; ay = Math.random() * H; } while (Math.hypot(ax - shipAst.x, ay - shipAst.y) < 100);
+                roids.push({ x: ax, y: ay, r: 40, vx: (Math.random() - 0.5) * (1 + wave * 0.1), vy: (Math.random() - 0.5) * (1 + wave * 0.1), pts: [] });
+            }
+            // gen shapes
+            roids.forEach(r => genAstShape(r));
+            shipAst.shield = Math.min(100, shipAst.shield + 33);
+            updateHUD();
+        }
+
+        function genAstShape(a) {
+            a.pts = [];
+            const v = 8 + Math.floor(Math.random() * 4);
+            for (let i = 0; i < v; i++) {
+                const ang = (i / v) * Math.PI * 2;
+                const rad = a.r * (0.6 + Math.random() * 0.4);
+                a.pts.push({ dx: Math.cos(ang) * rad, dy: Math.sin(ang) * rad });
+            }
+        }
+
+        function updateAsteroids() {
+            if (shipAst.invincible > 0) shipAst.invincible--;
+
+            // Ship turn
+            if (keys['ArrowLeft'] || keys['KeyA']) shipAst.a -= 0.08;
+            if (keys['ArrowRight'] || keys['KeyD']) shipAst.a += 0.08;
+            // Ship thrust
+            const thrusting = keys['ArrowUp'] || keys['KeyW'];
+            if (thrusting) {
+                shipAst.vx += Math.cos(shipAst.a) * 0.15;
+                shipAst.vy += Math.sin(shipAst.a) * 0.15;
+                burst(shipAst.x - Math.cos(shipAst.a) * 15, shipAst.y - Math.sin(shipAst.a) * 15, '#fb923c', 1, 1.5);
+            }
+            shipAst.vx *= 0.98; shipAst.vy *= 0.98;
+            shipAst.x += shipAst.vx; shipAst.y += shipAst.vy;
+            if (shipAst.x < 0) shipAst.x = W; if (shipAst.x > W) shipAst.x = 0;
+            if (shipAst.y < 0) shipAst.y = H; if (shipAst.y > H) shipAst.y = 0;
+
+            // Shield trigger
+            if ((keys['KeyS'] || keys['ArrowDown']) && shipAst.shield > 0) { shipAst.shield -= 0.5; updateHUD(); }
+
+            // Shoot
+            if (keys['Space'] && !shipAst.fired) {
+                bulletsAst.push({ x: shipAst.x + Math.cos(shipAst.a) * 15, y: shipAst.y + Math.sin(shipAst.a) * 15, vx: Math.cos(shipAst.a) * 8, vy: Math.sin(shipAst.a) * 8, life: 60 });
+                shipAst.fired = true;
+            }
+
+            // Bullets
+            bulletsAst.forEach((b, i) => {
+                b.x += b.vx; b.y += b.vy; b.life--;
+                if (b.x < 0) b.x = W; if (b.x > W) b.x = 0; if (b.y < 0) b.y = H; if (b.y > H) b.y = 0;
+                if (b.life <= 0) return bulletsAst.splice(i, 1);
+
+                // hit asteroid
+                for (let j = 0; j < roids.length; j++) {
+                    let a = roids[j];
+                    if (Math.hypot(b.x - a.x, b.y - a.y) < a.r) {
+                        burst(a.x, a.y, '#94a3b8', 15); score += (a.r === 40 ? 20 : a.r === 20 ? 50 : 100);
+                        bulletsAst.splice(i, 1); roids.splice(j, 1); updateHUD();
+                        if (a.r > 15) {
+                            const newR = a.r / 2;
+                            for (let k = 0; k < 2; k++) {
+                                let na = { x: a.x, y: a.y, r: newR, vx: a.vx + (Math.random() - 0.5) * 3, vy: a.vy + (Math.random() - 0.5) * 3 };
+                                genAstShape(na); roids.push(na);
+                            }
+                        }
+                        break;
+                    }
+                }
+            });
+
+            // Asteroids
+            roids.forEach(a => {
+                a.x += a.vx; a.y += a.vy;
+                if (a.x < -a.r) a.x = W + a.r; if (a.x > W + a.r) a.x = -a.r;
+                if (a.y < -a.r) a.y = H + a.r; if (a.y > H + a.r) a.y = -a.r;
+
+                // Collision with ship
+                if (shipAst.invincible <= 0 && ((!keys['KeyS'] && !keys['ArrowDown']) || shipAst.shield <= 0)) {
+                    if (Math.hypot(shipAst.x - a.x, shipAst.y - a.y) < a.r + 10) {
+                        burst(shipAst.x, shipAst.y, '#22d3ee', 30, 5);
+                        lives--; updateHUD();
+                        if (lives <= 0) endGame('Ship Terminated');
+                        else { shipAst.x = W / 2; shipAst.y = H / 2; shipAst.vx = 0; shipAst.vy = 0; shipAst.invincible = 100; }
+                    }
+                }
+            });
+
+            if (roids.length === 0) { wave++; initWaveAst(); }
+        }
+        function drawAsteroids() {
+            // Ship
+            if (shipAst.invincible % 10 < 5) {
+                ctx.save(); ctx.translate(shipAst.x, shipAst.y); ctx.rotate(shipAst.a);
+                ctx.strokeStyle = '#22d3ee'; ctx.lineWidth = 2;
+                ctx.beginPath(); ctx.moveTo(15, 0); ctx.lineTo(-10, -10); ctx.lineTo(-5, 0); ctx.lineTo(-10, 10); ctx.closePath(); ctx.stroke();
+                // Shield
+                if ((keys['KeyS'] || keys['ArrowDown']) && shipAst.shield > 0) {
+                    ctx.strokeStyle = 'rgba(34,211,238,0.6)'; ctx.beginPath(); ctx.arc(0, 0, 18, 0, Math.PI * 2); ctx.stroke();
+                }
+                ctx.restore();
+            }
+            // Bullets
+            ctx.fillStyle = '#22d3ee';
+            bulletsAst.forEach(b => { ctx.beginPath(); ctx.arc(b.x, b.y, 3, 0, Math.PI * 2); ctx.fill(); });
+            // Asteroids
+            ctx.strokeStyle = '#94a3b8'; ctx.lineWidth = 2;
+            roids.forEach(a => {
+                ctx.beginPath();
+                a.pts.forEach((pt, i) => { if (i === 0) ctx.moveTo(a.x + pt.dx, a.y + pt.dy); else ctx.lineTo(a.x + pt.dx, a.y + pt.dy); });
+                ctx.closePath(); ctx.stroke();
+            });
+        }
+    </script>
+</body>
+
+</html>

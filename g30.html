@@ -1,0 +1,388 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Brain Duel | Infinite Arcade</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --p1-color: #34d399;
+            --p2-color: #f87171;
+            --bg: #0b1120
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            user-select: none
+        }
+
+        body {
+            background: var(--bg);
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden
+        }
+
+        .back-btn {
+            position: absolute;
+            top: 50%;
+            left: 20px;
+            transform: translateY(-50%);
+            color: rgba(255, 255, 255, .5);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 40px;
+            height: 40px;
+            background: rgba(255, 255, 255, .1);
+            border-radius: 50%;
+            z-index: 99;
+            transition: .2s
+        }
+
+        .back-btn:hover {
+            background: #fff;
+            color: #000
+        }
+
+        /* Split Screen Regions */
+        .half {
+            flex: 1;
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 20px
+        }
+
+        .divider {
+            height: 4px;
+            background: rgba(255, 255, 255, .1);
+            width: 100%;
+            position: relative;
+            z-index: 10;
+            box-shadow: 0 0 20px rgba(0, 0, 0, .8)
+        }
+
+        .p2-half {
+            background: linear-gradient(to top, var(--bg), rgba(248, 113, 113, 0.1));
+            transform: rotate(180deg)
+        }
+
+        .p1-half {
+            background: linear-gradient(to top, var(--bg), rgba(52, 211, 153, 0.1))
+        }
+
+        .score-txt {
+            font-family: 'Outfit';
+            font-size: 2rem;
+            font-weight: 900;
+            position: absolute;
+            right: 20px;
+            top: 20px;
+            opacity: 0.5
+        }
+
+        .p1-half .score-txt {
+            color: var(--p1-color)
+        }
+
+        .p2-half .score-txt {
+            color: var(--p2-color)
+        }
+
+        h2 {
+            font-family: 'Outfit';
+            font-size: 4rem;
+            font-weight: 900;
+            text-align: center;
+            margin-bottom: 30px;
+            letter-spacing: 2px
+        }
+
+        .p1-half h2 {
+            color: var(--p1-color);
+            text-shadow: 0 0 30px rgba(52, 211, 153, .5)
+        }
+
+        .p2-half h2 {
+            color: var(--p2-color);
+            text-shadow: 0 0 30px rgba(248, 113, 113, .5)
+        }
+
+        .options {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            width: 100%;
+            max-width: 400px
+        }
+
+        .btn-opt {
+            padding: 25px;
+            background: rgba(0, 0, 0, .5);
+            border: 2px solid rgba(255, 255, 255, .1);
+            border-radius: 16px;
+            color: #fff;
+            font-family: 'Outfit';
+            font-size: 2.5rem;
+            font-weight: 900;
+            cursor: pointer;
+            transition: .1s;
+            box-shadow: 0 10px 20px rgba(0, 0, 0, .5)
+        }
+
+        .btn-opt:active {
+            transform: scale(0.95)
+        }
+
+        .p1-half .btn-opt:active {
+            border-color: var(--p1-color);
+            background: rgba(52, 211, 153, 0.2)
+        }
+
+        .p2-half .btn-opt:active {
+            border-color: var(--p2-color);
+            background: rgba(248, 113, 113, 0.2)
+        }
+
+        .correct-anim {
+            animation: flashGreen 0.5s
+        }
+
+        .wrong-anim {
+            animation: flashRed 0.5s
+        }
+
+        @keyframes flashGreen {
+            0% {
+                background: var(--p1-color)
+            }
+
+            100% {
+                background: rgba(0, 0, 0, .5)
+            }
+        }
+
+        @keyframes flashRed {
+            0% {
+                background: var(--p2-color)
+            }
+
+            100% {
+                background: rgba(0, 0, 0, .5)
+            }
+        }
+
+        .overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(9, 9, 11, .95);
+            backdrop-filter: blur(10px);
+            z-index: 50;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .3s
+        }
+
+        .overlay.show {
+            opacity: 1;
+            pointer-events: all;
+            transform: none
+        }
+
+        /* no rotation for global overlay */
+        .overlay h1 {
+            font-family: 'Outfit';
+            font-size: 5rem;
+            font-weight: 900;
+            margin-bottom: 10px
+        }
+
+        .btn-primary {
+            margin-top: 30px;
+            padding: 16px 40px;
+            border-radius: 12px;
+            border: none;
+            background: #fff;
+            color: #000;
+            font-family: 'Outfit';
+            font-weight: 900;
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: .2s;
+            box-shadow: 0 10px 20px rgba(255, 255, 255, .3);
+            text-transform: uppercase
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(255, 255, 255, .6)
+        }
+    </style>
+</head>
+
+<body>
+    <a href="index.html" class="back-btn"><i class="fas fa-home"></i></a>
+
+    <div class="overlay" id="overlay">
+        <h1 id="ovTitle">Game Over</h1>
+        <button class="btn-primary" onclick="startMatch()">Play Again</button>
+    </div>
+
+    <!-- Player 2 (Top, Flipped) -->
+    <div class="half p2-half" id="h2">
+        <div class="score-txt" id="s2">0</div>
+        <h2 class="qText">1+1</h2>
+        <div class="options">
+            <button class="btn-opt p2btn">1</button>
+            <button class="btn-opt p2btn">2</button>
+            <button class="btn-opt p2btn">3</button>
+            <button class="btn-opt p2btn">4</button>
+        </div>
+    </div>
+
+    <div class="divider"></div>
+
+    <!-- Player 1 (Bottom) -->
+    <div class="half p1-half" id="h1">
+        <div class="score-txt" id="s1">0</div>
+        <h2 class="qText">1+1</h2>
+        <div class="options">
+            <button class="btn-opt p1btn">1</button>
+            <button class="btn-opt p1btn">2</button>
+            <button class="btn-opt p1btn">3</button>
+            <button class="btn-opt p1btn">4</button>
+        </div>
+    </div>
+
+    <script>
+        let score1 = 0, score2 = 0;
+        let answer = 0;
+        let locked = false;
+        const WIN_SCORE = 10;
+
+        const p1Btns = document.querySelectorAll('.p1btn');
+        const p2Btns = document.querySelectorAll('.p2btn');
+        const qTexts = document.querySelectorAll('.qText');
+
+        function startMatch() {
+            score1 = 0; score2 = 0;
+            updateScores();
+            document.getElementById('overlay').classList.remove('show');
+            nextQuestion();
+        }
+
+        function updateScores() {
+            document.getElementById('s1').textContent = score1;
+            document.getElementById('s2').textContent = score2;
+        }
+
+        function generateQuestion() {
+            let ops = ['+', '-', '*'];
+            let op = ops[Math.floor(Math.random() * ops.length)];
+            let a, b, qTxt;
+
+            if (op === '+') {
+                a = Math.floor(Math.random() * 50) + 1;
+                b = Math.floor(Math.random() * 50) + 1;
+                answer = a + b;
+                qTxt = `${a} + ${b}`;
+            } else if (op === '-') {
+                a = Math.floor(Math.random() * 50) + 20;
+                b = Math.floor(Math.random() * 20) + 1;
+                answer = a - b;
+                qTxt = `${a} - ${b}`;
+            } else {
+                a = Math.floor(Math.random() * 9) + 2;
+                b = Math.floor(Math.random() * 9) + 2;
+                answer = a * b;
+                qTxt = `${a} × ${b}`;
+            }
+
+            qTexts.forEach(el => el.textContent = qTxt);
+
+            // Generate options
+            let opts = [answer];
+            while (opts.length < 4) {
+                let offset = Math.floor(Math.random() * 10) - 5;
+                if (offset === 0) offset = 1;
+                let pAns = answer + offset;
+                if (!opts.includes(pAns) && pAns >= 0) opts.push(pAns);
+            }
+            opts.sort(() => Math.random() - 0.5);
+
+            for (let i = 0; i < 4; i++) {
+                p1Btns[i].textContent = opts[i];
+                p2Btns[i].textContent = opts[i];
+            }
+        }
+
+        function nextQuestion() {
+            locked = false;
+            generateQuestion();
+        }
+
+        function handleGuess(val, player) {
+            if (locked) return;
+            locked = true;
+
+            let isCorrect = parseInt(val) === answer;
+
+            if (player === 1) {
+                if (isCorrect) { score1++; flashStatus('h1', true); }
+                else { score1 = Math.max(0, score1 - 1); flashStatus('h1', false); }
+            } else {
+                if (isCorrect) { score2++; flashStatus('h2', true); }
+                else { score2 = Math.max(0, score2 - 1); flashStatus('h2', false); }
+            }
+            updateScores();
+
+            if (score1 >= WIN_SCORE || score2 >= WIN_SCORE) {
+                setTimeout(() => {
+                    document.getElementById('ovTitle').textContent = `Player ${score1 >= WIN_SCORE ? '1' : '2'} Wins!`;
+                    document.getElementById('ovTitle').style.color = score1 >= WIN_SCORE ? 'var(--p1-color)' : 'var(--p2-color)';
+                    document.getElementById('overlay').classList.add('show');
+                }, 500);
+            } else {
+                setTimeout(nextQuestion, 600);
+            }
+        }
+
+        function flashStatus(halfId, isCorrect) {
+            let el = document.getElementById(halfId);
+            el.classList.add(isCorrect ? 'correct-anim' : 'wrong-anim');
+            let cl = isCorrect ? 'correct-anim' : 'wrong-anim';
+            // Using simple inline styling override for speed flash
+            el.style.background = isCorrect ? (halfId === 'h1' ? 'var(--p1-color)' : 'var(--p2-color)') : '#ef4444';
+            setTimeout(() => {
+                el.style.background = '';
+                el.classList.remove(cl);
+            }, 300);
+        }
+
+        p1Btns.forEach(btn => btn.onclick = () => handleGuess(btn.textContent, 1));
+        p2Btns.forEach(btn => btn.onclick = () => handleGuess(btn.textContent, 2));
+
+        // Init
+        document.getElementById('overlay').classList.add('show');
+        document.getElementById('ovTitle').textContent = "Math Duel";
+    </script>
+</body>
+
+</html>

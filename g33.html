@@ -1,0 +1,381 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Pattern Mastery | Infinite Arcade</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f172a;
+            --surface: rgba(30, 41, 59, .7);
+            --border: rgba(255, 255, 255, .08);
+            --accent: #8b5cf6
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            background: var(--bg);
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            user-select: none
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: #94a3b8;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: .9rem;
+            z-index: 99;
+            transition: .2s
+        }
+
+        .back-btn:hover {
+            color: #fff
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            width: 100%;
+            max-width: 600px
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.8rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #c4b5fd, #7c3aed);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center;
+            margin-bottom: 10px
+        }
+
+        .hud {
+            display: flex;
+            gap: 30px;
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center
+        }
+
+        .stat-label {
+            font-size: .7rem;
+            color: #64748b;
+            text-transform: uppercase;
+            letter-spacing: 1px
+        }
+
+        .stat-val {
+            color: #c4b5fd
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            background: var(--surface);
+            padding: 24px;
+            border-radius: 24px;
+            border: 1px solid var(--border);
+            box-shadow: 0 20px 50px rgba(0, 0, 0, .3);
+            position: relative
+        }
+
+        .tile {
+            width: 100px;
+            height: 100px;
+            background: rgba(15, 23, 42, .6);
+            border: 2px solid #334155;
+            border-radius: 16px;
+            cursor: pointer;
+            transition: .2s;
+            position: relative;
+            overflow: hidden
+        }
+
+        .tile::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, .1), transparent);
+            opacity: 0;
+            transition: .3s
+        }
+
+        .tile:hover:not(.disabled) {
+            border-color: #64748b;
+            transform: scale(1.05)
+        }
+
+        .tile:active:not(.disabled) {
+            transform: scale(0.95)
+        }
+
+        /* States */
+        .tile.active {
+            background: #8b5cf6;
+            border-color: #c4b5fd;
+            box-shadow: 0 0 30px rgba(139, 92, 246, .5);
+            transform: scale(1.1)
+        }
+
+        .tile.correct {
+            background: #10b981;
+            border-color: #34d399;
+            box-shadow: 0 0 30px rgba(16, 185, 129, .5)
+        }
+
+        .tile.wrong {
+            background: #ef4444;
+            border-color: #f87171;
+            box-shadow: 0 0 30px rgba(239, 68, 68, .5);
+            animation: shake 0.4s
+        }
+
+        .disabled {
+            pointer-events: none
+        }
+
+        @keyframes shake {
+
+            0%,
+            100% {
+                transform: translateX(0)
+            }
+
+            20%,
+            60% {
+                transform: translateX(-10px)
+            }
+
+            40%,
+            80% {
+                transform: translateX(10px)
+            }
+        }
+
+        .message {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: #94a3b8;
+            min-height: 34px;
+            text-align: center
+        }
+
+        .overlay {
+            position: absolute;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(15, 23, 42, .9);
+            backdrop-filter: blur(8px);
+            z-index: 50;
+            border-radius: 24px
+        }
+
+        .overlay.hidden {
+            display: none
+        }
+
+        .overlay h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #c4b5fd;
+            margin-bottom: 10px
+        }
+
+        .btn-primary {
+            padding: 14px 40px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(135deg, #a855f7, #7c3aed);
+            color: #fff;
+            font-weight: 900;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-family: 'Outfit', sans-serif;
+            transition: .3s;
+            box-shadow: 0 10px 30px rgba(124, 58, 237, .3)
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 15px 40px rgba(124, 58, 237, .5)
+        }
+    </style>
+</head>
+
+<body>
+    <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Hub</a>
+
+    <div class="container">
+        <h1>🧠 Pattern Mastery</h1>
+
+        <div class="hud">
+            <div class="stat">
+                <div class="stat-label">Level</div>
+                <div class="stat-val" id="level">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Score</div>
+                <div class="stat-val" id="score">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Best</div>
+                <div class="stat-val" id="best">0</div>
+            </div>
+        </div>
+
+        <div class="message" id="msg">Watch the sequence...</div>
+
+        <div class="grid" id="grid">
+            <div class="tile disabled" data-id="0"></div>
+            <div class="tile disabled" data-id="1"></div>
+            <div class="tile disabled" data-id="2"></div>
+            <div class="tile disabled" data-id="3"></div>
+            <div class="tile disabled" data-id="4"></div>
+            <div class="tile disabled" data-id="5"></div>
+            <div class="tile disabled" data-id="6"></div>
+            <div class="tile disabled" data-id="7"></div>
+            <div class="tile disabled" data-id="8"></div>
+
+            <div class="overlay" id="overlay">
+                <h2 id="ovTitle">Ready to memorize?</h2>
+                <p id="ovDesc" style="color:#94a3b8;margin-bottom:24px;text-align:center">Watch the tiles light up,
+                    <br>then repeat the pattern.</p>
+                <button class="btn-primary" id="startBtn">Start Game</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let sequence = [];
+        let playerStep = 0;
+        let level = 1;
+        let score = 0;
+        let best = +localStorage.getItem('pattern_best') || 0;
+        let playing = false;
+
+        document.getElementById('best').textContent = best;
+
+        const tiles = document.querySelectorAll('.tile');
+        const msg = document.getElementById('msg');
+
+        document.getElementById('startBtn').onclick = () => {
+            document.getElementById('overlay').classList.add('hidden');
+            level = 1; score = 0; sequence = [];
+            updateHUD();
+            nextLevel();
+        };
+
+        function updateHUD() {
+            document.getElementById('level').textContent = level;
+            document.getElementById('score').textContent = score;
+            if (score > best) { best = score; localStorage.setItem('pattern_best', best); document.getElementById('best').textContent = best; }
+        }
+
+        function nextLevel() {
+            playerStep = 0;
+            sequence.push(Math.floor(Math.random() * 9));
+            msg.textContent = `Level ${level} - Watch the sequence...`;
+            tiles.forEach(t => t.classList.add('disabled'));
+            playing = false;
+
+            setTimeout(() => {
+                playSequence(0);
+            }, 1000);
+        }
+
+        function playSequence(idx) {
+            if (idx < sequence.length) {
+                const t = tiles[sequence[idx]];
+                t.classList.add('active');
+                // Sound beep here if web audio was needed
+                setTimeout(() => {
+                    t.classList.remove('active');
+                    setTimeout(() => playSequence(idx + 1), 200);
+                }, 400 - Math.min(200, level * 10)); // speeds up slightly
+            } else {
+                msg.textContent = 'Your turn!';
+                tiles.forEach(t => t.classList.remove('disabled', 'correct', 'wrong'));
+                playing = true;
+            }
+        }
+
+        tiles.forEach(tile => {
+            tile.addEventListener('click', () => {
+                if (!playing) return;
+
+                const id = parseInt(tile.dataset.id);
+
+                if (id === sequence[playerStep]) {
+                    // Correct
+                    tile.classList.add('correct');
+                    setTimeout(() => tile.classList.remove('correct', 'active'), 200);
+                    playerStep++;
+                    score += 10;
+                    updateHUD();
+
+                    if (playerStep === sequence.length) {
+                        playing = false;
+                        msg.textContent = 'Perfect! Next level...';
+                        tiles.forEach(t => t.classList.add('disabled'));
+                        level++;
+                        setTimeout(nextLevel, 1500);
+                    }
+                } else {
+                    // Wrong
+                    playing = false;
+                    tile.classList.add('wrong');
+                    msg.textContent = 'Wrong tile!';
+                    tiles.forEach(t => t.classList.add('disabled'));
+
+                    // Show correct one
+                    tiles[sequence[playerStep]].classList.add('active');
+
+                    setTimeout(() => {
+                        document.getElementById('ovTitle').textContent = 'Game Over';
+                        document.getElementById('ovDesc').innerHTML = `You reached Level ${level}<br>Score: ${score}`;
+                        document.getElementById('startBtn').textContent = 'Try Again';
+                        document.getElementById('overlay').classList.remove('hidden');
+                        tiles.forEach(t => t.classList.remove('wrong', 'active', 'correct'));
+                    }, 1500);
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,435 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Maze | Infinite Arcade</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f0f11;
+            --surface: rgba(20, 20, 25, .8);
+            --border: rgba(56, 189, 248, .3);
+            --accent: #38bdf8;
+            --wall: #1e293b;
+            --floor: #0f172a;
+            --pC: #f43f5e;
+            --goal: #10b981
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            background: var(--bg);
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 10px;
+            overflow: hidden;
+            background-image: linear-gradient(135deg, #0f0f11 0%, rgba(56, 189, 248, .05) 100%)
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: #94a3b8;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: .9rem;
+            z-index: 99;
+            transition: .2s
+        }
+
+        .back-btn:hover {
+            color: #fff
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 15px;
+            width: 100%;
+            max-width: 500px;
+            z-index: 10;
+            margin-top: 40px
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: var(--accent);
+            text-shadow: 0 0 20px rgba(56, 189, 248, .5);
+            text-align: center;
+            margin: 0
+        }
+
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            align-items: center;
+            padding: 12px 24px;
+            background: var(--surface);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+            backdrop-filter: blur(8px)
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center
+        }
+
+        .stat-label {
+            font-size: .7rem;
+            text-transform: uppercase;
+            color: #bae6fd;
+            letter-spacing: 1px;
+            font-weight: 700
+        }
+
+        .stat-val {
+            font-family: 'Outfit';
+            font-size: 1.5rem;
+            font-weight: 900;
+            color: #fff
+        }
+
+        .game-layer {
+            width: 100%;
+            max-width: 400px;
+            aspect-ratio: 1;
+            background: var(--floor);
+            border: 2px solid #0c4a6e;
+            border-radius: 16px;
+            box-shadow: 0 15px 50px rgba(0, 0, 0, .8), inset 0 0 30px rgba(0, 0, 0, .8);
+            position: relative;
+            overflow: hidden;
+            touch-action: none
+        }
+
+        canvas {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            display: block;
+            z-index: 5
+        }
+
+        .overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(9, 9, 11, .9);
+            backdrop-filter: blur(10px);
+            z-index: 50
+        }
+
+        .overlay.hidden {
+            display: none
+        }
+
+        .overlay h2 {
+            font-family: 'Outfit';
+            font-size: 3rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+            color: var(--accent);
+            text-shadow: 0 0 30px rgba(56, 189, 248, .6)
+        }
+
+        .btn-primary {
+            margin-top: 30px;
+            padding: 16px 40px;
+            border-radius: 12px;
+            border: none;
+            background: var(--accent);
+            color: #0f172a;
+            font-family: 'Outfit';
+            font-weight: 900;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: .2s;
+            box-shadow: 0 10px 20px rgba(56, 189, 248, .4);
+            text-transform: uppercase;
+            letter-spacing: 2px
+        }
+
+        .btn-primary:hover {
+            background: #7dd3fc;
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(56, 189, 248, .6)
+        }
+
+        .mobile-controls {
+            display: none;
+            grid-template-areas: ". up ." "left down right";
+            gap: 10px;
+            width: 100%;
+            max-width: 250px;
+            margin-top: 10px
+        }
+
+        .m-btn {
+            padding: 15px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--accent);
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, .5);
+            cursor: pointer;
+            user-select: none;
+            touch-action: manipulation
+        }
+
+        .m-btn:active {
+            background: rgba(56, 189, 248, .3)
+        }
+
+        #btnU {
+            grid-area: up
+        }
+
+        #btnD {
+            grid-area: down
+        }
+
+        #btnL {
+            grid-area: left
+        }
+
+        #btnR {
+            grid-area: right
+        }
+
+        @media (max-width:600px) {
+            .mobile-controls {
+                display: grid
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Hub</a>
+
+    <div class="overlay" id="overlay">
+        <h2 id="ovTitle">Sector Clear</h2>
+        <p id="ovDesc" style="color:#94a3b8;font-size:1.5rem;font-family:'Outfit';font-weight:700"></p>
+        <button class="btn-primary" onclick="nextLevel()">Enter Next Tier</button>
+    </div>
+
+    <div class="container">
+        <h1>CYBER MAZE</h1>
+
+        <div class="hud">
+            <div class="stat">
+                <div class="stat-label">Tier</div>
+                <div class="stat-val" id="level">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Size</div>
+                <div class="stat-val" id="size">10x10</div>
+            </div>
+        </div>
+
+        <div class="game-layer">
+            <canvas id="c"></canvas>
+        </div>
+
+        <div class="mobile-controls">
+            <div class="m-btn" id="btnU"><i class="fas fa-chevron-up"></i></div>
+            <div class="m-btn" id="btnL"><i class="fas fa-chevron-left"></i></div>
+            <div class="m-btn" id="btnD"><i class="fas fa-chevron-down"></i></div>
+            <div class="m-btn" id="btnR"><i class="fas fa-chevron-right"></i></div>
+        </div>
+    </div>
+
+    <script>
+        const cvs = document.getElementById('c'), ctx = cvs.getContext('2d');
+        let W, H, cellSize;
+        let level = 1;
+        let rows = 10, cols = 10;
+        let maze = [], player = { r: 0, c: 0 }, running = false;
+        // Cell structure: { t:true, r:true, b:true, l:true, visited:false }
+
+        function resize() {
+            W = cvs.clientWidth; H = cvs.clientHeight;
+            cvs.width = W; cvs.height = H;
+            cellSize = W / cols;
+            if (maze.length > 0) draw();
+        }
+        window.onresize = resize;
+
+        function initLevel() {
+            rows = 8 + level * 2; cols = 8 + level * 2;
+            document.getElementById('size').textContent = `${cols}x${rows}`;
+            document.getElementById('level').textContent = level;
+            document.getElementById('overlay').classList.add('hidden');
+
+            // Gen maze
+            maze = [];
+            for (let r = 0; r < rows; r++) {
+                let row = [];
+                for (let c = 0; c < cols; c++) row.push({ t: true, r: true, b: true, l: true, v: false });
+                maze.push(row);
+            }
+
+            // DFS generation
+            let stack = [{ r: 0, c: 0 }];
+            maze[0][0].v = true;
+
+            while (stack.length > 0) {
+                let curr = stack[stack.length - 1];
+                let nbrs = [];
+                let r = curr.r, c = curr.c;
+                if (r > 0 && !maze[r - 1][c].v) nbrs.push({ r: r - 1, c: c, dir: 't' });
+                if (r < rows - 1 && !maze[r + 1][c].v) nbrs.push({ r: r + 1, c: c, dir: 'b' });
+                if (c > 0 && !maze[r][c - 1].v) nbrs.push({ r: r, c: c - 1, dir: 'l' });
+                if (c < cols - 1 && !maze[r][c + 1].v) nbrs.push({ r: r, c: c + 1, dir: 'r' });
+
+                if (nbrs.length > 0) {
+                    let next = nbrs[Math.floor(Math.random() * nbrs.length)];
+                    // break walls
+                    if (next.dir === 't') { maze[r][c].t = false; maze[next.r][next.c].b = false; }
+                    if (next.dir === 'b') { maze[r][c].b = false; maze[next.r][next.c].t = false; }
+                    if (next.dir === 'l') { maze[r][c].l = false; maze[next.r][next.c].r = false; }
+                    if (next.dir === 'r') { maze[r][c].r = false; maze[next.r][next.c].l = false; }
+
+                    maze[next.r][next.c].v = true;
+                    stack.push(next);
+                } else {
+                    stack.pop();
+                }
+            }
+
+            player = { r: 0, c: 0 };
+            resize();
+            running = true;
+        }
+
+        function draw() {
+            ctx.clearRect(0, 0, W, H);
+            let pd = cellSize / 3; // padding for walls
+
+            // Draw cells
+            for (let r = 0; r < rows; r++) {
+                for (let c = 0; c < cols; c++) {
+                    let cx = c * cellSize, cy = r * cellSize;
+                    let cell = maze[r][c];
+
+                    // Goal
+                    if (r === rows - 1 && c === cols - 1) {
+                        ctx.shadowBlur = 15; ctx.shadowColor = 'var(--goal)'; ctx.fillStyle = 'rgba(16,185,129,0.3)';
+                        ctx.fillRect(cx + 2, cy + 2, cellSize - 4, cellSize - 4);
+                        ctx.shadowBlur = 0;
+                    }
+
+                    ctx.strokeStyle = '#1e293b'; ctx.lineWidth = 2; ctx.lineCap = 'round';
+                    ctx.beginPath();
+                    if (cell.t) { ctx.moveTo(cx, cy); ctx.lineTo(cx + cellSize, cy); }
+                    if (cell.r) { ctx.moveTo(cx + cellSize, cy); ctx.lineTo(cx + cellSize, cy + cellSize); }
+                    if (cell.b) { ctx.moveTo(cx + cellSize, cy + cellSize); ctx.lineTo(cx, cy + cellSize); }
+                    if (cell.l) { ctx.moveTo(cx, cy + cellSize); ctx.lineTo(cx, cy); }
+                    ctx.stroke();
+                }
+            }
+
+            // Draw PLayer
+            let px = player.c * cellSize + cellSize / 2;
+            let py = player.r * cellSize + cellSize / 2;
+
+            ctx.shadowBlur = 15; ctx.shadowColor = 'var(--pC)'; ctx.fillStyle = 'var(--pC)';
+            ctx.beginPath(); ctx.arc(px, py, cellSize / 3.5, 0, Math.PI * 2); ctx.fill();
+            ctx.shadowBlur = 0; ctx.fillStyle = '#fff';
+            ctx.beginPath(); ctx.arc(px - cellSize / 8, py - cellSize / 8, cellSize / 8, 0, Math.PI * 2); ctx.fill();
+        }
+
+        function move(dr, dc) {
+            if (!running) return;
+            let r = player.r, c = player.c;
+            let cell = maze[r][c];
+
+            if (dr === -1 && !cell.t) player.r--;
+            if (dr === 1 && !cell.b) player.r++;
+            if (dc === -1 && !cell.l) player.c--;
+            if (dc === 1 && !cell.r) player.c++;
+
+            draw();
+
+            if (player.r === rows - 1 && player.c === cols - 1) {
+                running = false;
+                setTimeout(() => {
+                    document.getElementById('overlay').classList.remove('hidden');
+                }, 300);
+            }
+        }
+
+        document.addEventListener('keydown', e => {
+            if (!running) return;
+            if (e.code === 'ArrowUp' || e.code === 'KeyW') move(-1, 0);
+            if (e.code === 'ArrowDown' || e.code === 'KeyS') move(1, 0);
+            if (e.code === 'ArrowLeft' || e.code === 'KeyA') move(0, -1);
+            if (e.code === 'ArrowRight' || e.code === 'KeyD') move(0, 1);
+        });
+
+        document.getElementById('btnU').onmousedown = () => move(-1, 0);
+        document.getElementById('btnD').onmousedown = () => move(1, 0);
+        document.getElementById('btnL').onmousedown = () => move(0, -1);
+        document.getElementById('btnR').onmousedown = () => move(0, 1);
+
+        // touch mapping
+        ['btnU', 'btnD', 'btnL', 'btnR'].forEach(id => {
+            document.getElementById(id).ontouchstart = (e) => { e.preventDefault(); document.getElementById(id).onmousedown(); };
+        });
+
+        // swipe logic
+        let tsX = 0, tsY = 0;
+        document.querySelector('.game-layer').addEventListener('touchstart', e => {
+            tsX = e.changedTouches[0].screenX; tsY = e.changedTouches[0].screenY;
+        }, { passive: false });
+        document.querySelector('.game-layer').addEventListener('touchend', e => {
+            let dx = e.changedTouches[0].screenX - tsX;
+            let dy = e.changedTouches[0].screenY - tsY;
+            if (Math.abs(dx) > Math.abs(dy)) {
+                if (dx > 30) move(0, 1); else if (dx < -30) move(0, -1);
+            } else {
+                if (dy > 30) move(1, 0); else if (dy < -30) move(-1, 0);
+            }
+        });
+        document.querySelector('.game-layer').addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+
+        function nextLevel() { level++; initLevel(); }
+
+        window.onload = () => { initLevel(); };
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,314 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quantum Reaction | Infinite Arcade</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f0f11;
+            --accent: #3b82f6
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            background: var(--bg);
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow: hidden;
+            transition: background 0.1s
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: rgba(255, 255, 255, .5);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 1rem;
+            z-index: 99;
+            transition: .2s;
+            font-family: 'Outfit';
+            font-weight: 700
+        }
+
+        .back-btn:hover {
+            color: #fff
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            height: 100vh;
+            width: 100vw;
+            position: absolute;
+            inset: 0;
+            cursor: pointer;
+            user-select: none;
+            z-index: 10;
+            text-align: center;
+            padding: 20px
+        }
+
+        .icon {
+            font-size: 5rem;
+            margin-bottom: 20px;
+            opacity: 0.8;
+            text-shadow: 0 0 30px currentColor
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 4rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            margin-bottom: 10px
+        }
+
+        p {
+            font-size: 1.5rem;
+            color: rgba(255, 255, 255, .7);
+            font-family: 'Outfit'
+        }
+
+        /* States */
+        body.state-idle {
+            background: #09090b
+        }
+
+        body.state-idle h1 {
+            color: #3b82f6;
+            text-shadow: 0 0 40px rgba(59, 130, 246, .5)
+        }
+
+        body.state-idle .icon {
+            color: #3b82f6
+        }
+
+        body.state-wait {
+            background: #ef4444
+        }
+
+        body.state-wait h1 {
+            color: #fff;
+            text-shadow: 0 0 40px rgba(255, 255, 255, .5)
+        }
+
+        body.state-wait p {
+            color: #fff
+        }
+
+        body.state-wait .icon {
+            color: #fff
+        }
+
+        body.state-now {
+            background: #10b981
+        }
+
+        body.state-now h1 {
+            color: #fff;
+            text-shadow: 0 0 40px rgba(255, 255, 255, .5)
+        }
+
+        body.state-now p {
+            color: #fff
+        }
+
+        body.state-now .icon {
+            color: #fff
+        }
+
+        .stats {
+            position: fixed;
+            bottom: 30px;
+            display: flex;
+            gap: 30px;
+            font-family: 'Outfit';
+            font-size: 1.2rem;
+            color: rgba(255, 255, 255, .5);
+            z-index: 20
+        }
+
+        .stat-val {
+            color: #fff;
+            font-weight: 900;
+            font-size: 1.5rem
+        }
+
+        .overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(9, 9, 11, .95);
+            backdrop-filter: blur(10px);
+            z-index: 50;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity .3s
+        }
+
+        .overlay.show {
+            opacity: 1;
+            pointer-events: all
+        }
+
+        .overlay h2 {
+            font-family: 'Outfit';
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+            color: #3b82f6;
+            text-shadow: 0 0 30px rgba(59, 130, 246, .5)
+        }
+
+        .btn-primary {
+            margin-top: 30px;
+            padding: 16px 40px;
+            border-radius: 12px;
+            border: none;
+            background: #3b82f6;
+            color: #fff;
+            font-family: 'Outfit';
+            font-weight: 900;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: .2s;
+            box-shadow: 0 10px 20px rgba(59, 130, 246, .4);
+            text-transform: uppercase;
+            letter-spacing: 2px
+        }
+
+        .btn-primary:hover {
+            background: #60a5fa;
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(59, 130, 246, .6)
+        }
+    </style>
+</head>
+
+<body class="state-idle">
+    <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Hub</a>
+
+    <div class="overlay" id="overlay">
+        <h2 id="ovTitle">Test Complete</h2>
+        <p id="ovDesc" style="color:#a1a1aa;font-size:1.5rem;font-family:'Outfit';font-weight:700">Average: <span
+                id="avgText" style="color:#fff"></span></p>
+        <button class="btn-primary" onclick="resetFull()">Restart Sequence</button>
+    </div>
+
+    <div class="stats" id="statsBar">
+        <div>Attempt: <span class="stat-val" id="att">0/5</span></div>
+        <div>Average: <span class="stat-val" id="avg">0ms</span></div>
+    </div>
+
+    <div class="container" id="hitArea">
+        <i class="fas fa-bolt icon" id="iState"></i>
+        <h1 id="hState">Quantum Reaction</h1>
+        <p id="pState">Click anywhere to begin</p>
+    </div>
+
+    <script>
+        let state = 'idle'; // idle, wait, now, result
+        let startTime = 0;
+        let timeoutId = null;
+        let times = [];
+        const MAX_ATT = 5;
+
+        const b = document.body;
+        const h = document.getElementById('hState');
+        const p = document.getElementById('pState');
+        const i = document.getElementById('iState');
+        const hitArea = document.getElementById('hitArea');
+
+        function resetFull() {
+            times = []; state = 'idle';
+            document.getElementById('att').textContent = '0/' + MAX_ATT;
+            document.getElementById('avg').textContent = '0ms';
+            document.getElementById('overlay').classList.remove('show');
+            setUI('idle', 'Quantum Reaction', 'Click anywhere to begin', 'fa-bolt');
+        }
+
+        function setUI(sl, head, sub, ic) {
+            b.className = 'state-' + sl;
+            h.textContent = head; p.textContent = sub; i.className = "fas icon " + ic;
+        }
+
+        function startWait() {
+            state = 'wait';
+            setUI('wait', 'Wait for Green', 'Do not click yet...', 'fa-hand-paper');
+
+            // Random delay 1.5s to 5s
+            let delay = 1500 + Math.random() * 3500;
+            timeoutId = setTimeout(() => {
+                state = 'now';
+                setUI('now', 'CLICK!', 'Quickly!', 'fa-fighter-jet');
+                startTime = performance.now();
+            }, delay);
+        }
+
+        function clickHandler(e) {
+            // prevent overlay clicks propagating
+            if (e.target.closest('.overlay') || e.target.closest('.back-btn')) return;
+
+            if (state === 'idle' || state === 'result') {
+                if (times.length >= MAX_ATT) resetFull();
+                else startWait();
+            }
+            else if (state === 'wait') {
+                clearTimeout(timeoutId);
+                state = 'result';
+                setUI('idle', 'Too Soon!', 'Click to try again.', 'fa-exclamation-triangle');
+            }
+            else if (state === 'now') {
+                let t = Math.floor(performance.now() - startTime);
+                times.push(t);
+                state = 'result';
+
+                document.getElementById('att').textContent = times.length + '/' + MAX_ATT;
+                let avg = Math.floor(times.reduce((a, b) => a + b, 0) / times.length);
+                document.getElementById('avg').textContent = avg + 'ms';
+
+                if (times.length >= MAX_ATT) {
+                    setUI('idle', t + ' ms', 'Sequence complete.', 'fa-check');
+                    setTimeout(() => {
+                        document.getElementById('avgText').textContent = avg + 'ms';
+                        document.getElementById('overlay').classList.add('show');
+                    }, 500);
+                } else {
+                    setUI('idle', t + ' ms', 'Click to continue.', 'fa-clock');
+                }
+            }
+        }
+
+        // Handle both mouse and touch for better mobile
+        hitArea.addEventListener('mousedown', clickHandler);
+        hitArea.addEventListener('touchstart', (e) => { e.preventDefault(); clickHandler(e); }, { passive: false });
+
+    </script>
+</body>
+
+</html>

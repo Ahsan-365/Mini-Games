@@ -1,267 +1,562 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Enhanced Clicker Game</title>
+    <title>Idle Clicker Hub | Infinite Arcade</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        /* Body styling for centering and basic aesthetics */
+        :root {
+            --bg: #0f172a;
+            --surface: rgba(30, 41, 59, .7);
+            --border: rgba(255, 255, 255, .08);
+            --accent: #f59e0b
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
         body {
+            background: var(--bg);
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
-            justify-content: center;
             align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background-color: #f0f0f0; /* Light background by default */
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; /* Modern font */
-            color: #333; /* Dark text for light mode */
-            transition: background-color 0.3s ease, color 0.3s ease; /* Smooth transition for dark mode */
+            justify-content: center;
+            user-select: none
         }
 
-        /* Dark mode specific styles for the body */
-        body.dark-mode {
-            background-color: #2c2c2c; /* Dark background */
-            color: #e0e0e0; /* Light text for dark mode */
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: #94a3b8;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: .9rem;
+            z-index: 99;
+            transition: .2s
         }
 
-        /* Container for the game elements */
+        .back-btn:hover {
+            color: #fff
+        }
+
         .container {
             display: flex;
             flex-direction: column;
             align-items: center;
-            background-color: #ffffff; /* Light container background */
-            padding: 30px;
-            border-radius: 15px; /* Rounded corners */
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1); /* Soft shadow */
-            transition: background-color 0.3s ease, box-shadow 0.3s ease; /* Smooth transition */
+            gap: 24px;
+            width: 100%;
+            max-width: 800px;
+            padding: 60px 20px
         }
 
-        /* Dark mode specific styles for the container */
-        body.dark-mode .container {
-            background-color: #3a3a3a; /* Darker container background */
-            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3); /* More pronounced shadow in dark mode */
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.8rem;
+            font-weight: 900;
+            background: linear-gradient(135deg, #fcd34d, #f59e0b);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center
         }
 
-        /* Styling for the main clickable area */
-        .click-area {
+        .subtitle {
+            color: #94a3b8;
+            font-size: 1.1rem;
+            margin-top: -14px;
+            text-align: center
+        }
+
+        .game-cards {
+            display: flex;
+            gap: 20px;
+            width: 100%;
+            justify-content: center;
+            flex-wrap: wrap
+        }
+
+        .game-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 32px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            flex: 1;
+            min-width: 280px;
+            cursor: pointer;
+            transition: .3s;
+            position: relative;
+            overflow: hidden
+        }
+
+        .game-card::before {
+            content: '';
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(135deg, rgba(255, 255, 255, .03), transparent);
+            opacity: 0;
+            transition: .3s
+        }
+
+        .game-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent);
+            box-shadow: 0 12px 40px rgba(245, 158, 11, .15)
+        }
+
+        .game-card:hover::before {
+            opacity: 1
+        }
+
+        .icon-wrapper {
+            width: 70px;
+            height: 70px;
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 32px;
+            margin-bottom: 8px
+        }
+
+        #cookie-card .icon-wrapper {
+            background: linear-gradient(135deg, #fcd34d, #b45309);
+            color: #fff;
+            box-shadow: 0 8px 24px rgba(245, 158, 11, .3)
+        }
+
+        #gem-card .icon-wrapper {
+            background: linear-gradient(135deg, #67e8f9, #0891b2);
+            color: #fff;
+            box-shadow: 0 8px 24px rgba(6, 182, 212, .3)
+        }
+
+        .card-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.6rem;
+            font-weight: 900
+        }
+
+        .card-desc {
+            color: #94a3b8;
+            text-align: center;
+            font-size: .9rem;
+            line-height: 1.5
+        }
+
+        /* Game UI */
+        #gameWrapper {
+            display: none;
+            flex-direction: column;
+            align-items: center;
+            width: 100%;
+            max-width: 600px;
+            gap: 20px
+        }
+
+        .mode-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            width: 100%;
+            margin-bottom: 8px
+        }
+
+        .btn-secondary {
+            background: rgba(255, 255, 255, .05);
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 10px;
+            padding: 8px 16px;
+            color: #f8fafc;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            font-size: .9rem;
+            cursor: pointer;
+            transition: .2s
+        }
+
+        .btn-secondary:hover {
+            background: rgba(255, 255, 255, .1)
+        }
+
+        .main-area {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 10px;
+            width: 100%
+        }
+
+        .score-display {
+            font-family: 'Outfit', sans-serif;
+            font-size: 4rem;
+            font-weight: 900;
+            text-shadow: 0 4px 20px rgba(0, 0, 0, .5);
+            color: #fff
+        }
+
+        .cps-display {
+            font-size: 1rem;
+            color: #94a3b8;
+            letter-spacing: .05em;
+            margin-top: -10px
+        }
+
+        /* Click Targets */
+        .clickable {
+            cursor: pointer;
+            transition: transform 0.05s ease
+        }
+
+        .clickable:active {
+            transform: scale(0.95)
+        }
+
+        #cookieTarget {
             width: 220px;
             height: 220px;
-            background-color: #4CAF50; /* Green background */
-            border-radius: 50%; /* Circular shape */
-            display: flex;
-            flex-direction: column; /* Changed to column to stack emoji and text */
-            justify-content: center;
-            align-items: center;
-            font-size: 1em; /* Base font size for general text */
-            color: white;
-            cursor: pointer;
-            user-select: none; /* Prevent text selection */
-            box-shadow: 0 8px 20px rgba(0, 150, 0, 0.3); /* Green shadow */
-            transition: transform 0.1s ease-in-out, background-color 0.3s ease; /* Smooth transitions */
-            position: relative; /* Needed for positioning the click feedback ripple */
-            overflow: hidden; /* Ensures the ripple doesn't go outside the circle */
-        }
-
-        /* Styling for the emoji within the click area */
-        .click-area .emoji {
-            font-size: 4em; /* Size for the coin emoji */
-            margin-bottom: 5px; /* Space between emoji and text */
-        }
-
-        /* Styling for the text within the click area */
-        .click-area .text {
-            font-size: 1.2em; /* Size for the "Click Me!" text */
-            font-weight: bold;
-        }
-
-        /* Active state for the click area */
-        .click-area:active {
-            transform: scale(0.96); /* Shrink on click */
-            background-color: #45a049; /* Darker green on click */
-        }
-
-        /* Styling for the click feedback ripple animation */
-        .click-feedback {
-            position: absolute;
-            background-color: rgba(255, 255, 255, 0.7); /* White, semi-transparent ripple */
+            background: radial-gradient(circle at 30% 30%, #cd853f, #8b4513);
             border-radius: 50%;
-            transform: scale(0); /* Start hidden */
-            animation: click-ripple 0.4s forwards; /* Apply the ripple animation */
-            pointer-events: none; /* Allows clicks to go through the ripple */
+            position: relative;
+            box-shadow: inset -15px -15px 30px rgba(0, 0, 0, .4), 0 10px 40px rgba(0, 0, 0, .5);
+            display: none
         }
 
-        /* Keyframes for the click ripple animation */
-        @keyframes click-ripple {
-            to {
-                transform: scale(1.5); /* Expand the ripple */
-                opacity: 0; /* Fade out the ripple */
-            }
+        .chip {
+            position: absolute;
+            background: #3e2723;
+            border-radius: 50%;
+            width: 24px;
+            height: 24px;
+            box-shadow: inset -2px -2px 4px rgba(0, 0, 0, .6)
         }
 
-        /* Styling for the score display */
-        #score {
-            margin-top: 30px;
-            font-size: 2.5em;
-            font-weight: bold;
-            color: #2196F3; /* Blue color for score */
-            text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1); /* Subtle text shadow */
+        #gemTarget {
+            width: 200px;
+            height: 200px;
+            background: linear-gradient(135deg, #22d3ee, #0284c7);
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%);
+            box-shadow: inset 0 0 40px rgba(255, 255, 255, .4);
+            display: none;
+            position: relative
         }
 
-        /* Dark mode specific score color */
-        body.dark-mode #score {
-            color: #64B5F6; /* Lighter blue in dark mode */
+        #gemTarget::after {
+            content: '';
+            position: absolute;
+            inset: 4px;
+            background: linear-gradient(135deg, rgba(255, 255, 255, .4), transparent);
+            clip-path: polygon(50% 0%, 100% 25%, 100% 75%, 50% 100%, 0% 75%, 0% 25%)
         }
 
-        /* Container for control buttons */
-        .controls {
-            margin-top: 20px;
+        /* Upgrades */
+        .upgrades {
+            width: 100%;
             display: flex;
-            gap: 15px; /* Spacing between buttons */
+            flex-direction: column;
+            gap: 12px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px
         }
 
-        /* Base styling for buttons */
-        button {
-            padding: 10px 20px;
-            font-size: 1em;
-            border: none;
-            border-radius: 8px; /* Rounded button corners */
-            cursor: pointer;
-            transition: background-color 0.2s ease, transform 0.1s ease; /* Smooth transitions */
-            box-shadow: 0 3px 10px rgba(0, 0, 0, 0.1); /* Button shadow */
-            /* Added for perfect text centering */
+        .upg-title {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.2rem;
+            font-weight: 700;
+            margin-bottom: 4px
+        }
+
+        .upg-btn {
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
+            background: rgba(15, 23, 42, .6);
+            border: 1px solid rgba(255, 255, 255, .05);
+            border-radius: 12px;
+            padding: 12px 16px;
+            cursor: pointer;
+            transition: .2s
         }
 
-        /* Styling for the reset button */
-        #resetButton {
-            background-color: #f44336; /* Red background */
-            color: white;
+        .upg-btn:hover:not(.disabled) {
+            background: rgba(255, 255, 255, .05);
+            border-color: rgba(255, 255, 255, .1)
         }
 
-        /* Hover state for the reset button */
-        #resetButton:hover {
-            background-color: #da190b; /* Darker red on hover */
-            transform: translateY(-2px); /* Slight lift on hover */
+        .upg-btn.disabled {
+            opacity: .5;
+            cursor: not-allowed;
+            background: rgba(0, 0, 0, .2)
         }
 
-        /* Styling for the dark mode toggle button */
-        #darkModeToggle {
-            background-color: #607d8b; /* Grey background */
-            color: white;
+        .upg-info {
+            display: flex;
+            flex-direction: column;
+            gap: 2px
         }
 
-        /* Hover state for the dark mode toggle button */
-        #darkModeToggle:hover {
-            background-color: #455a64; /* Darker grey on hover */
-            transform: translateY(-2px); /* Slight lift on hover */
+        .upg-name {
+            font-weight: 600;
+            font-size-: .95rem
         }
 
-        /* Dark mode specific styling for the dark mode toggle button */
-        body.dark-mode #darkModeToggle {
-            background-color: #90a4ae; /* Lighter grey in dark mode */
-            color: #333; /* Darker text in dark mode */
+        .upg-desc {
+            font-size: .75rem;
+            color: #94a3b8
         }
-        body.dark-mode #darkModeToggle:hover {
-            background-color: #78909c; /* Slightly darker lighter grey on hover */
+
+        .upg-cost {
+            font-family: 'Outfit', sans-serif;
+            font-weight: 700;
+            color: var(--accent)
+        }
+
+        .floating-text {
+            position: absolute;
+            pointer-events: none;
+            font-family: 'Outfit', sans-serif;
+            font-weight: 900;
+            font-size: 1.5rem;
+            color: #fff;
+            animation: floatUp 1s ease-out forwards;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, .5)
+        }
+
+        @keyframes floatUp {
+            0% {
+                opacity: 1;
+                transform: translateY(0) scale(1)
+            }
+
+            100% {
+                opacity: 0;
+                transform: translateY(-50px) scale(1.2)
+            }
         }
     </style>
 </head>
+
 <body>
-    <div class="container">
-        <div id="clickArea" class="click-area">
-            <span class="emoji">&#128176;</span> <!-- Coin emoji for illustration -->
-            <span class="text">Click Me!</span> <!-- The "Click Me!" text -->
+    <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Hub</a>
+
+    <!-- Menu -->
+    <div class="container" id="menu">
+        <h1>🖱 Idle Clicker Hub</h1>
+        <p class="subtitle">Choose your progression experience</p>
+
+        <div class="game-cards">
+            <div class="game-card" id="cookie-card">
+                <div class="icon-wrapper"><i class="fas fa-cookie-bite"></i></div>
+                <div class="card-title">Cookie Clicker</div>
+                <div class="card-desc">The classic experience. Bake cookies, buy grandmas, factories, and take over the
+                    bakery world.</div>
+            </div>
+
+            <div class="game-card" id="gem-card">
+                <div class="icon-wrapper"><i class="fas fa-gem"></i></div>
+                <div class="card-title">Crystal Miner</div>
+                <div class="card-desc">Mine precious gems, upgrade your pickaxes, and hire automated miners to extract
+                    wealth.</div>
+            </div>
         </div>
-        <div id="score">Score: 0</div>
-        <div class="controls">
-            <button id="resetButton">Reset Score</button>
-            <button id="darkModeToggle">Toggle Dark Mode</button>
+    </div>
+
+    <!-- Game UI -->
+    <div class="container" id="gameWrapper" style="padding-top:40px">
+        <div class="mode-header">
+            <h2 style="font-family:'Outfit',sans-serif;font-size:1.8rem" id="gameModeTitle">Cookie Clicker</h2>
+            <button class="btn-secondary" id="backMenuBtn">Change Game</button>
+        </div>
+
+        <div class="main-area">
+            <div class="score-display" id="scoreDisplay">0</div>
+            <div class="cps-display"><span id="cpsDisplay">0</span> per second</div>
+            <div style="height:40px"></div>
+
+            <!-- Targets -->
+            <div id="cookieTarget" class="clickable">
+                <!-- Choco chips added via JS -->
+            </div>
+            <div id="gemTarget" class="clickable"></div>
+        </div>
+
+        <div class="upgrades">
+            <div class="upg-title">Upgrades</div>
+            <div id="upgList"></div>
         </div>
     </div>
 
     <script>
-        // Initialize score
-        let score = 0;
+        let mode = null; // 'cookie' | 'gem'
+        let amount = 0, cpc = 1, cps = 0;
+        let lastTick = performance.now();
+        let reqId;
 
-        // Get DOM elements
-        const clickArea = document.getElementById('clickArea');
-        const scoreDisplay = document.getElementById('score');
-        const resetButton = document.getElementById('resetButton');
-        const darkModeToggle = document.getElementById('darkModeToggle');
-        const body = document.body;
+        const UPGRADES_COOKIE = [
+            { id: 'c1', name: 'Cursor', desc: '+0.5 cookies/sec', baseCost: 15, cps: 0.5, cpc: 0, count: 0 },
+            { id: 'c2', name: 'Grandma', desc: '+4 cookies/sec', baseCost: 100, cps: 4, cpc: 0, count: 0 },
+            { id: 'c3', name: 'Farm', desc: '+20 cookies/sec', baseCost: 1100, cps: 20, cpc: 0, count: 0 },
+            { id: 'c4', name: 'Factory', desc: '+90 cookies/sec', baseCost: 12000, cps: 90, cpc: 0, count: 0 },
+            { id: 'c5', name: 'Click Power', desc: '+1 cookie per click', baseCost: 50, cps: 0, cpc: 1, count: 0 }
+        ];
 
-        /**
-         * Loads saved score and dark mode preference from local storage when the page loads.
-         */
-        document.addEventListener('DOMContentLoaded', () => {
-            // Load saved score
-            const savedScore = localStorage.getItem('clickerScore');
-            if (savedScore !== null) {
-                score = parseInt(savedScore, 10); // Parse string to integer
-                scoreDisplay.textContent = 'Score: ' + score;
+        const UPGRADES_GEM = [
+            { id: 'g1', name: 'Auto-Miner', desc: '+1 gem/sec', baseCost: 20, cps: 1, cpc: 0, count: 0 },
+            { id: 'g2', name: 'Laser Drill', desc: '+8 gems/sec', baseCost: 150, cps: 8, cpc: 0, count: 0 },
+            { id: 'g3', name: 'Deep Shaft', desc: '+40 gems/sec', baseCost: 2000, cps: 40, cpc: 0, count: 0 },
+            { id: 'g4', name: 'Plasma Extractor', desc: '+200 gems/sec', baseCost: 25000, cps: 200, cpc: 0, count: 0 },
+            { id: 'g5', name: 'Better Pickaxe', desc: '+2 gems per click', baseCost: 100, cps: 0, cpc: 2, count: 0 }
+        ];
+
+        let UPG = [];
+
+        // Cookie decoration
+        const cc = document.getElementById('cookieTarget');
+        for (let i = 0; i < 8; i++) {
+            const c = document.createElement('div'); c.className = 'chip';
+            c.style.left = `${20 + Math.random() * 60}%`; c.style.top = `${20 + Math.random() * 60}%`;
+            cc.appendChild(c);
+        }
+
+        document.getElementById('cookie-card').onclick = () => loadGame('cookie');
+        document.getElementById('gem-card').onclick = () => loadGame('gem');
+        document.getElementById('backMenuBtn').onclick = () => {
+            saveData(); cancelAnimationFrame(reqId);
+            document.getElementById('gameWrapper').style.display = 'none';
+            document.getElementById('menu').style.display = 'flex';
+        };
+
+        function loadGame(m) {
+            mode = m;
+            document.getElementById('menu').style.display = 'none';
+            document.getElementById('gameWrapper').style.display = 'flex';
+            document.getElementById('cookieTarget').style.display = m === 'cookie' ? 'block' : 'none';
+            document.getElementById('gemTarget').style.display = m === 'gem' ? 'block' : 'none';
+
+            document.documentElement.style.setProperty('--accent', m === 'cookie' ? '#f59e0b' : '#06b6d4');
+            document.getElementById('gameModeTitle').textContent = m === 'cookie' ? 'Cookie Clicker' : 'Crystal Miner';
+
+            const saved = localStorage.getItem(`clicker_${m}`);
+            UPG = m === 'cookie' ? UPGRADES_COOKIE : UPGRADES_GEM;
+
+            if (saved) {
+                const d = JSON.parse(saved);
+                amount = d.amount || 0;
+                d.upg.forEach((u, i) => { if (UPG[i]) UPG[i].count = u; });
+            } else {
+                amount = 0;
+                UPG.forEach(u => u.count = 0);
             }
 
-            // Load dark mode preference
-            const isDarkMode = localStorage.getItem('darkMode') === 'true';
-            if (isDarkMode) {
-                body.classList.add('dark-mode'); // Apply dark mode if previously set
-            }
-        });
+            calcStats();
+            renderUpgrades();
+            updateUI();
+            lastTick = performance.now();
+            cancelAnimationFrame(reqId);
+            reqId = requestAnimationFrame(loop);
+        }
 
-        /**
-         * Event listener for clicks on the click area.
-         * Increments score, updates display, saves to local storage, and shows click feedback.
-         */
-        clickArea.addEventListener('click', (event) => {
-            score++; // Increment score
-            scoreDisplay.textContent = 'Score: ' + score; // Update score display
-            localStorage.setItem('clickerScore', score); // Save score to local storage
+        function saveData() {
+            localStorage.setItem(`clicker_${mode}`, JSON.stringify({ amount, upg: UPG.map(u => u.count) }));
+        }
 
-            // Create click feedback element
-            const feedback = document.createElement('div');
-            feedback.classList.add('click-feedback');
+        function calcStats() {
+            cps = 0; cpc = 1;
+            UPG.forEach(u => { cps += u.cps * u.count; cpc += u.cpc * u.count; });
+        }
 
-            // Get the position and dimensions of the click area
-            const rect = clickArea.getBoundingClientRect();
+        function getCost(base, count) { return Math.ceil(base * Math.pow(1.15, count)); }
 
-            // Set the size of the ripple to be larger than the click area
-            feedback.style.width = feedback.style.height = Math.max(rect.width, rect.height) + 'px';
-
-            // Position the ripple at the click point relative to the click area
-            feedback.style.left = (event.clientX - rect.left - feedback.offsetWidth / 2) + 'px';
-            feedback.style.top = (event.clientY - rect.top - feedback.offsetHeight / 2) + 'px';
-
-            // Append the feedback element to the click area
-            clickArea.appendChild(feedback);
-
-            // Remove the feedback element after its animation ends
-            feedback.addEventListener('animationend', () => {
-                feedback.remove();
+        function renderUpgrades() {
+            const ls = document.getElementById('upgList'); ls.innerHTML = '';
+            UPG.forEach((u, i) => {
+                const cost = getCost(u.baseCost, u.count);
+                const btn = document.createElement('div');
+                btn.className = `upg-btn ${amount < cost ? 'disabled' : ''}`;
+                btn.id = `upg-${i}`;
+                btn.innerHTML = `
+      <div class="upg-info">
+        <div class="upg-name">${u.name} <span style="opacity:.5;font-size:.8rem">(${u.count})</span></div>
+        <div class="upg-desc">${u.desc}</div>
+      </div>
+      <div class="upg-cost">${cost} ${mode === 'cookie' ? '🍪' : '💎'}</div>
+    `;
+                btn.onclick = () => buyUpgrade(i);
+                ls.appendChild(btn);
             });
-        });
+        }
 
-        /**
-         * Event listener for the reset button.
-         * Resets the score to 0 and updates local storage.
-         */
-        resetButton.addEventListener('click', () => {
-            score = 0; // Reset score
-            scoreDisplay.textContent = 'Score: ' + score; // Update score display
-            localStorage.setItem('clickerScore', score); // Reset saved score in local storage
-        });
+        function updateUpgradeUI() {
+            UPG.forEach((u, i) => {
+                const cost = getCost(u.baseCost, u.count);
+                const btn = document.getElementById(`upg-${i}`);
+                if (!btn) return;
+                if (amount >= cost) btn.classList.remove('disabled'); else btn.classList.add('disabled');
+                btn.querySelector('.upg-name span').textContent = `(${u.count})`;
+                btn.querySelector('.upg-cost').textContent = `${cost} ${mode === 'cookie' ? '🍪' : '💎'}`;
+            });
+        }
 
-        /**
-         * Event listener for the dark mode toggle button.
-         * Toggles the 'dark-mode' class on the body and saves the preference to local storage.
-         */
-        darkModeToggle.addEventListener('click', () => {
-            body.classList.toggle('dark-mode'); // Toggle dark mode class
-            const isDarkMode = body.classList.contains('dark-mode'); // Check current dark mode state
-            localStorage.setItem('darkMode', isDarkMode); // Save dark mode preference to local storage
-        });
+        function buyUpgrade(idx) {
+            const u = UPG[idx]; const cost = getCost(u.baseCost, u.count);
+            if (amount >= cost) {
+                amount -= cost; u.count++;
+                calcStats(); updateUI(); updateUpgradeUI(); saveData();
+            }
+        }
+
+        function doClick(e) {
+            amount += cpc;
+            updateUI(); updateUpgradeUI();
+            // Floating text
+            const t = document.createElement('div');
+            t.className = 'floating-text'; t.textContent = `+${cpc}`;
+            const rect = (mode === 'cookie' ? document.getElementById('cookieTarget') : document.getElementById('gemTarget')).getBoundingClientRect();
+            const x = e.clientX ? e.clientX - rect.left : rect.width / 2;
+            const y = e.clientY ? e.clientY - rect.top : rect.height / 2;
+            t.style.left = `${x}px`; t.style.top = `${y}px`;
+            (mode === 'cookie' ? document.getElementById('cookieTarget') : document.getElementById('gemTarget')).appendChild(t);
+            setTimeout(() => t.remove(), 1000);
+        }
+
+        document.getElementById('cookieTarget').onclick = doClick;
+        document.getElementById('gemTarget').onclick = doClick;
+
+        function updateUI() {
+            document.getElementById('scoreDisplay').textContent = Math.floor(amount);
+            document.getElementById('cpsDisplay').textContent = cps.toFixed(1);
+        }
+
+        function loop(t) {
+            const dt = (t - lastTick) / 1000;
+            lastTick = t;
+            if (cps > 0) {
+                amount += cps * dt;
+                updateUI();
+                if (Math.random() < 0.1) updateUpgradeUI(); // don't calc every frame
+            }
+            reqId = requestAnimationFrame(loop);
+        }
+
+        setInterval(() => { if (mode) saveData(); }, 5000); // auto save
     </script>
 </body>
+
 </html>

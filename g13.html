@@ -4,501 +4,600 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Cookie Clicker Master</title> <!-- Updated Title -->
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <link rel="stylesheet" href="shared.css">
-    <script src="shared.js"></script>
+    <title>Tower Defense | Infinite Arcade</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
-
-        body {
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            background: linear-gradient(135deg, #050814 0%, #0a0a16 100%);
-            font-family: 'Inter', sans-serif;
-            color: #fff;
-            user-select: none;
-            position: relative;
+        :root {
+            --bg: #020617;
+            --surface: rgba(15, 23, 42, .8);
+            --border: rgba(255, 255, 255, .08);
+            --accent: #6366f1
         }
 
-        #game-area {
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            background: var(--bg);
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            justify-content: flex-start;
-            padding: 40px;
-            border-radius: 1.5rem;
-            background: rgba(15, 23, 42, 0.8);
-            border: 1px solid rgba(0, 234, 255, 0.2);
-            box-shadow: 0 0 30px rgba(0, 234, 255, 0.1);
-            backdrop-filter: blur(10px);
-            width: 90%;
-            max-width: 450px;
-            box-sizing: border-box;
-            position: relative;
-            z-index: 1;
-            margin-top: 20px;
-            margin-bottom: 20px;
+            justify-content: center;
+            user-select: none
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: #94a3b8;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: .9rem;
+            z-index: 99;
+            transition: .2s
+        }
+
+        .back-btn:hover {
+            color: #fff
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+            padding: 60px 20px 20px
         }
 
         h1 {
-            font-family: 'Press Start 2P', cursive;
-            background: linear-gradient(to right, #00eaff, #ff0055);
-            -webkit-background-clip: text;
-            background-clip: text;
-            color: transparent;
-            text-shadow: 0 0 10px rgba(0, 234, 255, 0.3);
-            text-align: center;
-            font-size: 1.5rem;
-            margin-bottom: 20px;
-            line-height: 1.4;
-        }
-
-        #cookie {
-            width: 250px;
-            height: 250px;
-            background-color: transparent;
-            border-radius: 50%;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            cursor: pointer;
-            transition: transform 0.1s ease-out, filter 0.2s ease;
-            position: relative;
-            z-index: 10;
-        }
-
-        #cookie:active {
-            transform: scale(0.9);
-            filter: brightness(1.2);
-        }
-
-        #cookie svg {
-            width: 100%;
-            height: 100%;
-            display: block;
-            filter: drop-shadow(0 0 20px rgba(0, 234, 255, 0.6));
-        }
-
-        #score {
-            margin-top: 25px;
-            font-family: 'Press Start 2P', cursive;
+            font-family: 'Outfit', sans-serif;
             font-size: 2rem;
-            color: #00eaff;
-            text-shadow: 0 0 15px rgba(0, 234, 255, 0.5);
+            font-weight: 900;
+            background: linear-gradient(135deg, #c7d2fe, #6366f1);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center
+        }
+
+        .hud {
+            display: flex;
+            gap: 12px;
+            width: 100%;
+            max-width: 600px;
+            justify-content: center
+        }
+
+        .stat {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            padding: 8px 14px;
             text-align: center;
+            flex: 1
         }
 
-        #cps-display {
-            font-size: 1rem;
-            font-family: 'Press Start 2P', cursive;
-            color: #ff0055;
-            margin-top: 10px;
-            text-shadow: 0 0 10px rgba(255, 0, 85, 0.5);
+        .stat-label {
+            font-size: .65rem;
+            text-transform: uppercase;
+            letter-spacing: .1em;
+            color: #64748b
         }
 
-        .floating-score {
-            position: absolute;
-            color: #00ff41;
-            font-family: 'Press Start 2P', cursive;
-            font-size: 1.5rem;
-            text-shadow: 0 0 10px rgba(0, 255, 65, 0.8);
-            animation: fadeOutUp 1s forwards;
-            pointer-events: none;
-            z-index: 1000;
+        .stat-val {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--accent)
         }
 
-        @keyframes fadeOutUp {
-            0% {
-                opacity: 1;
-                transform: translateY(0) scale(1);
-            }
-
-            100% {
-                opacity: 0;
-                transform: translateY(-80px) scale(1.5);
-            }
+        .game-area {
+            display: flex;
+            gap: 16px;
+            align-items: flex-start
         }
 
-        .upgrades-container {
+        .canvas-wrap {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            border: 1px solid rgba(99, 102, 241, .2);
+            box-shadow: 0 0 40px rgba(99, 102, 241, .1)
+        }
+
+        canvas {
+            display: block;
+            background: #0f172a;
+            cursor: crosshair
+        }
+
+        .shop {
             display: flex;
             flex-direction: column;
-            gap: 15px;
-            margin-top: 30px;
-            width: 100%;
-            max-width: 350px;
+            gap: 10px;
+            width: 160px
         }
 
-        .upgrades-container h2 {
-            font-family: 'Press Start 2P', cursive;
-            font-size: 1.2rem;
-            color: #fff;
-            text-align: center;
-            margin-bottom: 10px;
-            text-shadow: 0 0 10px rgba(255, 255, 255, 0.5);
+        .shop-item {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px;
+            cursor: pointer;
+            transition: .2s;
+            text-align: center
         }
 
-        .upgrade-button {
-            padding: 15px 20px;
-            background: rgba(0, 234, 255, 0.05);
-            color: #00eaff;
-            border: 1px solid rgba(0, 234, 255, 0.4);
+        .shop-item.active {
+            border-color: var(--accent);
+            background: rgba(99, 102, 241, .15);
+            box-shadow: 0 0 16px rgba(99, 102, 241, .2)
+        }
+
+        .shop-item.disabled {
+            opacity: .4;
+            cursor: not-allowed
+        }
+
+        .shop-icon {
+            width: 36px;
+            height: 36px;
             border-radius: 8px;
-            font-size: 1.1rem;
+            margin: 0 auto 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center
+        }
+
+        .shop-name {
             font-weight: 700;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 0 10px rgba(0, 234, 255, 0.1);
+            font-size: .9rem;
+            font-family: 'Outfit'
+        }
+
+        .shop-cost {
+            font-size: .8rem;
+            color: #fbbf24;
+            font-weight: 600
+        }
+
+        .shop-stats {
+            font-size: .7rem;
+            color: #94a3b8;
+            margin-top: 4px;
+            line-height: 1.4
+        }
+
+        .overlay {
+            position: absolute;
+            inset: 0;
             display: flex;
-            justify-content: space-between;
+            flex-direction: column;
             align-items: center;
-            font-family: 'Inter', sans-serif;
-        }
-
-        .upgrade-button:hover:not(:disabled) {
-            background: rgba(0, 234, 255, 0.2);
-            box-shadow: 0 0 20px rgba(0, 234, 255, 0.4);
-            transform: translateX(5px);
-        }
-
-        .upgrade-button:active:not(:disabled) {
-            transform: translateX(2px);
-            box-shadow: 0 0 5px rgba(0, 234, 255, 0.2);
-        }
-
-        .upgrade-button:disabled {
-            background: rgba(15, 23, 42, 0.8);
-            color: rgba(255, 255, 255, 0.3);
-            border-color: rgba(255, 255, 255, 0.1);
-            cursor: not-allowed;
-            box-shadow: none;
-        }
-
-        .upgrade-cost {
-            font-size: 0.9em;
-            color: #ff0055;
-            font-family: 'Press Start 2P', cursive;
-            font-size: 0.7rem;
-            text-shadow: 0 0 5px rgba(255, 0, 85, 0.5);
-        }
-
-        .upgrade-button:disabled .upgrade-cost {
-            color: rgba(255, 255, 255, 0.3);
-            text-shadow: none;
-        }
-
-        #resetButton {
-            margin-top: 30px;
-            padding: 12px 25px;
-            background: rgba(255, 0, 85, 0.1);
-            color: #ff0055;
-            border: 1px solid rgba(255, 0, 85, 0.5);
-            border-radius: 8px;
-            cursor: pointer;
-            transition: all 0.2s ease;
-            box-shadow: 0 0 10px rgba(255, 0, 85, 0.2);
-            display: flex;
             justify-content: center;
-            align-items: center;
-            width: 100%;
-            max-width: 350px;
-            font-family: 'Press Start 2P', cursive;
-            font-size: 1rem;
+            background: rgba(2, 6, 23, .92);
+            backdrop-filter: blur(8px);
+            gap: 16px;
+            z-index: 10
         }
 
-        #resetButton:hover {
-            background: rgba(255, 0, 85, 0.3);
-            box-shadow: 0 0 20px rgba(255, 0, 85, 0.4);
+        .overlay.hidden {
+            display: none
+        }
+
+        .overlay h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900
+        }
+
+        .btn-primary {
+            padding: 12px 32px;
+            border-radius: 12px;
+            border: none;
+            background: linear-gradient(135deg, #818cf8, #4f46e5);
+            color: #fff;
+            font-weight: 900;
+            cursor: pointer;
+            font-size: 1.1rem;
+            font-family: 'Outfit', sans-serif;
+            transition: .2s
+        }
+
+        .btn-primary:hover {
             transform: translateY(-2px);
-        }
-
-        #resetButton:active {
-            transform: translateY(2px);
-            box-shadow: 0 0 5px rgba(255, 0, 85, 0.2);
+            box-shadow: 0 8px 20px rgba(79, 70, 229, .3)
         }
     </style>
 </head>
 
 <body>
-    <div id="game-area">
-        <h1>Cookie Clicker Master</h1> <!-- Game Title -->
-        <div id="cookie">
-            <!-- SVG Cookie Illustration -->
-            <svg viewBox="0 0 200 200" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <!-- Cookie base -->
-                <circle cx="100" cy="100" r="90" fill="#e0b080" />
-                <!-- Inner shadow for depth -->
-                <circle cx="100" cy="100" r="90" fill="url(#shadowGradient)" />
-                <defs>
-                    <radialGradient id="shadowGradient" cx="0" cy="0" r="1" gradientUnits="userSpaceOnUse"
-                        gradientTransform="translate(100 100) rotate(90) scale(180)">
-                        <stop offset="0.5" stop-color="#000000" stop-opacity="0" />
-                        <stop offset="1" stop-color="#000000" stop-opacity="0.2" />
-                    </radialGradient>
-                </defs>
+    <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Hub</a>
 
-                <!-- Chocolate Chips -->
-                <circle cx="55" cy="45" r="15" fill="#4a2b1f" />
-                <circle cx="130" cy="60" r="12" fill="#4a2b1f" />
-                <circle cx="80" cy="120" r="18" fill="#4a2b1f" />
-                <circle cx="150" cy="130" r="10" fill="#4a2b1f" />
-                <circle cx="60" cy="160" r="14" fill="#4a2b1f" />
-                <circle cx="110" cy="70" r="10" fill="#4a2b1f" />
-                <circle cx="140" cy="90" r="16" fill="#4a2b1f" />
-            </svg>
-        </div>
-        <div id="score">0 Cookies</div>
-        <div id="cps-display">0 Cookies/sec</div>
+    <div class="container">
+        <h1>🛡 Tower Defense</h1>
 
-        <div class="upgrades-container">
-            <h2>Upgrades</h2>
-            <button id="autoClickerButton" class="upgrade-button">
-                <span>Cursor (<span id="autoClickerCount">0</span>)</span>
-                <span class="upgrade-cost">Cost: <span id="autoClickerCost">10</span></span>
-            </button>
-            <button id="grandmaButton" class="upgrade-button">
-                <span>Grandma (<span id="grandmaCount">0</span>)</span>
-                <span class="upgrade-cost">Cost: <span id="grandmaCost">100</span></span>
-            </button>
-            <!-- New Upgrade: Oven -->
-            <button id="ovenButton" class="upgrade-button">
-                <span>Oven (<span id="ovenCount">0</span>)</span>
-                <span class="upgrade-cost">Cost: <span id="ovenCost">500</span></span>
-            </button>
+        <div class="hud">
+            <div class="stat">
+                <div class="stat-label">Wave</div>
+                <div class="stat-val" id="wave">1</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Lives</div>
+                <div class="stat-val" id="lives" style="color:#ef4444">20</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Gold</div>
+                <div class="stat-val" id="gold" style="color:#fbbf24">100</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Score</div>
+                <div class="stat-val" id="score">0</div>
+            </div>
         </div>
 
-        <!-- Reset Button Added -->
-        <button id="resetButton">Reset Game</button>
+        <div class="game-area">
+            <div class="canvas-wrap">
+                <canvas id="c" width="600" height="480"></canvas>
+                <div class="overlay" id="overlay">
+                    <h2 id="ovTitle">Defend the Base!</h2>
+                    <p id="ovDesc" style="color:#94a3b8;margin-bottom:8px">Build towers to stop the incoming enemies.
+                    </p>
+                    <button class="btn-primary" id="startBtn">▶ Start Wave 1</button>
+                </div>
+            </div>
+
+            <div class="shop">
+                <div class="shop-item active" id="buy-basic" data-type="basic">
+                    <div class="shop-icon" style="background:#3b82f6"><i class="fas fa-bullseye"></i></div>
+                    <div class="shop-name">Basic Turret</div>
+                    <div class="shop-cost">50 Gold</div>
+                    <div class="shop-stats">Dmg: 10<br>Range: 100</div>
+                </div>
+                <div class="shop-item" id="buy-sniper" data-type="sniper">
+                    <div class="shop-icon" style="background:#a855f7"><i class="fas fa-crosshairs"></i></div>
+                    <div class="shop-name">Sniper</div>
+                    <div class="shop-cost">120 Gold</div>
+                    <div class="shop-stats">Dmg: 40<br>Range: 200</div>
+                </div>
+                <div class="shop-item" id="buy-rapid" data-type="rapid">
+                    <div class="shop-icon" style="background:#f59e0b"><i class="fas fa-bolt"></i></div>
+                    <div class="shop-name">Rapid Fire</div>
+                    <div class="shop-cost">150 Gold</div>
+                    <div class="shop-stats">Dmg: 5<br>Speed: Fast</div>
+                </div>
+                <div class="shop-item" id="buy-sell" data-type="sell"
+                    style="margin-top:auto;border-color:#ef4444;background:rgba(239,68,68,.1)">
+                    <div class="shop-icon" style="background:#ef4444;color:#fff"><i class="fas fa-trash"></i></div>
+                    <div class="shop-name">Sell Tower</div>
+                    <div class="shop-stats">Returns 50%</div>
+                </div>
+            </div>
+        </div>
+
     </div>
 
     <script>
-        // Game state variables
-        let cookies = 0;
-        let autoClickers = 0;
-        let grandmas = 0;
-        let ovens = 0; // New upgrade count
-        let cookiesPerSecond = 0;
+        const canvas = document.getElementById('c'), ctx = canvas.getContext('2d');
+        const W = 600, H = 480;
+        const TS = 40; // Tile size
+        const COLS = W / TS, ROWS = H / TS;
 
-        // Initial costs (will be reset to these values)
-        const initialAutoClickerCost = 10;
-        const initialGrandmaCost = 100;
-        const initialOvenCost = 500;
-
-        // Current costs (these change during gameplay)
-        let autoClickerCost = initialAutoClickerCost;
-        let grandmaCost = initialGrandmaCost;
-        let ovenCost = initialOvenCost;
-
-        // CPS values for each upgrade
-        const autoClickerCps = 0.1; // Each auto clicker gives 0.1 cookies/sec
-        const grandmaCps = 1; // Each grandma gives 1 cookie/sec
-        const ovenCps = 5; // Each oven gives 5 cookies/sec
-
-        // DOM elements
-        const cookieButton = document.getElementById('cookie');
-        const scoreDisplay = document.getElementById('score');
-        const cpsDisplay = document.getElementById('cps-display');
-
-        const autoClickerButton = document.getElementById('autoClickerButton');
-        const autoClickerCountDisplay = document.getElementById('autoClickerCount');
-        const autoClickerCostDisplay = document.getElementById('autoClickerCost');
-
-        const grandmaButton = document.getElementById('grandmaButton');
-        const grandmaCountDisplay = document.getElementById('grandmaCount');
-        const grandmaCostDisplay = document.getElementById('grandmaCost');
-
-        const ovenButton = document.getElementById('ovenButton');
-        const ovenCountDisplay = document.getElementById('ovenCount');
-        const ovenCostDisplay = document.getElementById('ovenCost');
-
-        const resetButton = document.getElementById('resetButton'); // Get the new reset button
-
-        /**
-         * Saves the current game state to local storage.
-         */
-        function saveGame() {
-            const gameState = {
-                cookies: cookies,
-                autoClickers: autoClickers,
-                grandmas: grandmas,
-                ovens: ovens,
-                autoClickerCost: autoClickerCost,
-                grandmaCost: grandmaCost,
-                ovenCost: ovenCost
-            };
-            localStorage.setItem('cookieClickerGame', JSON.stringify(gameState));
-        }
-
-        /**
-         * Loads game state from local storage.
-         */
-        function loadGame() {
-            const savedState = localStorage.getItem('cookieClickerGame');
-            if (savedState) {
-                const parsedState = JSON.parse(savedState);
-                cookies = parsedState.cookies || 0;
-                autoClickers = parsedState.autoClickers || 0;
-                grandmas = parsedState.grandmas || 0;
-                ovens = parsedState.ovens || 0;
-                autoClickerCost = parsedState.autoClickerCost || initialAutoClickerCost;
-                grandmaCost = parsedState.grandmaCost || initialGrandmaCost;
-                ovenCost = parsedState.ovenCost || initialOvenCost;
-            }
-        }
-
-        /**
-         * Resets the game to its initial state.
-         */
-        function resetGame() {
-            if (cookies > 0) {
-                submitScore('g13.html', Math.floor(cookies));
-            }
-            cookies = 0;
-            autoClickers = 0;
-            grandmas = 0;
-            ovens = 0;
-            cookiesPerSecond = 0; // Important to reset CPS as well
-            autoClickerCost = initialAutoClickerCost;
-            grandmaCost = initialGrandmaCost;
-            ovenCost = initialOvenCost;
-
-            localStorage.removeItem('cookieClickerGame'); // Clear saved data
-            updateAllDisplays(); // Update all UI elements
-            saveGame(); // Save the reset state
-        }
-
-        /**
-         * Calculates and updates the total cookies per second (CPS).
-         */
-        function calculateCps() {
-            cookiesPerSecond = (autoClickers * autoClickerCps) +
-                (grandmas * grandmaCps) +
-                (ovens * ovenCps);
-        }
-
-        /**
-         * Updates the main score and CPS displays.
-         */
-        function updateScoreDisplay() {
-            scoreDisplay.textContent = Math.floor(cookies).toLocaleString() + ' Cookies';
-            cpsDisplay.textContent = cookiesPerSecond.toFixed(1) + ' Cookies/sec';
-        }
-
-        /**
-         * Updates the display and enabled/disabled state of all upgrade buttons.
-         */
-        function updateUpgradeButtons() {
-            autoClickerCountDisplay.textContent = autoClickers;
-            autoClickerCostDisplay.textContent = autoClickerCost.toLocaleString();
-            autoClickerButton.disabled = cookies < autoClickerCost;
-
-            grandmaCountDisplay.textContent = grandmas;
-            grandmaCostDisplay.textContent = grandmaCost.toLocaleString();
-            grandmaButton.disabled = cookies < grandmaCost;
-
-            ovenCountDisplay.textContent = ovens;
-            ovenCostDisplay.textContent = ovenCost.toLocaleString();
-            ovenButton.disabled = cookies < ovenCost;
-        }
-
-        /**
-         * A helper function to call all necessary UI update functions.
-         */
-        function updateAllDisplays() {
-            calculateCps();
-            updateScoreDisplay();
-            updateUpgradeButtons();
-        }
-
-        /**
-         * Handles a cookie click event.
-         * Increments cookies, updates displays, and shows a floating score animation.
-         * @param {MouseEvent} event - The click event object.
-         */
-        cookieButton.addEventListener('click', (event) => {
-            cookies++;
-            updateAllDisplays();
-            saveGame(); // Save game after manual click
-
-            // Create floating score animation
-            const floatingScore = document.createElement('div');
-            floatingScore.textContent = '+1';
-            floatingScore.className = 'floating-score';
-            // Position the floating score relative to the click point on the page
-            floatingScore.style.left = event.clientX + 'px';
-            floatingScore.style.top = event.clientY - 20 + 'px'; // Offset slightly above click
-            document.body.appendChild(floatingScore);
-
-            // Remove the floating score element after its animation ends
-            floatingScore.addEventListener('animationend', () => {
-                floatingScore.remove();
+        // Map config (0: buildable, 1: path, 2: base)
+        const map = [
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [1, 1, 1, 1, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0, 1, 1, 1, 1, 1, 0, 0, 0, 0],
+            [0, 0, 0, 1, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 0],
+            [0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 1, 1, 1, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+            [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 1, 1, 1, 0, 0],
+            [0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 1, 1, 1, 1, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 1, 1, 1, 2, 0, 0],
+            [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0]
+        ];
+        const pathPts = [];
+        // Parse path points
+        let currX = 0, currY = 1;
+        pathPts.push({ x: currX * TS + TS / 2, y: currY * TS + TS / 2 });
+        let visited = new Set([`0,1`]);
+        while (map[currY][currX] !== 2) {
+            let found = false;
+            [[0, 1], [0, -1], [1, 0], [-1, 0]].forEach(([dx, dy]) => {
+                if (found) return;
+                let nx = currX + dx, ny = currY + dy;
+                if (nx >= 0 && nx < COLS && ny >= 0 && ny < ROWS && (map[ny][nx] === 1 || map[ny][nx] === 2) && !visited.has(`${nx},${ny}`)) {
+                    visited.add(`${nx},${ny}`);
+                    pathPts.push({ x: nx * TS + TS / 2, y: ny * TS + TS / 2 });
+                    currX = nx; currY = ny; found = true;
+                }
             });
-        });
+            if (!found) break;
+        }
 
-        /**
-         * Event listener for Auto Clicker purchase button.
-         */
-        autoClickerButton.addEventListener('click', () => {
-            if (cookies >= autoClickerCost) {
-                cookies -= autoClickerCost;
-                autoClickers++;
-                autoClickerCost = Math.ceil(autoClickerCost * 1.5); // Increase cost
-                updateAllDisplays(); // Update all displays after purchase
-                saveGame(); // Save game after purchase
+        // Stats & Towers
+        const TOWER_TYPES = {
+            basic: { cost: 50, range: 100, dmg: 10, cd: 40, color: '#3b82f6' },
+            sniper: { cost: 120, range: 240, dmg: 40, cd: 90, color: '#a855f7' },
+            rapid: { cost: 150, range: 85, dmg: 5, cd: 8, color: '#f59e0b' }
+        };
+
+        let gold = 100, lives = 20, wave = 1, score = 0;
+        let buildMode = 'basic'; // basic|sniper|rapid|sell
+        let towers = [], enemies = [], projectiles = [], particles = [];
+        let reqId, running = false, waiting = true, waveSpawned = 0, waveEnemies = 0, spawnTimer = 0;
+        let mx = -100, my = -100;
+
+        document.querySelectorAll('.shop-item').forEach(el => {
+            el.onclick = () => {
+                document.querySelectorAll('.shop-item').forEach(e => e.classList.remove('active'));
+                el.classList.add('active');
+                buildMode = el.dataset.type;
             }
         });
 
-        /**
-         * Event listener for Grandma purchase button.
-         */
-        grandmaButton.addEventListener('click', () => {
-            if (cookies >= grandmaCost) {
-                cookies -= grandmaCost;
-                grandmas++;
-                grandmaCost = Math.ceil(grandmaCost * 1.5); // Increase cost
-                updateAllDisplays(); // Update all displays after purchase
-                saveGame(); // Save game after purchase
+        function updateHUD() {
+            document.getElementById('gold').textContent = gold;
+            document.getElementById('lives').textContent = lives;
+            document.getElementById('wave').textContent = wave;
+            document.getElementById('score').textContent = score;
+
+            ['basic', 'sniper', 'rapid'].forEach(t => {
+                const el = document.getElementById(`buy-${t}`);
+                if (gold < TOWER_TYPES[t].cost) el.classList.add('disabled');
+                else el.classList.remove('disabled');
+            });
+        }
+
+        function startWave() {
+            running = true; waiting = false;
+            document.getElementById('overlay').classList.add('hidden');
+            waveSpawned = 0; waveEnemies = 5 + wave * 3; spawnTimer = 0;
+            cancelAnimationFrame(reqId);
+            update();
+        }
+        document.getElementById('startBtn').onclick = () => {
+            if (lives <= 0) { gold = 100; lives = 20; wave = 1; score = 0; towers = []; enemies = []; projectiles = []; particles = []; }
+            startWave();
+        };
+
+        function spawnEnemy() {
+            const hpBase = 20 + wave * 15;
+            const isFast = Math.random() < 0.2 + wave * 0.02;
+            const isTank = Math.random() < 0.1 + wave * 0.01 && !isFast;
+
+            let hp = hpBase, spd = 1.2 + wave * 0.05, r = 8, color = '#ef4444', reward = 5;
+            if (isFast) { hp = hpBase * 0.6; spd *= 1.8; r = 6; color = '#fcd34d'; reward = 6; }
+            else if (isTank) { hp = hpBase * 3; spd *= 0.6; r = 12; color = '#b91c1c'; reward = 12; }
+
+            enemies.push({ x: pathPts[0].x, y: pathPts[0].y, pathIdx: 0, hp, maxHp: hp, spd, r, color, reward });
+            waveSpawned++;
+        }
+
+        function updateMousePos(cX, cY) {
+            const rect = canvas.getBoundingClientRect();
+            mx = (cX - rect.left) * (W / rect.width);
+            my = (cY - rect.top) * (H / rect.height);
+        }
+
+        canvas.addEventListener('mousemove', e => updateMousePos(e.clientX, e.clientY));
+        canvas.addEventListener('mouseleave', () => { mx = -100; my = -100; });
+
+        canvas.addEventListener('touchstart', e => {
+            if (e.touches.length > 0) updateMousePos(e.touches[0].clientX, e.touches[0].clientY);
+        }, { passive: true });
+
+        canvas.addEventListener('touchmove', e => {
+            e.preventDefault();
+            if (e.touches.length > 0) updateMousePos(e.touches[0].clientX, e.touches[0].clientY);
+        }, { passive: false });
+
+        canvas.addEventListener('click', () => {
+            if (!running && waiting) return;
+            const tx = Math.floor(mx / TS), ty = Math.floor(my / TS);
+            if (tx < 0 || tx >= COLS || ty < 0 || ty >= ROWS) return;
+
+            // Check if tower exists here
+            const existIdx = towers.findIndex(t => t.tx === tx && t.ty === ty);
+
+            if (buildMode === 'sell') {
+                if (existIdx !== -1) {
+                    gold += Math.floor(towers[existIdx].cost * 0.5);
+                    towers.splice(existIdx, 1);
+                    burst(tx * TS + TS / 2, ty * TS + TS / 2, '#fbbf24', 10);
+                    updateHUD();
+                }
+            } else {
+                // Build
+                if (map[ty][tx] === 0 && existIdx === -1) {
+                    const type = TOWER_TYPES[buildMode];
+                    if (gold >= type.cost) {
+                        gold -= type.cost;
+                        towers.push({ tx, ty, cx: tx * TS + TS / 2, cy: ty * TS + TS / 2, angle: 0, timer: 0, ...type });
+                        burst(tx * TS + TS / 2, ty * TS + TS / 2, type.color, 10);
+                        updateHUD();
+                    }
+                }
             }
         });
 
-        /**
-         * Event listener for Oven purchase button (new upgrade).
-         */
-        ovenButton.addEventListener('click', () => {
-            if (cookies >= ovenCost) {
-                cookies -= ovenCost;
-                ovens++;
-                ovenCost = Math.ceil(ovenCost * 1.5); // Increase cost
-                updateAllDisplays(); // Update all displays after purchase
-                saveGame(); // Save game after purchase
+        function burst(x, y, color, count) {
+            for (let i = 0; i < count; i++) particles.push({ x, y, vx: (Math.random() - 0.5) * 5, vy: (Math.random() - 0.5) * 5, life: 1, color, r: Math.random() * 2 + 1 });
+        }
+
+        function update() {
+            if (!running) return;
+
+            // Spawn
+            if (!waiting && waveSpawned < waveEnemies) {
+                if (spawnTimer <= 0) { spawnEnemy(); spawnTimer = 60 - Math.min(40, wave * 2); }
+                else spawnTimer--;
             }
-        });
 
-        /**
-         * Event listener for the Reset Game button.
-         */
-        resetButton.addEventListener('click', resetGame);
+            // Enemies
+            enemies.forEach((e, i) => {
+                const target = pathPts[e.pathIdx + 1];
+                if (!target) {
+                    // Reached base
+                    enemies.splice(i, 1); lives--; updateHUD();
+                    burst(e.x, e.y, e.color, 15);
+                    if (lives <= 0) {
+                        running = false; document.getElementById('ovTitle').textContent = 'Game Over';
+                        document.getElementById('startBtn').textContent = 'Restart';
+                        document.getElementById('overlay').classList.remove('hidden');
+                    }
+                    return;
+                }
+                const ang = Math.atan2(target.y - e.y, target.x - e.x);
+                e.x += Math.cos(ang) * e.spd; e.y += Math.sin(ang) * e.spd;
+                if (Math.hypot(target.x - e.x, target.y - e.y) < e.spd) e.pathIdx++;
+            });
 
-        /**
-         * Game loop: adds cookies from passive income and updates UI.
-         */
-        setInterval(() => {
-            cookies += cookiesPerSecond;
-            updateAllDisplays(); // Update all displays periodically
-            saveGame(); // Save game state periodically
-        }, 1000); // Update every second
+            // Towers
+            towers.forEach(t => {
+                if (t.timer > 0) t.timer--;
 
-        // Initial setup on page load
-        document.addEventListener('DOMContentLoaded', () => {
-            loadGame(); // Load game state
-            updateAllDisplays(); // Initial update of all displays
-        });
+                // Find target
+                let target = null, minDist = t.range;
+                enemies.forEach(e => {
+                    const d = Math.hypot(e.x - t.cx, e.y - t.cy);
+                    if (d <= minDist) { target = e; minDist = d; }
+                });
+
+                if (target) {
+                    t.angle = Math.atan2(target.y - t.cy, target.x - t.cx);
+                    if (t.timer <= 0) {
+                        t.timer = t.cd;
+                        projectiles.push({ x: t.cx, y: t.cy, vx: Math.cos(t.angle) * 8, vy: Math.sin(t.angle) * 8, dmg: t.dmg, target, color: t.color });
+                    }
+                }
+            });
+
+            // Projectiles
+            projectiles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy;
+
+                // Check hit
+                if (p.target && enemies.includes(p.target)) {
+                    if (Math.hypot(p.target.x - p.x, p.target.y - p.y) < p.target.r + 5) {
+                        projectiles.splice(i, 1);
+                        p.target.hp -= p.dmg;
+                        burst(p.target.x, p.target.y, p.color, 4);
+                        if (p.target.hp <= 0) {
+                            gold += p.target.reward; score += p.target.reward * 10; updateHUD();
+                            burst(p.target.x, p.target.y, p.target.color, 10);
+                            enemies.splice(enemies.indexOf(p.target), 1);
+                        }
+                    }
+                } else {
+                    // Target died, fly off map
+                    if (p.x < 0 || p.x > W || p.y < 0 || p.y > H) projectiles.splice(i, 1);
+                }
+            });
+
+            // Particles
+            particles.forEach((p, i) => {
+                p.x += p.vx; p.y += p.vy; p.life -= 0.05;
+                if (p.life <= 0) particles.splice(i, 1);
+            });
+
+            // Wave check
+            if (!waiting && waveSpawned >= waveEnemies && enemies.length === 0 && lives > 0) {
+                waiting = true; wave++; gold += 50 + wave * 10; updateHUD();
+                document.getElementById('ovTitle').textContent = `Wave ${wave - 1} Cleared!`;
+                document.getElementById('startBtn').textContent = `Start Wave ${wave}`;
+                document.getElementById('overlay').classList.remove('hidden');
+            }
+
+            draw();
+            reqId = requestAnimationFrame(update);
+        }
+
+        function draw() {
+            ctx.fillStyle = '#020617'; ctx.fillRect(0, 0, W, H);
+
+            // Map
+            for (let y = 0; y < ROWS; y++) {
+                for (let x = 0; x < COLS; x++) {
+                    if (map[y][x] === 1) { ctx.fillStyle = '#1e293b'; ctx.fillRect(x * TS, y * TS, TS, TS); }
+                    if (map[y][x] === 2) { ctx.fillStyle = '#334155'; ctx.fillRect(x * TS, y * TS, TS, TS); ctx.fillStyle = '#fbbf24'; ctx.beginPath(); ctx.arc(x * TS + TS / 2, y * TS + TS / 2, 12, 0, Math.PI * 2); ctx.fill(); }
+                }
+            }
+
+            // Grid lines
+            ctx.strokeStyle = 'rgba(255,255,255,0.03)'; ctx.lineWidth = 1;
+            ctx.beginPath();
+            for (let x = 0; x <= W; x += TS) { ctx.moveTo(x, 0); ctx.lineTo(x, H); }
+            for (let y = 0; y <= H; y += TS) { ctx.moveTo(0, y); ctx.lineTo(W, y); }
+            ctx.stroke();
+
+            // Highlight tile
+            const tx = Math.floor(mx / TS), ty = Math.floor(my / TS);
+            if (tx >= 0 && tx < COLS && ty >= 0 && ty < ROWS) {
+                if (buildMode === 'sell') {
+                    ctx.fillStyle = 'rgba(239,68,68,0.3)'; ctx.fillRect(tx * TS, ty * TS, TS, TS);
+                } else {
+                    if (map[ty][tx] === 0 && !towers.some(t => t.tx === tx && t.ty === ty)) {
+                        ctx.fillStyle = 'rgba(255,255,255,0.1)'; ctx.fillRect(tx * TS, ty * TS, TS, TS);
+                        ctx.beginPath(); ctx.arc(tx * TS + TS / 2, ty * TS + TS / 2, TOWER_TYPES[buildMode].range, 0, Math.PI * 2);
+                        ctx.fillStyle = 'rgba(255,255,255,0.05)'; ctx.fill(); ctx.strokeStyle = 'rgba(255,255,255,0.15)'; ctx.stroke();
+                    } else {
+                        ctx.fillStyle = 'rgba(239,68,68,0.3)'; ctx.fillRect(tx * TS, ty * TS, TS, TS);
+                    }
+                }
+            }
+
+            // Towers
+            towers.forEach(t => {
+                // Base
+                ctx.fillStyle = '#334155'; ctx.fillRect(t.tx * TS + 4, t.ty * TS + 4, TS - 8, TS - 8);
+                // Turret
+                ctx.save(); ctx.translate(t.cx, t.cy); ctx.rotate(t.angle);
+                ctx.fillStyle = t.color;
+                ctx.beginPath(); ctx.arc(0, 0, 10, 0, Math.PI * 2); ctx.fill();
+                ctx.fillRect(0, -4, 16, 8);
+                ctx.restore();
+            });
+
+            // Projectiles
+            projectiles.forEach(p => {
+                ctx.fillStyle = '#fff'; ctx.shadowColor = p.color; ctx.shadowBlur = 8;
+                ctx.beginPath(); ctx.arc(p.x, p.y, 3, 0, Math.PI * 2); ctx.fill(); ctx.shadowBlur = 0;
+            });
+
+            // Enemies
+            enemies.forEach(e => {
+                ctx.fillStyle = e.color;
+                ctx.beginPath(); ctx.arc(e.x, e.y, e.r, 0, Math.PI * 2); ctx.fill();
+                // HP bar
+                ctx.fillStyle = '#ef4444'; ctx.fillRect(e.x - 10, e.y - e.r - 6, 20, 3);
+                ctx.fillStyle = '#22c55e'; ctx.fillRect(e.x - 10, e.y - e.r - 6, 20 * (e.hp / e.maxHp), 3);
+            });
+
+            // Particles
+            particles.forEach(p => {
+                ctx.globalAlpha = p.life; ctx.fillStyle = p.color;
+                ctx.beginPath(); ctx.arc(p.x, p.y, p.r, 0, Math.PI * 2); ctx.fill();
+            });
+            ctx.globalAlpha = 1;
+
+        }
+
+        draw();
+        updateHUD();
+
     </script>
 </body>
 

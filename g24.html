@@ -1,0 +1,561 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber 2048 | Infinite Arcade</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
+    <style>
+        :root {
+            --bg: #0f0f11;
+            --surface: rgba(20, 20, 25, .8);
+            --border: rgba(255, 107, 107, .2);
+            --accent: #ff6b6b;
+            --grid: #1a1a24;
+            --empty: #2a2a35
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            background: var(--bg);
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            overflow-x: hidden;
+            background-image: linear-gradient(45deg, #0f0f11, #1a1a24)
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: #a1a1aa;
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: .9rem;
+            z-index: 99;
+            transition: .2s
+        }
+
+        .back-btn:hover {
+            color: #fff
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 30px;
+            width: 100%;
+            max-width: 500px;
+            z-index: 10;
+            margin-top: 20px
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 4px;
+            color: rgba(255, 255, 255, .9);
+            text-shadow: 0 0 15px rgba(255, 107, 107, .5);
+            text-align: center
+        }
+
+        .hud {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            align-items: center;
+            padding: 16px 24px;
+            background: var(--surface);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+            backdrop-filter: blur(8px)
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center
+        }
+
+        .stat-label {
+            font-size: .7rem;
+            text-transform: uppercase;
+            color: #ff8787;
+            letter-spacing: 1px;
+            font-weight: 700
+        }
+
+        .stat-val {
+            font-family: 'Outfit';
+            font-size: 2rem;
+            font-weight: 900;
+            color: #fff
+        }
+
+        .game-board {
+            width: 100%;
+            max-width: 400px;
+            aspect-ratio: 1;
+            background: var(--grid);
+            padding: 10px;
+            border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, .8), inset 0 0 30px rgba(0, 0, 0, .5);
+            border: 2px solid #2a2a35;
+            position: relative;
+            touch-action: none
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 10px;
+            width: 100%;
+            height: 100%
+        }
+
+        .cell-bg {
+            background: var(--empty);
+            border-radius: 8px;
+            box-shadow: inset 0 4px 10px rgba(0, 0, 0, .5)
+        }
+
+        .tile-layer {
+            position: absolute;
+            inset: 10px;
+            pointer-events: none
+        }
+
+        .tile {
+            position: absolute;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Outfit';
+            font-weight: 900;
+            border-radius: 8px;
+            transition: transform 0.15s ease-in-out;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, .4);
+            animation: pop .2s cubic-bezier(0.175, 0.885, 0.32, 1.275)
+        }
+
+        .tile.merged {
+            animation: merge .2s cubic-bezier(0.175, 0.885, 0.32, 1.275)
+        }
+
+        @keyframes pop {
+            0% {
+                transform: scale(0)
+            }
+
+            100% {
+                transform: scale(1)
+            }
+        }
+
+        @keyframes merge {
+            0% {
+                transform: scale(1)
+            }
+
+            50% {
+                transform: scale(1.2)
+            }
+
+            100% {
+                transform: scale(1)
+            }
+        }
+
+        .t2 {
+            background: #3b82f6;
+            color: #fff;
+            font-size: 2.5rem;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, .5)
+        }
+
+        .t4 {
+            background: #8b5cf6;
+            color: #fff;
+            font-size: 2.5rem;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, .5)
+        }
+
+        .t8 {
+            background: #d946ef;
+            color: #fff;
+            font-size: 2.5rem;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, .5)
+        }
+
+        .t16 {
+            background: #f43f5e;
+            color: #fff;
+            font-size: 2.2rem;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, .5);
+            box-shadow: 0 0 15px rgba(244, 63, 94, .5)
+        }
+
+        .t32 {
+            background: #f97316;
+            color: #fff;
+            font-size: 2.2rem;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, .5);
+            box-shadow: 0 0 15px rgba(249, 115, 22, .5)
+        }
+
+        .t64 {
+            background: #eab308;
+            color: #fff;
+            font-size: 2.2rem;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, .5);
+            box-shadow: 0 0 15px rgba(234, 179, 8, .5)
+        }
+
+        .t128 {
+            background: #84cc16;
+            color: #fff;
+            font-size: 2rem;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, .5);
+            box-shadow: 0 0 20px rgba(132, 204, 22, .6)
+        }
+
+        .t256 {
+            background: #10b981;
+            color: #fff;
+            font-size: 2rem;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, .5);
+            box-shadow: 0 0 20px rgba(16, 185, 129, .6)
+        }
+
+        .t512 {
+            background: #06b6d4;
+            color: #fff;
+            font-size: 2rem;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, .5);
+            box-shadow: 0 0 20px rgba(6, 182, 212, .6)
+        }
+
+        .t1024 {
+            background: #6366f1;
+            color: #fff;
+            font-size: 1.6rem;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, .5);
+            box-shadow: 0 0 25px rgba(99, 102, 241, .8)
+        }
+
+        .t2048 {
+            background: #fff;
+            color: #000;
+            font-size: 1.6rem;
+            text-shadow: 0 2px 5px rgba(255, 255, 255, .5);
+            box-shadow: 0 0 30px #fff
+        }
+
+        .tsuper {
+            background: linear-gradient(45deg, #ff0000, #00ff00, #0000ff);
+            color: #fff;
+            font-size: 1.4rem;
+            text-shadow: 0 2px 5px rgba(0, 0, 0, .8);
+            box-shadow: 0 0 40px rgba(255, 255, 255, .8)
+        }
+
+        .overlay {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: rgba(9, 9, 11, .9);
+            backdrop-filter: blur(8px);
+            z-index: 50
+        }
+
+        .overlay.hidden {
+            display: none
+        }
+
+        .overlay h2 {
+            font-family: 'Outfit';
+            font-size: 4rem;
+            font-weight: 900;
+            margin-bottom: 10px;
+            color: var(--accent);
+            text-shadow: 0 0 30px rgba(255, 107, 107, .5)
+        }
+
+        .btn-primary {
+            margin-top: 30px;
+            padding: 16px 40px;
+            border-radius: 12px;
+            border: none;
+            background: var(--accent);
+            color: #0f0f11;
+            font-family: 'Outfit';
+            font-weight: 900;
+            font-size: 1.3rem;
+            cursor: pointer;
+            transition: .2s;
+            box-shadow: 0 10px 20px rgba(255, 107, 107, .4);
+            text-transform: uppercase;
+            letter-spacing: 2px
+        }
+
+        .btn-primary:hover {
+            background: #ffa8a8;
+            transform: translateY(-2px);
+            box-shadow: 0 15px 30px rgba(255, 107, 107, .6)
+        }
+
+        .controls-hint {
+            color: #a1a1aa;
+            font-family: 'Outfit';
+            font-size: 1rem;
+            margin-top: 20px;
+            display: flex;
+            gap: 15px
+        }
+
+        .k {
+            padding: 4px 8px;
+            background: rgba(255, 255, 255, .1);
+            border-radius: 4px;
+            color: #fff
+        }
+    </style>
+</head>
+
+<body>
+    <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Hub</a>
+
+    <div class="overlay" id="overlay">
+        <h2 id="ovTitle">No Moves Left</h2>
+        <p id="ovDesc" style="color:#a1a1aa;font-size:1.5rem;font-family:'Outfit';font-weight:700"></p>
+        <button class="btn-primary" onclick="init()">Reboot Grid</button>
+    </div>
+
+    <div class="container">
+        <h1>CYBER 2048</h1>
+
+        <div class="hud">
+            <div class="stat">
+                <div class="stat-label">Score</div>
+                <div class="stat-val" id="score">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Best</div>
+                <div class="stat-val" id="best">0</div>
+            </div>
+        </div>
+
+        <div class="game-board" id="boardEl">
+            <div class="grid" id="bgGrid"></div>
+            <div class="tile-layer" id="tiles"></div>
+        </div>
+
+        <div class="controls-hint">
+            <span><span class="k">↑</span> <span class="k">↓</span> <span class="k">←</span> <span class="k">→</span>
+                Swipe or Keys</span>
+        </div>
+    </div>
+
+    <script>
+        let grid = [], score = 0, best = +localStorage.getItem('cyber2048_best') || 0;
+        const S = 4, PAD = 10;
+        let tSize = 0;
+        const bgGrid = document.getElementById('bgGrid');
+        const tileLayer = document.getElementById('tiles');
+        document.getElementById('best').textContent = best;
+
+        let touchStartX = 0, touchStartY = 0;
+
+        function resize() {
+            tSize = (document.getElementById('boardEl').clientWidth - 20 - (PAD * 3)) / 4;
+            render(); // updates physical positions
+        }
+        window.addEventListener('resize', resize);
+
+        function init() {
+            score = 0; document.getElementById('score').textContent = score;
+            document.getElementById('overlay').classList.add('hidden');
+            grid = Array(S).fill().map(() => Array(S).fill(null));
+            tileLayer.innerHTML = '';
+            bgGrid.innerHTML = '';
+            for (let i = 0; i < 16; i++) {
+                const bgc = document.createElement('div');
+                bgc.className = 'cell-bg';
+                bgGrid.appendChild(bgc);
+            }
+
+            resize();
+            addTile(); addTile();
+            render();
+        }
+
+        function addTile() {
+            let empty = [];
+            for (let r = 0; r < S; r++) for (let c = 0; c < S; c++) if (!grid[r][c]) empty.push({ r, c });
+            if (empty.length > 0) {
+                let spot = empty[Math.floor(Math.random() * empty.length)];
+                let val = Math.random() < 0.9 ? 2 : 4;
+                let id = Math.random().toString(36).substr(2, 9);
+                grid[spot.r][spot.c] = { val, id, newlyMerged: false, isNew: true };
+            }
+        }
+
+        function render() {
+            // Keep DOM elements mapped to IDs to animate moves
+            // Simple approach: re-render all, rely on CSS transitions for moves if DOM element persists.
+            // So we match element by ID.
+
+            let currentIds = [];
+            for (let r = 0; r < S; r++) {
+                for (let c = 0; c < S; c++) {
+                    let t = grid[r][c];
+                    if (t) {
+                        currentIds.push(t.id);
+                        let el = document.getElementById(t.id);
+                        if (!el) {
+                            el = document.createElement('div');
+                            el.id = t.id;
+                            el.className = `tile t${t.val > 2048 ? 'super' : t.val}`;
+                            if (t.isNew) el.style.animation = 'pop 0.2s';
+                            tileLayer.appendChild(el);
+                            t.isNew = false;
+                        }
+
+                        // Update position
+                        el.style.width = tSize + 'px';
+                        el.style.height = tSize + 'px';
+                        el.style.transform = `translate(${c * (tSize + PAD)}px, ${r * (tSize + PAD)}px)`;
+                        el.className = `tile t${t.val > 2048 ? 'super' : t.val} ${t.newlyMerged ? 'merged' : ''}`;
+                        el.textContent = t.val;
+                        t.newlyMerged = false;
+                    }
+                }
+            }
+
+            // Cleanup old tiles
+            Array.from(tileLayer.children).forEach(el => {
+                if (!currentIds.includes(el.id)) {
+                    el.style.opacity = 0;
+                    setTimeout(() => el.remove(), 150); // wait for transition
+                }
+            });
+        }
+
+        function move(dir) {
+            let moved = false;
+            let newGrid = Array(S).fill().map(() => Array(S).fill(null));
+
+            // Extract rows/cols, merge, inject back
+            for (let i = 0; i < S; i++) {
+                let line = [];
+                for (let j = 0; j < S; j++) {
+                    let r = (dir === 'l' || dir === 'r') ? i : ((dir === 'u') ? j : S - 1 - j);
+                    let c = (dir === 'u' || dir === 'd') ? i : ((dir === 'l') ? j : S - 1 - j);
+                    if (grid[r][c]) line.push(grid[r][c]);
+                }
+
+                let mergedLine = [];
+                let skip = false;
+                for (let k = 0; k < line.length; k++) {
+                    if (skip) { skip = false; continue; }
+                    if (k < line.length - 1 && line[k].val === line[k + 1].val) {
+                        let v = line[k].val * 2;
+                        score += v;
+                        // keep the ID of the first one so it translates, kill the second
+                        // actually better UX: target merges into stationary. Since we extract sequentially, line[k] is the destination.
+                        mergedLine.push({ val: v, id: line[k].id, newlyMerged: true, isNew: false });
+                        skip = true; moved = true;
+                    } else {
+                        mergedLine.push(line[k]);
+                    }
+                }
+
+                while (mergedLine.length < S) mergedLine.push(null);
+
+                for (let j = 0; j < S; j++) {
+                    let r = (dir === 'l' || dir === 'r') ? i : ((dir === 'u') ? j : S - 1 - j);
+                    let c = (dir === 'u' || dir === 'd') ? i : ((dir === 'l') ? j : S - 1 - j);
+                    newGrid[r][c] = mergedLine[j];
+                }
+            }
+
+            // Check if moved
+            if (!moved) {
+                for (let r = 0; r < S; r++) for (let c = 0; c < S; c++) {
+                    if (!grid[r][c] && newGrid[r][c]) moved = true;
+                    if (grid[r][c] && newGrid[r][c] && grid[r][c].id !== newGrid[r][c].id) moved = true;
+                }
+            }
+
+            if (moved) {
+                grid = newGrid;
+                document.getElementById('score').textContent = score;
+                if (score > best) { best = score; localStorage.setItem('cyber2048_best', best); document.getElementById('best').textContent = best; }
+                render(); // move existing
+                setTimeout(() => { addTile(); render(); checkOver(); }, 150);
+            }
+        }
+
+        function checkOver() {
+            let over = true;
+            for (let r = 0; r < S; r++) for (let c = 0; c < S; c++) {
+                if (!grid[r][c]) over = false;
+                if (c < S - 1 && grid[r][c] && grid[r][c + 1] && grid[r][c].val === grid[r][c + 1].val) over = false;
+                if (r < S - 1 && grid[r][c] && grid[r + 1][c] && grid[r][c].val === grid[r + 1][c].val) over = false;
+            }
+            if (over) {
+                document.getElementById('ovDesc').innerHTML = `Final Score: <span style="color:#fff">${score}</span>`;
+                setTimeout(() => document.getElementById('overlay').classList.remove('hidden'), 500);
+            }
+        }
+
+        document.addEventListener('keydown', e => {
+            if (document.getElementById('overlay').classList.contains('hidden')) {
+                if (e.code === 'ArrowLeft') move('l');
+                if (e.code === 'ArrowRight') move('r');
+                if (e.code === 'ArrowUp') move('u');
+                if (e.code === 'ArrowDown') move('d');
+            }
+        });
+
+        const bEl = document.getElementById('boardEl');
+        bEl.addEventListener('touchstart', e => { touchStartX = e.changedTouches[0].screenX; touchStartY = e.changedTouches[0].screenY; }, { passive: false });
+        bEl.addEventListener('touchmove', e => e.preventDefault(), { passive: false });
+        bEl.addEventListener('touchend', e => {
+            if (!document.getElementById('overlay').classList.contains('hidden')) return;
+            let dx = e.changedTouches[0].screenX - touchStartX;
+            let dy = e.changedTouches[0].screenY - touchStartY;
+            if (Math.abs(dx) > Math.abs(dy)) {
+                if (dx > 30) move('r'); else if (dx < -30) move('l');
+            } else {
+                if (dy > 30) move('d'); else if (dy < -30) move('u');
+            }
+        });
+
+        window.onload = init;
+    </script>
+</body>
+
+</html>

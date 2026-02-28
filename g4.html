@@ -1,592 +1,332 @@
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sliding Block Puzzle</title>
-    <!-- Tailwind CSS CDN -->
-    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Flux Puzzle | Infinite Arcade</title>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@400;700;900&family=Inter:wght@400;600&display=swap"
+        rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;700&display=swap');
-
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #f0f4f8; /* Light blue-gray background */
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            margin: 0;
-            padding: 1rem; /* Base padding for all screens */
-            box-sizing: border-box;
-            overflow-y: auto; /* Allow vertical scrolling if content overflows */
+        :root {
+            --bg: #1e1b4b;
+            --surface: rgba(49, 46, 129, .6);
+            --border: rgba(99, 102, 241, .3);
+            --accent: #6366f1
         }
 
-        .game-container {
-            background-color: #ffffff;
-            border-radius: 1.5rem;
-            box-shadow: 0 10px 20px rgba(0, 0, 0, 0.1);
-            padding: 2rem;
-            text-align: center;
-            width: 100%; /* Take full width of parent (body padding applied) */
-            max-width: 600px; /* Max width for the entire game container */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box
+        }
+
+        body {
+            background: var(--bg);
+            color: #f8fafc;
+            font-family: 'Inter', sans-serif;
+            min-height: 100vh;
             display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 1.5rem;
-            box-sizing: border-box;
+            justify-content: center;
+            user-select: none;
+            background-image: radial-gradient(circle at top right, rgba(99, 102, 241, 0.15), transparent 50%)
+        }
+
+        .back-btn {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            color: var(--accent);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: .9rem;
+            z-index: 99;
+            transition: .2s
+        }
+
+        .back-btn:hover {
+            color: #818cf8;
+            text-shadow: 0 0 10px #818cf8
+        }
+
+        .container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 24px;
+            width: 100%;
+            max-width: 500px;
+            padding: 20px
+        }
+
+        h1 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3rem;
+            font-weight: 900;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            background: linear-gradient(to right, #a5b4fc, #6366f1);
+            -webkit-background-clip: text; background-clip: text;
+            -webkit-text-fill-color: transparent;
+            text-align: center
+        }
+
+        .status-bar {
+            display: flex;
+            justify-content: space-between;
+            width: 100%;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 12px 24px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, .5);
+            backdrop-filter: blur(8px)
+        }
+
+        .stat {
+            display: flex;
+            flex-direction: column;
+            align-items: center
+        }
+
+        .stat-label {
+            font-size: .7rem;
+            text-transform: uppercase;
+            color: #a5b4fc;
+            letter-spacing: 1px
+        }
+
+        .stat-val {
+            font-family: 'Outfit', sans-serif;
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: #fff
+        }
+
+        .puzzle-board {
+            position: relative;
+            width: 320px;
+            height: 320px;
+            background: #111827;
+            border: 2px solid var(--border);
+            border-radius: 16px;
+            box-shadow: 0 20px 50px rgba(0, 0, 0, .5), inset 0 0 20px rgba(0, 0, 0, .8);
+            padding: 4px
+        }
+
+        .tile {
+            position: absolute;
+            width: 100px;
+            height: 100px;
+            background: linear-gradient(135deg, #4f46e5, #3730a3);
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-family: 'Outfit', sans-serif;
+            font-size: 2.5rem;
+            font-weight: 900;
+            color: #fff;
+            cursor: pointer;
+            transition: transform 0.2s cubic-bezier(0.2, 0.8, 0.2, 1);
+            box-shadow: inset 2px 2px 10px rgba(255, 255, 255, .2), 2px 2px 10px rgba(0, 0, 0, .4)
+        }
+
+        .tile::after {
+            content: '';
+            position: absolute;
+            inset: 2px;
+            border: 1px solid rgba(255, 255, 255, .1);
+            border-radius: 10px
+        }
+
+        .tile:hover {
+            filter: brightness(1.2);
+            box-shadow: 0 0 15px rgba(99, 102, 241, .6)
         }
 
         .controls {
             display: flex;
-            flex-wrap: wrap;
-            gap: 1rem;
-            justify-content: center;
-            align-items: center;
-            margin-bottom: 1rem;
-            width: 100%; /* Ensure controls take full width to wrap properly */
+            gap: 16px;
+            margin-top: 20px
         }
 
-        .controls label, .controls select, .controls button {
-            padding: 0.75rem 1.25rem;
-            border-radius: 0.75rem; /* More rounded buttons/selects */
-            border: 1px solid #cbd5e0;
-            background-color: #f7fafc;
-            font-size: 1rem;
-            font-weight: bold;
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            border: none;
+            background: var(--accent);
+            color: #fff;
+            font-family: 'Outfit';
+            font-weight: 700;
+            font-size: 1.1rem;
             cursor: pointer;
-            transition: all 0.2s ease-in-out;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+            transition: .2s;
+            box-shadow: 0 5px 15px rgba(99, 102, 241, .4)
         }
 
-        .controls select {
-            flex-grow: 1; /* Allow selects to grow if space permits */
-            min-width: 120px; /* Minimum width for selects before wrapping */
+        .btn:hover {
+            background: #4f46e5;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(99, 102, 241, .6)
         }
 
-        .controls button.bg-blue-500 { background-color: #3b82f6; color: white; }
-        .controls button.bg-blue-500:hover { background-color: #2563eb; transform: translateY(-2px); }
-        .controls button.bg-green-500 { background-color: #22c55e; color: white; }
-        .controls button.bg-green-500:hover { background-color: #16a34a; transform: translateY(-2px); }
-        .controls button.bg-yellow-500 { background-color: #f59e0b; color: white; }
-        .controls button.bg-yellow-500:hover { background-color: #d97706; transform: translateY(-2px); }
-
-
-        .puzzle-board {
-            display: grid;
-            gap: 5px; /* Small gap between tiles */
-            width: 90%; /* Take 90% of game-container width to ensure space */
-            max-width: 450px; /* Maximum width for the board itself */
-            background-color: #a0aec0; /* Background for the board to show gaps */
-            border-radius: 0.5rem;
-            padding: 5px;
-            box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.06);
-            aspect-ratio: 1 / 1; /* Keep the board perfectly square */
-            margin: 0 auto; /* Center the board */
-        }
-
-        .puzzle-tile {
-            background-color: #63b3ed; /* Blue tile color */
-            color: white;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            font-size: 2.5rem; /* Base font size, will be overridden by responsive classes */
-            font-weight: bold;
-            border-radius: 0.5rem;
-            cursor: pointer;
-            transition: transform 0.2s ease-out, background-color 0.2s ease-out;
-            user-select: none; /* Prevent text selection */
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
-            background-repeat: no-repeat; /* For image tiles */
-            background-size: cover; /* Default for image tiles, will be overridden */
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.3); /* For number legibility on images */
-        }
-
-        .puzzle-tile.empty {
-            background-color: transparent;
-            cursor: default;
-            box-shadow: none;
-            text-shadow: none;
-            background-image: none !important; /* Ensure no image on empty tile */
-        }
-
-        .puzzle-tile:not(.empty):hover {
-            background-color: #4299e1; /* Darker blue on hover */
-            transform: translateY(-2px); /* Slight lift on hover */
-        }
-
-        /* Responsive font size for tiles based on board size and screen size */
-        /* Default/Large Screens */
-        .puzzle-board.board-3x3 .puzzle-tile { font-size: 3rem; }
-        .puzzle-board.board-4x4 .puzzle-tile { font-size: 2.2rem; }
-        .puzzle-board.board-5x5 .puzzle-tile { font-size: 1.6rem; }
-
-        /* Tablet and smaller desktops */
-        @media (max-width: 768px) {
-            body {
-                padding: 0.75rem; /* Slightly less padding on smaller screens */
-            }
-            .game-container {
-                padding: 1.5rem;
-                gap: 1rem;
-                max-width: 95%; /* Allow it to take more width on tablets */
-            }
-            .puzzle-board {
-                max-width: 350px; /* Limit board size for tablets */
-            }
-            h1 {
-                font-size: 1.75rem;
-            }
-            .controls {
-                flex-direction: column; /* Stack controls vertically */
-                gap: 0.75rem;
-            }
-            .controls select, .controls button {
-                width: 100%; /* Full width for controls on small screens */
-                padding: 0.6rem 1rem;
-                font-size: 0.9rem;
-            }
-
-            .puzzle-board.board-3x3 .puzzle-tile { font-size: 2.5rem; }
-            .puzzle-board.board-4x4 .puzzle-tile { font-size: 1.8rem; }
-            .puzzle-board.board-5x5 .puzzle-tile { font-size: 1.3rem; }
-        }
-
-        /* Mobile phones */
-        @media (max-width: 480px) {
-            body {
-                padding: 0.5rem; /* Even less padding on mobile */
-            }
-            .game-container {
-                padding: 1rem;
-                gap: 0.75rem;
-            }
-            .puzzle-board {
-                max-width: 280px; /* Even smaller for phones */
-                gap: 3px; /* Smaller gap */
-                padding: 3px;
-            }
-            .puzzle-tile {
-                border-radius: 0.4rem;
-            }
-            h1 {
-                font-size: 1.5rem;
-            }
-
-            .puzzle-board.board-3x3 .puzzle-tile { font-size: 2rem; }
-            .puzzle-board.board-4x4 .puzzle-tile { font-size: 1.5rem; }
-            .puzzle-board.board-5x5 .puzzle-tile { font-size: 1.1rem; }
-        }
-
-        /* Extra small phones (e.g., iPhone SE) */
-        @media (max-width: 320px) {
-            .game-container {
-                padding: 0.75rem;
-                gap: 0.5rem;
-            }
-            .puzzle-board {
-                max-width: 250px; /* Smallest max-width */
-            }
-            h1 {
-                font-size: 1.3rem;
-            }
-            .controls select, .controls button {
-                font-size: 0.8rem;
-                padding: 0.4rem 0.7rem;
-            }
-
-            .puzzle-board.board-3x3 .puzzle-tile { font-size: 1.8rem; }
-            .puzzle-board.board-4x4 .puzzle-tile { font-size: 1.2rem; }
-            .puzzle-board.board-5x5 .puzzle-tile { font-size: 0.9rem; }
-        }
-
-        /* Message box specific styles */
-        .message-box {
+        .overlay {
             position: fixed;
-            top: 50%;
-            left: 50%;
-            transform: translate(-50%, -50%);
-            background-color: #4a5568;
-            color: white;
-            padding: 1.5rem 2.5rem;
-            border-radius: 1rem;
-            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
-            z-index: 1000;
-            display: none; /* Hidden by default */
+            inset: 0;
+            display: flex;
             flex-direction: column;
             align-items: center;
-            gap: 1rem;
-            font-size: 1.25rem;
-            font-weight: bold;
-            opacity: 0; /* Start invisible */
-            transition: opacity 0.3s ease-in-out; /* Smooth fade effect */
+            justify-content: center;
+            background: rgba(17, 24, 39, .9);
+            backdrop-filter: blur(8px);
+            z-index: 50
         }
 
-        .message-box.show {
-            opacity: 1; /* Fade in */
+        .overlay.hidden {
+            display: none
+        }
+
+        .overlay h2 {
+            font-family: 'Outfit', sans-serif;
+            font-size: 3.5rem;
+            font-weight: 900;
+            color: #818cf8;
+            margin-bottom: 10px;
+            text-shadow: 0 0 30px rgba(129, 140, 248, .5)
         }
     </style>
 </head>
-<body class="bg-gray-100 flex items-center justify-center min-h-screen p-4">
-    <div class="game-container">
-        <h1 class="text-3xl font-bold text-gray-800 mb-4">Sliding Block Puzzle</h1>
 
-        <div class="controls">
-            <label for="puzzle-type-select" class="font-semibold text-gray-700">Puzzle Type:</label>
-            <select id="puzzle-type-select" class="bg-white">
-                <option value="numbers">Numbers</option>
-                <option value="image-forest">Forest Landscape</option>
-                <option value="image-sunset">Abstract Sunset</option>
-                <option value="image-ocean">Ocean Waves</option>
-            </select>
+<body>
+    <a href="index.html" class="back-btn"><i class="fas fa-arrow-left"></i> Hub</a>
 
-            <label for="board-size-select" class="font-semibold text-gray-700">Difficulty:</label>
-            <select id="board-size-select" class="bg-white">
-                <option value="3">Easy (3x3)</option>
-                <option value="4" selected>Medium (4x4)</option>
-                <option value="5">Hard (5x5)</option>
-            </select>
+    <div class="container">
+        <h1>FLUX PUZZLE</h1>
 
-            <button id="start-puzzle-button" class="bg-blue-500 text-white">Start New Puzzle</button>
-            <button id="shuffle-button" class="bg-green-500 text-white">Shuffle Puzzle</button>
-            <button id="solve-button" class="bg-yellow-500 text-white">Solve Puzzle</button>
+        <div class="status-bar">
+            <div class="stat">
+                <div class="stat-label">Moves</div>
+                <div class="stat-val" id="moves">0</div>
+            </div>
+            <div class="stat">
+                <div class="stat-label">Time</div>
+                <div class="stat-val" id="timer">00:00</div>
+            </div>
         </div>
 
-        <div id="puzzle-board" class="puzzle-board">
-            <!-- Puzzle tiles will be dynamically inserted here -->
+        <div class="puzzle-board" id="board"></div>
+
+        <div class="controls">
+            <button class="btn" onclick="scramble()"><i class="fas fa-random"></i> Shuffle Modules</button>
         </div>
     </div>
 
-    <!-- Message Box for game outcomes -->
-    <div id="message-box" class="message-box">
-        <p id="message-text"></p>
-        <!-- The "OK" button has been removed -->
+    <div class="overlay hidden" id="overlay">
+        <h2>Sequence Restored</h2>
+        <p id="ovDesc" style="color:#cbd5e1;margin-bottom:30px;font-size:1.2rem"></p>
+        <button class="btn" onclick="scramble()">Play Again</button>
     </div>
 
     <script>
-        const puzzleBoard = document.getElementById('puzzle-board');
-        const puzzleTypeSelect = document.getElementById('puzzle-type-select');
-        const boardSizeSelect = document.getElementById('board-size-select');
-        const startPuzzleButton = document.getElementById('start-puzzle-button');
-        const shuffleButton = document.getElementById('shuffle-button');
-        const solveButton = document.getElementById('solve-button');
-        const messageBox = document.getElementById('message-box');
-        const messageText = document.getElementById('message-text');
-        // Removed messageButton constant as the button is gone
+        const board = document.getElementById('board');
+        const TILE_SIZE = 104; // 100px + 4px gap internally calculated visually
+        let tiles = [];
+        let emptyPos = { r: 2, c: 2 };
+        let moves = 0, time = 0, timerId = null;
+        let isSolvedMode = false;
 
-        // Puzzle configurations for different types and images
-        const puzzleConfigs = {
-            'numbers': {
-                type: 'numbers',
-            },
-            'image-forest': {
-                type: 'image',
-                url: 'https://placehold.co/800x800/bbf7d0/22c55e?text=Forest',
-                alt: 'Forest Landscape'
-            },
-            'image-sunset': {
-                type: 'image',
-                url: 'https://placehold.co/800x800/fecaca/dc2626?text=Sunset',
-                alt: 'Abstract Sunset'
-            },
-            'image-ocean': {
-                type: 'image',
-                url: 'https://placehold.co/800x800/bfdbfe/3b82f6?text=Ocean',
-                alt: 'Ocean Waves'
-            }
-        };
-
-        let currentBoardSize = 4; // Default 4x4
-        let currentPuzzleType = 'numbers'; // Default numbers
-        let tiles = []; // Array to store the current order of tile numbers (0 for empty)
-        let emptyTileIndex; // Index of the empty tile in the `tiles` array
-        let currentImage = new Image(); // For image puzzles
-        let messageTimeoutId; // To store the timeout ID for hiding messages
-
-        /**
-         * Shows a message box that disappears automatically after a delay.
-         * @param {string} message The message to display.
-         * @param {number} duration The duration in milliseconds to display the message (default 2000).
-         */
-        function showMessageBox(message, duration = 2000) {
-            messageText.textContent = message;
-            messageBox.style.display = 'flex'; // Make it visible
-            // Force reflow to ensure transition plays
-            messageBox.offsetWidth;
-            messageBox.classList.add('show'); // Trigger fade-in
-
-            // Clear any previous timeout
-            if (messageTimeoutId) {
-                clearTimeout(messageTimeoutId);
-            }
-
-            messageTimeoutId = setTimeout(() => {
-                messageBox.classList.remove('show'); // Trigger fade-out
-                // Hide fully after transition completes
-                setTimeout(() => {
-                    messageBox.style.display = 'none';
-                }, 300); // Match CSS transition duration
-            }, duration);
-        }
-
-        /**
-         * Initializes the puzzle board with tiles in solved order based on current selections.
-         */
-        function initializeBoard() {
-            puzzleBoard.innerHTML = ''; // Clear existing tiles
-            currentBoardSize = parseInt(boardSizeSelect.value);
-            currentPuzzleType = puzzleTypeSelect.value;
-
-            // Update grid class for responsive font sizing
-            puzzleBoard.className = 'puzzle-board'; // Reset to base class
-            puzzleBoard.classList.add(`board-${currentBoardSize}x${currentBoardSize}`);
-
-            tiles = Array.from({ length: currentBoardSize * currentBoardSize - 1 }, (_, i) => i + 1);
-            tiles.push(0); // 0 represents the empty tile
-            emptyTileIndex = tiles.indexOf(0); // Set initial empty tile index
-
-            puzzleBoard.style.gridTemplateColumns = `repeat(${currentBoardSize}, 1fr)`; // Set grid columns
-
-            if (currentPuzzleType.startsWith('image-')) {
-                const config = puzzleConfigs[currentPuzzleType];
-                showMessageBox('Loading image puzzle...');
-                currentImage.src = config.url;
-                currentImage.onload = () => {
-                    // Check if the puzzle type is still an image puzzle (user might have changed it during load)
-                    if (puzzleTypeSelect.value === currentPuzzleType) {
-                        renderBoard();
-                    }
-                    // No need to call hideMessageBox() here, showMessageBox handles duration.
-                };
-                currentImage.onerror = () => {
-                    showMessageBox('Failed to load image. Falling back to numbers puzzle.');
-                    puzzleTypeSelect.value = 'numbers';
-                    currentPuzzleType = 'numbers';
-                    renderBoard(); // Render numbers puzzle if image fails
-                };
-            } else {
-                renderBoard(); // Render numbers puzzle directly
-            }
-        }
-
-        /**
-         * Renders the tiles on the puzzle board based on the `tiles` array.
-         */
-        function renderBoard() {
-            puzzleBoard.innerHTML = '';
-            const isImagePuzzle = currentPuzzleType.startsWith('image-');
-            // Get current computed dimensions of the puzzle board after CSS styling
-            let renderedBoardWidth = puzzleBoard.offsetWidth;
-            let renderedBoardHeight = puzzleBoard.offsetHeight;
-
-            tiles.forEach((number, index) => {
-                const tileDiv = document.createElement('div');
-                tileDiv.classList.add('puzzle-tile');
-                tileDiv.dataset.index = index; // Store its current position index
-                tileDiv.dataset.number = number; // Store its value
-
-                if (number === 0) {
-                    tileDiv.classList.add('empty');
-                } else {
-                    if (isImagePuzzle) {
-                        // Calculate background position for image tiles
-                        const col = (number - 1) % currentBoardSize;
-                        const row = Math.floor((number - 1) / currentBoardSize);
-
-                        // Ensure currentImage has natural dimensions before calculation
-                        if (currentImage.naturalWidth === 0 || currentImage.naturalHeight === 0) {
-                            console.warn("Image not fully loaded for background calculations. Using fallback.");
-                            // Fallback if image dimensions aren't available yet (should be caught by onload)
-                            tileDiv.textContent = number; // Display number temporarily
-                        } else {
-                             // Calculate background size relative to the *rendered* board size
-                            const backgroundSizeX = renderedBoardWidth;
-                            const backgroundSizeY = renderedBoardHeight;
-
-                            // Calculate background position in pixels
-                            const backgroundPositionX = -(col * (backgroundSizeX / currentBoardSize));
-                            const backgroundPositionY = -(row * (backgroundSizeY / currentBoardSize));
-
-                            tileDiv.style.backgroundImage = `url('${currentImage.src}')`;
-                            tileDiv.style.backgroundSize = `${backgroundSizeX}px ${backgroundSizeY}px`;
-                            tileDiv.style.backgroundPosition = `${backgroundPositionX}px ${backgroundPositionY}px`;
-                        }
-                    } else {
-                        tileDiv.textContent = number;
-                    }
-                    tileDiv.addEventListener('click', () => moveTile(index));
-                }
-                puzzleBoard.appendChild(tileDiv);
-            });
-        }
-
-        /**
-         * Checks if a tile can be moved to the empty spot.
-         * @param {number} tileIndex The current index of the tile clicked.
-         * @returns {boolean} True if the tile can move, false otherwise.
-         */
-        function canMove(tileIndex) {
-            const tileRow = Math.floor(tileIndex / currentBoardSize);
-            const tileCol = tileIndex % currentBoardSize;
-            const emptyRow = Math.floor(emptyTileIndex / currentBoardSize);
-            const emptyCol = emptyTileIndex % currentBoardSize;
-
-            // Check if the tile is adjacent to the empty spot (horizontally or vertically)
-            const isAdjacentRow = tileRow === emptyRow && Math.abs(tileCol - emptyCol) === 1;
-            const isAdjacentCol = tileCol === emptyCol && Math.abs(tileRow - emptyRow) === 1;
-
-            return isAdjacentRow || isAdjacentCol;
-        }
-
-        /**
-         * Moves a tile to the empty spot if valid.
-         * @param {number} tileIndex The index of the tile to move.
-         */
-        function moveTile(tileIndex) {
-            if (!canMove(tileIndex)) {
-                return;
-            }
-
-            // Swap the tile and the empty spot
-            [tiles[tileIndex], tiles[emptyTileIndex]] = [tiles[emptyTileIndex], tiles[tileIndex]];
-            emptyTileIndex = tileIndex; // Update the empty tile's new index
-
-            renderBoard(); // Re-render the board to reflect the move
-            checkWin(); // Check if the puzzle is solved
-        }
-
-        /**
-         * Shuffles the puzzle tiles. Ensures the shuffled puzzle is solvable.
-         */
-        function shuffleTiles() {
-            let shuffledTiles = [];
-            // Generate numbers 1 to (boardSize*boardSize - 1)
-            for (let i = 1; i < currentBoardSize * currentBoardSize; i++) {
-                shuffledTiles.push(i);
-            }
-
-            // Fisher-Yates shuffle
-            for (let i = shuffledTiles.length - 1; i > 0; i--) {
-                const j = Math.floor(Math.random() * (i + 1));
-                [shuffledTiles[i], shuffledTiles[j]] = [shuffledTiles[j], shuffledTiles[i]];
-            }
-
-            // Add the empty tile (0) back in
-            shuffledTiles.push(0);
-
-            // Check for solvability (for N*N puzzles)
-            if (!isSolvable(shuffledTiles, currentBoardSize)) {
-                // If not solvable, swap two non-empty tiles to make it solvable
-                // This changes the parity of inversions, ensuring solvability.
-                let swapIndex1 = shuffledTiles.findIndex(val => val !== 0);
-                let swapIndex2 = shuffledTiles.findIndex((val, idx) => val !== 0 && idx !== swapIndex1);
-
-                // Ensure swapIndex1 and swapIndex2 are valid before swapping
-                if (swapIndex1 !== -1 && swapIndex2 !== -1) {
-                    [shuffledTiles[swapIndex1], shuffledTiles[swapIndex2]] =
-                        [shuffledTiles[swapIndex2], shuffledTiles[swapIndex1]];
-                } else {
-                    console.warn("Could not find two non-empty tiles to swap for solvability fix.");
+        function init() {
+            for (let r = 0; r < 3; r++) {
+                for (let c = 0; c < 3; c++) {
+                    if (r === 2 && c === 2) continue; // empty slot
+                    const num = r * 3 + c + 1;
+                    const t = document.createElement('div');
+                    t.className = 'tile';
+                    t.textContent = num;
+                    t.dataset.r = r; t.dataset.c = c;
+                    t.dataset.num = num;
+                    t.onclick = () => moveTile(t);
+                    setPos(t, r, c);
+                    board.appendChild(t);
+                    tiles.push(t);
                 }
             }
-
-            tiles = shuffledTiles;
-            emptyTileIndex = tiles.indexOf(0);
-            renderBoard();
-            showMessageBox('Puzzle shuffled! Good luck!');
+            scramble();
         }
 
-        /**
-         * Calculates the number of inversions in the tile array (excluding 0).
-         * An inversion is when a higher number comes before a lower number.
-         * Used to check puzzle solvability.
-         * @param {Array<number>} arr The current arrangement of tiles.
-         * @returns {number} The total number of inversions.
-         */
-        function countInversions(arr) {
-            let inversions = 0;
-            const tempArr = arr.filter(num => num !== 0); // Exclude empty tile
-            for (let i = 0; i < tempArr.length - 1; i++) {
-                for (let j = i + 1; j < tempArr.length; j++) {
-                    if (tempArr[i] > tempArr[j]) {
-                        inversions++;
-                    }
+        function setPos(el, r, c) {
+            el.style.transform = `translate(${c * TILE_SIZE + 4}px, ${r * TILE_SIZE + 4}px)`;
+            el.dataset.r = r; el.dataset.c = c;
+        }
+
+        function moveTile(el, isSetup = false) {
+            if (isSolvedMode) return;
+            const r = +el.dataset.r, c = +el.dataset.c;
+            // Check adjacent
+            if ((Math.abs(r - emptyPos.r) === 1 && c === emptyPos.c) ||
+                (Math.abs(c - emptyPos.c) === 1 && r === emptyPos.r)) {
+
+                // Swap
+                const tr = emptyPos.r, tc = emptyPos.c;
+                emptyPos.r = r; emptyPos.c = c;
+                setPos(el, tr, tc);
+
+                if (!isSetup) {
+                    moves++; document.getElementById('moves').textContent = moves;
+                    if (moves === 1 && !timerId) timerId = setInterval(() => { time++; updateTimer(); }, 1000);
+                    checkWin();
                 }
             }
-            return inversions;
         }
 
-        /**
-         * Checks if the current puzzle configuration is solvable.
-         * @param {Array<number>} currentTiles The current arrangement of tiles.
-         * @param {number} size The board size (N for NxN).
-         * @returns {boolean} True if the puzzle is solvable, false otherwise.
-         */
-        function isSolvable(currentTiles, size) {
-            const inversions = countInversions(currentTiles);
-            if (size % 2 === 1) { // Odd grid (e.g., 3x3, 5x5)
-                return inversions % 2 === 0;
-            } else { // Even grid (e.g., 4x4)
-                // Row of empty tile from bottom (1-indexed)
-                const emptyRow = Math.floor(currentTiles.indexOf(0) / size); // 0-indexed row
-                const emptyRowFromBottom = size - emptyRow; // 1-indexed from bottom
-
-                // If N is even, puzzle is solvable if:
-                // (number of inversions is even) AND (empty tile is on an odd row counting from bottom) OR
-                // (number of inversions is odd) AND (empty tile is on an even row counting from bottom)
-                return (inversions % 2 === 0 && emptyRowFromBottom % 2 === 1) ||
-                       (inversions % 2 === 1 && emptyRowFromBottom % 2 === 0);
+        function scramble() {
+            isSolvedMode = false;
+            document.getElementById('overlay').classList.add('hidden');
+            // perform random valid moves
+            for (let i = 0; i < 150; i++) {
+                // find active neighbors
+                const neighbors = tiles.filter(t => {
+                    const r = +t.dataset.r, c = +t.dataset.c;
+                    return (Math.abs(r - emptyPos.r) === 1 && c === emptyPos.c) || (Math.abs(c - emptyPos.c) === 1 && r === emptyPos.r);
+                });
+                const pick = neighbors[Math.floor(Math.random() * neighbors.length)];
+                if (pick) moveTile(pick, true);
             }
+            moves = 0; time = 0; clearInterval(timerId); timerId = null;
+            document.getElementById('moves').textContent = '0';
+            document.getElementById('timer').textContent = '00:00';
         }
 
-        /**
-         * Checks if the puzzle is in its solved state.
-         */
+        function updateTimer() {
+            document.getElementById('timer').textContent = `${String(Math.floor(time / 60)).padStart(2, '0')}:${String(time % 60).padStart(2, '0')}`;
+        }
+
         function checkWin() {
-            // Create the solved state array (1, 2, 3... 0)
-            const solvedState = Array.from({ length: currentBoardSize * currentBoardSize - 1 }, (_, i) => i + 1);
-            solvedState.push(0);
+            let win = true;
+            tiles.forEach(t => {
+                const tr = +t.dataset.r, tc = +t.dataset.c, num = +t.dataset.num;
+                const expectNum = tr * 3 + tc + 1;
+                if (num !== expectNum) win = false;
+            });
 
-            // Compare current tiles with the solved state
-            if (JSON.stringify(tiles) === JSON.stringify(solvedState)) {
-                showMessageBox('Congratulations! You solved the puzzle!');
+            if (win && emptyPos.r === 2 && emptyPos.c === 2) {
+                isSolvedMode = true;
+                clearInterval(timerId);
+                setTimeout(() => {
+                    document.getElementById('ovDesc').innerHTML = `Moves: <span style="color:#818cf8">${moves}</span> &nbsp;&bull;&nbsp; Time: <span style="color:#818cf8">${document.getElementById('timer').textContent}</span>`;
+                    document.getElementById('overlay').classList.remove('hidden');
+                }, 500);
             }
         }
 
-        /**
-         * Solves the puzzle instantly.
-         */
-        function solvePuzzle() {
-            tiles = Array.from({ length: currentBoardSize * currentBoardSize - 1 }, (_, i) => i + 1);
-            tiles.push(0);
-            emptyTileIndex = tiles.indexOf(0);
-            renderBoard();
-            showMessageBox('Puzzle solved!');
-        }
-
-        // Event Listeners
-        // Modified: Calling initializeBoard directly when dropdowns change
-        puzzleTypeSelect.addEventListener('change', initializeBoard);
-        boardSizeSelect.addEventListener('change', initializeBoard);
-
-        // This button still functions to restart with current selections
-        startPuzzleButton.addEventListener('click', initializeBoard);
-        
-        shuffleButton.addEventListener('click', shuffleTiles);
-        solveButton.addEventListener('click', solvePuzzle);
-
-        // Add a resize event listener to re-render board for image puzzles if size changes
-        // This is important because background-size and background-position depend on rendered board size.
-        window.addEventListener('resize', () => {
-            // Only re-render if it's an image puzzle and tiles have been created
-            if (currentPuzzleType.startsWith('image-') && tiles.length > 0 && currentImage.complete && currentImage.naturalWidth > 0) {
-                renderBoard();
-            }
-        });
-
-        // Initialize the board on page load
-        window.onload = initializeBoard;
+        init();
     </script>
 </body>
+
 </html>
